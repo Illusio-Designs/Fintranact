@@ -225,6 +225,12 @@
   .qp-tab.on { background: var(--red); border-color: var(--red); color: #fff; }
   .qp-tab .req { font-size: 9px; background: rgba(0,0,0,.14); border-radius: 999px; padding: 1px 6px; letter-spacing: .04em; }
   .qp-tab.on .req { background: rgba(255,255,255,.22); }
+  .qp-vtype { padding: 12px 18px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--red) 4%, var(--paper-2)), var(--paper-2)); }
+  .qp-vtype > label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); font-weight:800; margin-bottom:6px; }
+  .vt-meta { margin-top: 8px; font-size: 11.5px; color: var(--text-2); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .vt-meta .vt-badge { background: var(--red); color:#fff; font-weight:800; font-size:10.5px; padding:2px 8px; border-radius:999px; letter-spacing:.03em; }
+  .vt-meta b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .sec-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 800; margin: 4px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
   .qp-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
   .qp-pane { display: none; } .qp-pane.on { display: block; }
   .qp-foot { border-top: 1px solid var(--line); padding: 13px 18px; display: flex; align-items: center; gap: 12px; background: var(--paper); }
@@ -555,7 +561,7 @@
       <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Search… <kbd>⌘K</kbd></div>
       <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
       <button class="icon-btn" title="Notifications" onclick="openNotif()"><span class="dot-alert num" id="bellBadge">6</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></button>
-      <button class="btn btn-primary" onclick="openQuick('bank')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2L4 13h6l-1 9 9-11h-6z"/></svg> Quick Entry</button>
+      <button class="btn btn-primary" onclick="openQuick('payment')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2L4 13h6l-1 9 9-11h-6z"/></svg> Quick Entry</button>
     </div>
 
     <div class="content">
@@ -567,7 +573,7 @@
         </div>
         <div class="head-actions">
           <button class="btn btn-ghost"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg> Export</button>
-          <button class="btn btn-primary" onclick="openQuick('bank')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 13h6l-1 9 9-11h-6z"/></svg> Quick Entry</button>
+          <button class="btn btn-primary" onclick="openQuick('payment')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 13h6l-1 9 9-11h-6z"/></svg> Quick Entry</button>
         </div>
       </div>
 
@@ -703,16 +709,195 @@
     <button class="qp-close" onclick="closeQuick()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
 
-  <div class="qp-tabs">
-    <button class="qp-tab" data-tab="bank" onclick="switchTab('bank')"><svg class="qt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>Bank <span class="req">Must</span></button>
-    <button class="qp-tab" data-tab="sales" onclick="switchTab('sales')"><svg class="qt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/></svg>Sales <span class="req">Must</span></button>
-    <button class="qp-tab" data-tab="job" onclick="switchTab('job')"><svg class="qt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>Job Work <span class="req">Must</span></button>
-    <button class="qp-tab" data-tab="payroll" onclick="switchTab('payroll')"><svg class="qt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/></svg>Payroll <span class="req">Must</span></button>
+  <div class="qp-vtype">
+    <label>Voucher type</label>
+    <select class="ctl big" id="vType" onchange="selectVoucher(this.value)">
+      <optgroup label="Accounting">
+        <option value="payment">Payment</option>
+        <option value="receipt">Receipt</option>
+        <option value="contra">Contra</option>
+        <option value="journal">Journal</option>
+      </optgroup>
+      <optgroup label="Trade / GST">
+        <option value="sales">Sales Invoice</option>
+        <option value="purchase">Purchase Bill</option>
+        <option value="creditnote">Credit Note</option>
+        <option value="debitnote">Debit Note</option>
+      </optgroup>
+      <optgroup label="Operations">
+        <option value="bank">Bank — multi-line entry</option>
+        <option value="job">Job Work Challan</option>
+        <option value="payroll">Payroll Run</option>
+      </optgroup>
+    </select>
+    <div class="vt-meta"><span class="vt-badge" id="vtSeries">PMT/26-27</span> <span id="vtDesc">Money going out through bank or cash.</span></div>
   </div>
 
   <div class="qp-body">
+    <!-- ===== PAYMENT ===== -->
+    <div class="qp-pane on" id="qp-payment">
+      <div class="grid2">
+        <div class="fld"><label>Voucher no.</label><input class="ctl" value="PMT/26-27/0209"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Paid from — Bank / Cash a/c</label>
+        <select class="ctl big"><option>HDFC Bank — Current ••4021</option><option>ICICI Bank — Current ••7788</option><option>SBI — CC ••1120</option><option>Cash in Hand</option></select>
+      </div>
+      <div class="fld"><label>Paid to — party / ledger</label>
+        <select class="ctl"><option>Gujarat Poly Pvt Ltd</option><option>Anand Fabrication (Job Worker)</option><option>MSEB — Electricity</option><option>Furnace Fuel &amp; Gas</option><option>Freight Outward</option><option>Rent — Factory Shed</option><option>Petrol &amp; Conveyance</option></select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Payment mode</label><select class="ctl"><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>UPI</option><option>Cheque</option><option>Cash</option></select></div>
+        <div class="fld"><label>Instrument / UTR no.</label><input class="ctl" placeholder="Cheque / UTR ref"></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+        <div class="fld"><label>TDS section</label><select class="ctl"><option>None</option><option>194C — Contractor</option><option>194J — Professional</option><option>194I — Rent</option><option>194Q — Purchase of goods</option><option>194H — Commission</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Cost centre</label><select class="ctl"><option>Heat-Treatment Plant</option><option>Machine Shop</option><option>Admin &amp; Office</option><option>Dispatch</option></select></div>
+        <div class="fld"><label>Bill reference</label><select class="ctl"><option>On account</option><option>Against PB/26-27/0311</option><option>Against PB/26-27/0298</option><option>New reference</option></select></div>
+      </div>
+      <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being payment against June supplies"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Payments above ₹1L route through <b>maker-checker</b> approval before release. TDS, if any, is auto-deducted on the net.</div>
+    </div>
+
+    <!-- ===== RECEIPT ===== -->
+    <div class="qp-pane" id="qp-receipt">
+      <div class="grid2">
+        <div class="fld"><label>Voucher no.</label><input class="ctl" value="RCP/26-27/0341"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Received in — Bank / Cash a/c</label>
+        <select class="ctl big"><option>HDFC Bank — Current ••4021</option><option>ICICI Bank — Current ••7788</option><option>SBI — CC ••1120</option><option>Cash in Hand</option></select>
+      </div>
+      <div class="fld"><label>Received from — customer</label>
+        <select class="ctl"><option>Mahalaxmi Traders</option><option>Shree Balaji Enterprises</option><option>Tata Motors Ltd</option><option>Gujarat Poly Pvt Ltd</option></select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Receipt mode</label><select class="ctl"><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>UPI</option><option>Cheque</option><option>Cash</option></select></div>
+        <div class="fld"><label>Instrument / UTR no.</label><input class="ctl" placeholder="UTR / cheque ref"></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+        <div class="fld"><label>Against reference (bill)</label><select class="ctl"><option>On account</option><option>SI/26-27/0482 — ₹2,48,600</option><option>SI/26-27/0461 — ₹1,04,200</option><option>Advance receipt</option></select></div>
+      </div>
+      <div class="fld"><label>TCS applicable?</label><select class="ctl"><option>None</option><option>206C(1H) @ 0.1% — buyer over ₹50L</option></select></div>
+      <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being amount received against invoice"></div>
+      <div class="qp-note" style="background:var(--good-tint);color:var(--good)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Auto-knocks off the selected outstanding bill and updates receivable ageing.</div>
+    </div>
+
+    <!-- ===== CONTRA ===== -->
+    <div class="qp-pane" id="qp-contra">
+      <div class="grid2">
+        <div class="fld"><label>Voucher no.</label><input class="ctl" value="CTR/26-27/0067"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>From account</label>
+        <select class="ctl big"><option>HDFC Bank — Current ••4021</option><option>ICICI Bank — Current ••7788</option><option>SBI — CC ••1120</option><option>Cash in Hand</option></select>
+      </div>
+      <div class="fld"><label>To account</label>
+        <select class="ctl big"><option>Cash in Hand</option><option>ICICI Bank — Current ••7788</option><option>SBI — CC ••1120</option><option>HDFC Bank — Current ••4021</option></select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Transfer type</label><select class="ctl"><option>Bank to bank transfer</option><option>Cash deposited to bank</option><option>Cash withdrawn from bank</option></select></div>
+        <div class="fld"><label>Reference no.</label><input class="ctl" placeholder="Slip / UTR"></div>
+      </div>
+      <div class="fld"><label>Amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+      <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Cash deposited to HDFC"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Contra moves money between your own bank/cash accounts — no party, no P&amp;L impact.</div>
+    </div>
+
+    <!-- ===== JOURNAL ===== -->
+    <div class="qp-pane" id="qp-journal">
+      <div class="grid2">
+        <div class="fld"><label>Voucher no.</label><input class="ctl" value="JV/26-27/0128"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="sec-label">Debit</div>
+      <div class="grid2">
+        <div class="fld"><label>Debit ledger</label><select class="ctl"><option>Depreciation</option><option>Furnace Fuel &amp; Gas</option><option>Bad Debts</option><option>Round Off</option><option>TDS Receivable</option></select></div>
+        <div class="fld"><label>Debit amount ₹</label><input class="ctl" placeholder="0.00"></div>
+      </div>
+      <div class="sec-label">Credit</div>
+      <div class="grid2">
+        <div class="fld"><label>Credit ledger</label><select class="ctl"><option>Accumulated Depreciation</option><option>Provision for Expenses</option><option>Sundry Debtors</option><option>Party Ledger</option></select></div>
+        <div class="fld"><label>Credit amount ₹</label><input class="ctl" placeholder="0.00"></div>
+      </div>
+      <div class="fld"><label>Narration (reason)</label><input class="ctl" placeholder="e.g. Being provision for June expenses"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Adjustment entry — no cash/bank movement. Debit total must equal credit total to post.</div>
+    </div>
+
+    <!-- ===== PURCHASE ===== -->
+    <div class="qp-pane" id="qp-purchase">
+      <div class="grid2">
+        <div class="fld"><label>Supplier bill no.</label><input class="ctl" placeholder="Vendor invoice no."></div>
+        <div class="fld"><label>Bill date</label><input class="ctl" value="24 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Supplier</label>
+        <select class="ctl big"><option>Gujarat Poly Pvt Ltd — 24AAGCG…2P3</option><option>Precision Heat Treaters — 27AAB…5T1</option><option>MSEB — Electricity</option></select>
+        <div class="hint">Supplier state <b>Gujarat</b> → inter-state <b>IGST</b>. <span class="badge-auto">auto</span></div>
+      </div>
+      <div class="fld"><label>Item / service</label>
+        <select class="ctl"><option>HDPE Granules (HSN 3901)</option><option>Furnace LPG (HSN 2711)</option><option>MS Rounds (HSN 7214)</option></select>
+      </div>
+      <div class="grid3">
+        <div class="fld"><label>Qty</label><input class="ctl" value="2,000"></div>
+        <div class="fld"><label>Rate ₹</label><input class="ctl" value="56.00"></div>
+        <div class="fld"><label>GST rate</label><select class="ctl"><option>18%</option><option>12%</option><option>5%</option><option>28%</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>ITC eligibility</label><select class="ctl"><option>Eligible</option><option>Ineligible</option><option>Blocked u/s 17(5)</option></select></div>
+        <div class="fld"><label>TDS section</label><select class="ctl"><option>None</option><option>194Q — Purchase of goods</option><option>194C — Contractor</option><option>194J — Professional</option></select></div>
+      </div>
+      <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being raw material purchased"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> ITC flows to GSTR-2B reconciliation. 194Q vs supplier's 206C(1H) is auto-guarded to avoid double tax.</div>
+    </div>
+
+    <!-- ===== CREDIT NOTE ===== -->
+    <div class="qp-pane" id="qp-creditnote">
+      <div class="grid2">
+        <div class="fld"><label>Credit note no.</label><input class="ctl" value="CN/26-27/0020"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Against sales invoice</label>
+        <select class="ctl big"><option>SI/26-27/0461 — Shree Balaji ₹1,04,200</option><option>SI/26-27/0448 — Tata Motors ₹3,20,000</option></select>
+      </div>
+      <div class="fld"><label>Customer</label>
+        <select class="ctl"><option>Shree Balaji Enterprises — 27AAB…2Z1</option><option>Tata Motors Ltd — 27AAA…9M4</option></select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Reason</label><select class="ctl"><option>Sales return</option><option>Rate difference</option><option>Post-sale discount</option><option>Order cancellation</option></select></div>
+        <div class="fld"><label>GST rate</label><select class="ctl"><option>18%</option><option>12%</option><option>5%</option><option>28%</option></select></div>
+      </div>
+      <div class="fld"><label>Taxable amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+      <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being goods returned by customer"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Reduces output GST liability and reflects in GSTR-1 (credit/debit notes). Above ₹1L → approval.</div>
+    </div>
+
+    <!-- ===== DEBIT NOTE ===== -->
+    <div class="qp-pane" id="qp-debitnote">
+      <div class="grid2">
+        <div class="fld"><label>Debit note no.</label><input class="ctl" value="DN/26-27/0012"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Against purchase bill</label>
+        <select class="ctl big"><option>PB/26-27/0311 — Gujarat Poly ₹1,12,000</option><option>PB/26-27/0298 — Precision Heat ₹64,800</option></select>
+      </div>
+      <div class="fld"><label>Supplier</label>
+        <select class="ctl"><option>Gujarat Poly Pvt Ltd — 24AAGCG…2P3</option><option>Precision Heat Treaters — 27AAB…5T1</option></select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Reason</label><select class="ctl"><option>Purchase return</option><option>Rate difference</option><option>Damaged goods</option><option>Short supply</option></select></div>
+        <div class="fld"><label>GST rate</label><select class="ctl"><option>18%</option><option>12%</option><option>5%</option><option>28%</option></select></div>
+      </div>
+      <div class="fld"><label>Taxable amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+      <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being defective material returned to supplier"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Reverses input ITC on the returned value and adjusts the supplier ledger.</div>
+    </div>
+
     <!-- ===== BANK (columnar, one bank → many lines) ===== -->
-    <div class="qp-pane on" id="qp-bank">
+    <div class="qp-pane" id="qp-bank">
       <div class="bank-strip">
         <div class="row1">
           <div class="bk-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M6 15h4"/></svg></div>
@@ -859,8 +1044,21 @@
   document.querySelectorAll('.page').forEach(function(p){ p.addEventListener('click', function(){ if (window.innerWidth <= 860) closeNav(); }); });
 
   /* ===== Quick Entry aside ===== */
-  var curTab = 'bank';
+  var curTab = 'payment';
   var curDir = 'dr';
+  var VMETA = {
+    payment:    { s:'PMT/26-27', d:'Money going out through bank or cash.',       post:'Post payment' },
+    receipt:    { s:'RCP/26-27', d:'Money received from a customer.',             post:'Post receipt' },
+    contra:     { s:'CTR/26-27', d:'Transfer between your own bank / cash a/cs.',  post:'Post contra' },
+    journal:    { s:'JV/26-27',  d:'Adjustment entry — no cash movement.',         post:'Post journal' },
+    sales:      { s:'SI/26-27',  d:'Tax invoice to a customer.',                   post:'Save & e-Invoice' },
+    purchase:   { s:'PB/26-27',  d:'Record a supplier bill with ITC.',             post:'Post purchase' },
+    creditnote: { s:'CN/26-27',  d:'Reduce a sales invoice (return / discount).',  post:'Post credit note' },
+    debitnote:  { s:'DN/26-27',  d:'Reduce a purchase bill (return).',             post:'Post debit note' },
+    bank:       { s:'BNK/26-27', d:'One bank, many contra lines.',                 post:'Post lines' },
+    job:        { s:'JW/26-27',  d:'Rule 45 job-work challan movement.',           post:'Save challan' },
+    payroll:    { s:'PAY/26-27', d:'Monthly salary run posted to GL.',             post:'Send for approval' }
+  };
   var bankLines = [
     { date: '27 Jul 26', dir: 'dr', acc: 'Mahalaxmi Traders', narr: 'NEFT receipt · inv SI/0482', amt: 248600 },
     { date: '27 Jul 26', dir: 'cr', acc: 'Gujarat Poly Pvt Ltd', narr: 'Vendor payment · PB/0311', amt: 112000 },
@@ -869,14 +1067,18 @@
 
   function inr(n){ return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
 
-  function openQuick(tab){ document.body.classList.add('qp-open'); switchTab(tab || 'bank'); renderBank(); }
+  function openQuick(tab){ document.body.classList.add('qp-open'); selectVoucher(tab || 'payment'); }
   function closeQuick(){ document.body.classList.remove('qp-open'); }
 
-  function switchTab(tab){
-    curTab = tab;
-    document.querySelectorAll('.qp-tab').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === tab); });
-    document.querySelectorAll('.qp-pane').forEach(function(p){ p.classList.toggle('on', p.id === 'qp-' + tab); });
-    updateFooter();
+  function selectVoucher(type){
+    curTab = type;
+    var sel = document.getElementById('vType'); if (sel && sel.value !== type) sel.value = type;
+    document.querySelectorAll('.qp-pane').forEach(function(p){ p.classList.toggle('on', p.id === 'qp-' + type); });
+    var m = VMETA[type] || { s:'', d:'' };
+    document.getElementById('vtSeries').textContent = m.s;
+    document.getElementById('vtDesc').textContent = m.d;
+    if (type === 'bank') renderBank(); else updateFooter();
+    var body = document.querySelector('.qp-body'); if (body) body.scrollTop = 0;
   }
 
   function setDir(d){
@@ -938,9 +1140,7 @@
       label.textContent = 'Post ' + bankLines.length + ' line' + (bankLines.length === 1 ? '' : 's');
     } else {
       totals.style.visibility = 'hidden';
-      label.textContent = curTab === 'sales' ? 'Save & e-Invoice'
-                        : curTab === 'job' ? 'Save challan'
-                        : 'Send for approval';
+      label.textContent = (VMETA[curTab] || {}).post || 'Post';
     }
   }
 
