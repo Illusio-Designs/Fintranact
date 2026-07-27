@@ -1,0 +1,529 @@
+<title>Fintranact — Black / Red / White</title>
+<style>
+  :root {
+    --ink: #0E0E11;
+    --ink-2: #17171B;
+    --ink-3: #202027;
+    --paper: #F6F5F4;
+    --paper-2: #FFFFFF;
+    --line: #E4E2E0;
+    --text: #14141A;
+    --text-2: #5C5A5E;
+    --text-3: #8A888C;
+    --red: #E11D2A;
+    --red-press: #B3111C;
+    --red-tint: #FBE7E8;
+    --red-ink: #7A0E16;
+    --good: #1F7A54;
+    --good-tint: #E4F1EA;
+    --warn: #9A6A00;
+    --warn-tint: #F6ECD6;
+    --rail-bg: #0E0E11;
+    --rail-text: #B8B6BA;
+    --rail-text-strong: #FFFFFF;
+    --rail-line: #26262C;
+    --shadow: 0 1px 2px rgba(14,14,17,.06), 0 8px 24px rgba(14,14,17,.05);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #101013;
+      --paper-2: #17171C;
+      --line: #2A2A31;
+      --text: #EDECEE;
+      --text-2: #A6A4A9;
+      --text-3: #77757A;
+      --red-tint: #2A1315;
+      --red-ink: #FF6B74;
+      --good-tint: #12271E;
+      --warn-tint: #2A2210;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F6F5F4; --paper-2: #FFFFFF; --line: #E4E2E0;
+    --text: #14141A; --text-2: #5C5A5E; --text-3: #8A888C;
+    --red-tint: #FBE7E8; --red-ink: #7A0E16;
+    --good-tint: #E4F1EA; --warn-tint: #F6ECD6;
+    --shadow: 0 1px 2px rgba(14,14,17,.06), 0 8px 24px rgba(14,14,17,.05);
+  }
+  :root[data-theme="dark"] {
+    --paper: #101013; --paper-2: #17171C; --line: #2A2A31;
+    --text: #EDECEE; --text-2: #A6A4A9; --text-3: #77757A;
+    --red-tint: #2A1315; --red-ink: #FF6B74;
+    --good-tint: #12271E; --warn-tint: #2A2210;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1; }
+  .display { font-weight: 800; letter-spacing: -0.02em; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.10em; font-weight: 700; color: var(--text-3); }
+
+  /* ---- App shell ---- */
+  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+
+  /* ---- Rail (always near-black — anchors identity) ---- */
+  .rail {
+    background: var(--rail-bg);
+    color: var(--rail-text);
+    border-right: 1px solid var(--rail-line);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 20px 20px 18px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px; flex: none;
+    background: var(--red);
+    display: grid; place-items: center;
+    color: #fff; font-weight: 900; font-size: 17px; letter-spacing: -0.04em;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset;
+  }
+  .brand-name { color: var(--rail-text-strong); font-weight: 800; letter-spacing: -0.02em; font-size: 17px; }
+  .brand-name b { color: var(--red); }
+  .brand-sub { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6C72; margin-top: 1px; }
+
+  .nav { padding: 6px 12px; overflow-y: auto; flex: 1; }
+  .nav-group { margin: 14px 8px 6px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #5B595F; font-weight: 700; }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 8px 10px; border-radius: 8px; color: var(--rail-text);
+    text-decoration: none; font-weight: 500; font-size: 13.5px; position: relative;
+    cursor: pointer;
+  }
+  .nav-item:hover { background: #1B1B20; color: #E7E6E9; }
+  .nav-item .ic { width: 17px; height: 17px; flex: none; opacity: .85; }
+  .nav-item .badge { margin-left: auto; font-size: 11px; background: var(--red); color:#fff; border-radius: 999px; padding: 1px 7px; font-weight: 700; }
+  .nav-item.active { background: #202027; color: #fff; }
+  .nav-item.active::before {
+    content: ""; position: absolute; left: -12px; top: 6px; bottom: 6px; width: 3px;
+    background: var(--red); border-radius: 0 3px 3px 0;
+  }
+  .rail-foot { border-top: 1px solid var(--rail-line); padding: 12px; display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#E11D2A,#7A0E16); color:#fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
+  .rail-foot .who { line-height: 1.25; }
+  .rail-foot .who b { color: #fff; font-weight: 600; font-size: 13px; display: block; }
+  .rail-foot .who span { font-size: 11px; color: #7A787E; }
+
+  /* ---- Main ---- */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    position: sticky; top: 0; z-index: 5;
+    background: color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 16px; padding: 12px 24px;
+  }
+  .crumbs { font-size: 13px; color: var(--text-2); }
+  .crumbs b { color: var(--text); font-weight: 700; }
+  .switcher {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 12px 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer;
+  }
+  .switcher .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+  .switcher .gstin { color: var(--text-3); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .spacer { flex: 1; }
+  .search {
+    display: flex; align-items: center; gap: 8px; background: var(--paper-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; color: var(--text-3);
+    font-size: 13px; width: 260px;
+  }
+  .search kbd { margin-left: auto; font-family: inherit; font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; color: var(--text-3); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; border-radius: 8px; padding: 8px 14px;
+    font-weight: 650; font-size: 13px; cursor: pointer; border: 1px solid transparent; white-space: nowrap;
+  }
+  .btn-primary { background: var(--red); color: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+  .btn-primary:hover { background: var(--red-press); }
+  .btn-ghost { background: var(--paper-2); border-color: var(--line); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--text-3); }
+  .icon-btn { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--paper-2); border: 1px solid var(--line); cursor: pointer; color: var(--text-2); position: relative; }
+  .icon-btn .dot-alert { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); border: 2px solid var(--paper); }
+
+  .content { padding: 24px; display: flex; flex-direction: column; gap: 20px; max-width: 1400px; width: 100%; margin: 0 auto; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .page-head h1 { margin: 4px 0 2px; font-size: 26px; }
+  .page-head p { margin: 0; color: var(--text-2); font-size: 13.5px; }
+  .head-actions { display: flex; gap: 10px; }
+
+  /* ---- KPI tiles ---- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tile {
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 16px 14px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .tile .label { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 12.5px; font-weight: 600; }
+  .tile .value { font-size: 27px; margin-top: 8px; }
+  .tile .value small { font-size: 15px; color: var(--text-3); font-weight: 600; }
+  .tile .delta { margin-top: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+  .delta.up { color: var(--good); } .delta.down { color: var(--red); }
+  .tile.accent { color: #fff; background: linear-gradient(150deg,#1A1A1F 0%, #0E0E11 60%); border-color: #26262C; }
+  .tile.accent .label { color: #C9C7CB; } .tile.accent .value small { color: #8A888C; }
+  .tile.accent::after { content:""; position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background: radial-gradient(circle, rgba(225,29,42,.35), transparent 70%); }
+  .spark { position: absolute; right: 14px; bottom: 12px; opacity: .9; }
+
+  /* ---- Grid rows ---- */
+  .row { display: grid; gap: 16px; }
+  .row.a { grid-template-columns: 1.7fr 1fr; }
+  .row.b { grid-template-columns: 1.4fr 1fr; }
+  .card { background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 0; }
+  .card-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+  .card-head h3 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .card-head .sub { color: var(--text-3); font-size: 12px; }
+  .card-head .tools { margin-left: auto; display: flex; gap: 6px; }
+  .seg { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+  .seg button.on { background: var(--paper-2); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .card-body { padding: 18px; }
+
+  /* ---- Chart ---- */
+  .chart-wrap { padding: 8px 8px 0; }
+  .chart-legend { display: flex; gap: 18px; padding: 0 10px 10px; }
+  .lg { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-2); font-weight: 600; }
+  .lg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  /* ---- Compliance list ---- */
+  .due-list { display: flex; flex-direction: column; }
+  .due {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+    padding: 13px 18px; border-bottom: 1px solid var(--line);
+  }
+  .due:last-child { border-bottom: 0; }
+  .due .stripe { width: 3px; height: 34px; border-radius: 3px; }
+  .due .t { font-weight: 650; font-size: 13.5px; }
+  .due .m { color: var(--text-3); font-size: 12px; }
+  .due .when { text-align: right; }
+  .due .when b { display: block; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .pill { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; display: inline-block; letter-spacing: .01em; }
+  .pill.crit { background: var(--red-tint); color: var(--red-ink); }
+  .pill.warn { background: var(--warn-tint); color: var(--warn); }
+  .pill.ok { background: var(--good-tint); color: var(--good); }
+  .pill.neut { background: var(--paper); color: var(--text-2); border: 1px solid var(--line); }
+
+  /* ---- Table ---- */
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); font-weight: 700; padding: 10px 18px; border-bottom: 1px solid var(--line); }
+  tbody td { padding: 12px 18px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: color-mix(in srgb, var(--red) 4%, var(--paper-2)); }
+  td.amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .vno { font-variant-numeric: tabular-nums; color: var(--text-2); font-weight: 600; }
+  .party { font-weight: 600; }
+  .party small { display: block; color: var(--text-3); font-weight: 500; font-size: 11.5px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 5px; background: var(--paper); border: 1px solid var(--line); color: var(--text-2); }
+
+  /* ---- Approvals ---- */
+  .appr { display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+  .appr:last-child { border-bottom: 0; }
+  .appr .who2 { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 12px; color: #fff; flex: none; }
+  .appr .info { min-width: 0; flex: 1; }
+  .appr .info b { font-size: 13px; font-weight: 650; }
+  .appr .info span { display: block; color: var(--text-3); font-size: 12px; }
+  .appr .amt2 { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; }
+  .mini { border: 1px solid var(--line); background: var(--paper-2); border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 650; cursor: pointer; color: var(--text); }
+  .mini.go { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .theme-toggle { display:inline-flex; align-items:center; gap:6px; font-size:12px; }
+
+  @media (max-width: 1080px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .row.a, .row.b { grid-template-columns: 1fr; }
+    .search { display: none; }
+  }
+  @media (max-width: 720px) {
+    .app { grid-template-columns: 1fr; }
+    .rail { display: none; }
+    .kpis { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="app">
+  <!-- ===== RAIL ===== -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="brand-mark">F</div>
+      <div>
+        <div class="brand-name">Fintr<b>a</b>nact</div>
+        <div class="brand-sub">Accounts · GST · Payroll</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">Overview</div>
+      <a class="nav-item active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</a>
+
+      <div class="nav-group">Accounting</div>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>Chart of Accounts</a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>Vouchers</a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Sales &amp; Purchase</a>
+
+      <div class="nav-group">Compliance</div>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>GST &amp; Returns<span class="badge">3</span></a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M5 8h9a3 3 0 0 1 0 6H7"/></svg>TDS</a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 6h16M4 18h10"/></svg>TCS</a>
+
+      <div class="nav-group">Operations</div>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>Job Work</a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 6a3 3 0 0 1 0 6M21 20a5 5 0 0 0-4-5"/></svg>Payroll</a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/></svg>Reports</a>
+
+      <div class="nav-group">Admin</div>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.3 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.4 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h5l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>Ravi Matel · Ops</a>
+      <a class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users &amp; Roles</a>
+    </nav>
+    <div class="rail-foot">
+      <div class="avatar">RJ</div>
+      <div class="who"><b>Rajesh J.</b><span>Finance Controller</span></div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">Home / <b>Dashboard</b></div>
+      <button class="switcher"><span class="dot"></span> Shakti Industries Pvt Ltd <span class="gstin">· 27AABCS1429P1Z8 · Pune</span> ▾</button>
+      <div class="spacer"></div>
+      <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Search vouchers, parties… <kbd>⌘K</kbd></div>
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <button class="icon-btn" title="Notifications"><span class="dot-alert"></span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></button>
+      <button class="btn btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg> New Voucher</button>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">FY 2026–27 · Q2 · as on 27 Jul 2026</div>
+          <h1 class="display">Good evening, Rajesh</h1>
+          <p>3 approvals awaiting you · GSTR-3B for Jun due in 4 days · TDS challan pending deposit.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg> Export</button>
+          <button class="btn btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3h18v4H3zM6 10h12M6 14h12M6 18h7"/></svg> Bulk Run</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <section class="kpis">
+        <div class="tile">
+          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg> Cash &amp; Bank</div>
+          <div class="value num">₹<span>84.62</span><small> L</small></div>
+          <div class="delta up">▲ 6.4% vs last month</div>
+          <svg class="spark" width="72" height="28" viewBox="0 0 72 28" fill="none"><polyline points="0,22 12,20 24,23 36,14 48,16 60,8 72,6" stroke="var(--good)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="tile">
+          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M12 3v18M17 6H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg> Receivables</div>
+          <div class="value num">₹<span>1.42</span><small> Cr</small></div>
+          <div class="delta down">▲ 11% · ₹38.1L overdue</div>
+          <svg class="spark" width="72" height="28" viewBox="0 0 72 28" fill="none"><polyline points="0,10 12,12 24,9 36,14 48,12 60,18 72,20" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="tile">
+          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M20 7H4M20 7l-3-3M20 7l-3 3M4 17h16M4 17l3-3M4 17l3 3"/></svg> Payables</div>
+          <div class="value num">₹<span>67.90</span><small> L</small></div>
+          <div class="delta">12 bills · 5 due this week</div>
+          <svg class="spark" width="72" height="28" viewBox="0 0 72 28" fill="none"><polyline points="0,16 12,14 24,17 36,12 48,15 60,11 72,13" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="tile accent">
+          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg> GST Liability · Jun</div>
+          <div class="value num">₹<span>9.18</span><small> L</small></div>
+          <div class="delta down">Net payable after ITC ₹6.4L</div>
+        </div>
+      </section>
+
+      <!-- Chart + Compliance -->
+      <section class="row a">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>Cash Flow</h3>
+              <div class="sub">Inflow vs outflow · last 6 months (₹ Lakh)</div>
+            </div>
+            <div class="tools">
+              <div class="seg"><button>3M</button><button class="on">6M</button><button>1Y</button></div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-legend">
+              <span class="lg"><i style="background:var(--red)"></i>Inflow</span>
+              <span class="lg"><i style="background:#3A3A42"></i>Outflow</span>
+              <span class="lg"><i style="background:var(--good)"></i>Net</span>
+            </div>
+            <svg viewBox="0 0 640 240" width="100%" height="240" preserveAspectRatio="none" role="img" aria-label="Cash flow chart">
+              <defs>
+                <linearGradient id="fillRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--red)" stop-opacity="0.28"/>
+                  <stop offset="100%" stop-color="var(--red)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- grid -->
+              <g stroke="var(--line)" stroke-width="1">
+                <line x1="0" y1="40" x2="640" y2="40"/>
+                <line x1="0" y1="100" x2="640" y2="100"/>
+                <line x1="0" y1="160" x2="640" y2="160"/>
+                <line x1="0" y1="210" x2="640" y2="210"/>
+              </g>
+              <!-- inflow area -->
+              <path d="M0,150 L106,120 L213,135 L320,80 L426,95 L533,55 L640,60 L640,210 L0,210 Z" fill="url(#fillRed)"/>
+              <path d="M0,150 L106,120 L213,135 L320,80 L426,95 L533,55 L640,60" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- outflow line -->
+              <path d="M0,175 L106,168 L213,178 L320,150 L426,162 L533,140 L640,148" fill="none" stroke="#6C6C76" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- endpoint emphasis -->
+              <circle cx="640" cy="60" r="4.5" fill="var(--red)"/>
+              <circle cx="640" cy="60" r="8" fill="none" stroke="var(--red)" stroke-opacity="0.3" stroke-width="2"/>
+              <!-- x labels -->
+              <g fill="var(--text-3)" font-size="11" font-family="inherit" text-anchor="middle">
+                <text x="20" y="230">Feb</text><text x="106" y="230">Mar</text><text x="213" y="230">Apr</text>
+                <text x="320" y="230">May</text><text x="426" y="230">Jun</text><text x="533" y="230">Jul</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Compliance Calendar</h3>
+            <span class="pill crit" style="margin-left:auto">2 due soon</span>
+          </div>
+          <div class="due-list">
+            <div class="due">
+              <div class="stripe" style="background:var(--red)"></div>
+              <div><div class="t">GSTR-3B · June</div><div class="m">Net payable ₹6.42L · GSTIN 27…1Z8</div></div>
+              <div class="when"><b>31 Jul</b><span class="pill crit">4 days</span></div>
+            </div>
+            <div class="due">
+              <div class="stripe" style="background:var(--red)"></div>
+              <div><div class="t">TDS Challan · 194C, 194J</div><div class="m">ITNS 281 · ₹1,84,300 deposit</div></div>
+              <div class="when"><b>07 Aug</b><span class="pill warn">11 days</span></div>
+            </div>
+            <div class="due">
+              <div class="stripe" style="background:#C9C7CB"></div>
+              <div><div class="t">GSTR-1 · July</div><div class="m">B2B 214 · HSN summary ready</div></div>
+              <div class="when"><b>11 Aug</b><span class="pill neut">15 days</span></div>
+            </div>
+            <div class="due">
+              <div class="stripe" style="background:var(--good)"></div>
+              <div><div class="t">PF ECR + ESI · July</div><div class="m">142 employees · file generated</div></div>
+              <div class="when"><b>15 Aug</b><span class="pill ok">Ready</span></div>
+            </div>
+            <div class="due">
+              <div class="stripe" style="background:#C9C7CB"></div>
+              <div><div class="t">TCS 27EQ · Q1</div><div class="m">206C(1H) · 9 buyers over ₹50L</div></div>
+              <div class="when"><b>31 Aug</b><span class="pill neut">Draft</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Vouchers + Approvals -->
+      <section class="row b">
+        <div class="card">
+          <div class="card-head">
+            <h3>Recent Vouchers</h3>
+            <div class="tools">
+              <div class="seg"><button class="on">All</button><button>Sales</button><button>Purchase</button><button>Payment</button></div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Voucher</th><th>Party</th><th>Type</th><th>Status</th><th style="text-align:right">Amount</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="vno">SI/26-27/0482<br><span style="color:var(--text-3);font-weight:500">27 Jul</span></td>
+                <td class="party">Mahalaxmi Traders<small>27AACFM…9K1 · Maharashtra</small></td>
+                <td><span class="tag">Sales · IRN ✓</span></td>
+                <td><span class="pill ok">Posted</span></td>
+                <td class="amt">₹2,48,600</td>
+              </tr>
+              <tr>
+                <td class="vno">PB/26-27/0311<br><span style="color:var(--text-3);font-weight:500">27 Jul</span></td>
+                <td class="party">Gujarat Poly Pvt Ltd<small>24AAGCG…2P3 · IGST</small></td>
+                <td><span class="tag">Purchase · TDS 194C</span></td>
+                <td><span class="pill warn">Pending Approval</span></td>
+                <td class="amt">₹1,12,000</td>
+              </tr>
+              <tr>
+                <td class="vno">PY/26-27/0208<br><span style="color:var(--text-3);font-weight:500">26 Jul</span></td>
+                <td class="party">HDFC Bank · Vendor Batch<small>Bulk payment · 8 bills</small></td>
+                <td><span class="tag">Payment</span></td>
+                <td><span class="pill crit">Awaiting You</span></td>
+                <td class="amt">₹9,74,250</td>
+              </tr>
+              <tr>
+                <td class="vno">JW/26-27/0044<br><span style="color:var(--text-3);font-weight:500">26 Jul</span></td>
+                <td class="party">Anand Fabrication<small>Job work · 950/1000 kg back</small></td>
+                <td><span class="tag">Job Work · Inward</span></td>
+                <td><span class="pill ok">Reconciled</span></td>
+                <td class="amt">₹64,800</td>
+              </tr>
+              <tr>
+                <td class="vno">CN/26-27/0019<br><span style="color:var(--text-3);font-weight:500">25 Jul</span></td>
+                <td class="party">Shree Balaji Enterprises<small>Credit note vs SI/0461</small></td>
+                <td><span class="tag">Credit Note</span></td>
+                <td><span class="pill neut">Draft</span></td>
+                <td class="amt">₹18,340</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Approvals · You</h3>
+            <span class="pill crit" style="margin-left:auto">3 pending</span>
+          </div>
+          <div>
+            <div class="appr">
+              <div class="who2" style="background:linear-gradient(135deg,#E11D2A,#7A0E16)">SP</div>
+              <div class="info"><b>Vendor payment batch</b><span>Raised by Suresh P. · maker-checker · 8 bills</span></div>
+              <div style="text-align:right"><div class="amt2 num">₹9.74L</div></div>
+            </div>
+            <div style="display:flex;gap:8px;padding:0 18px 14px;justify-content:flex-end;border-bottom:1px solid var(--line)">
+              <button class="mini">Reject</button><button class="mini go">Approve</button>
+            </div>
+            <div class="appr">
+              <div class="who2" style="background:linear-gradient(135deg,#3A3A42,#0E0E11)">PK</div>
+              <div class="info"><b>Payroll run · July</b><span>142 employees · net ₹41.8L · PF/ESI/TDS ok</span></div>
+              <div style="text-align:right"><div class="amt2 num">₹41.8L</div></div>
+            </div>
+            <div style="display:flex;gap:8px;padding:14px 18px;justify-content:flex-end;border-bottom:1px solid var(--line)">
+              <button class="mini">Hold</button><button class="mini go">Approve &amp; Post</button>
+            </div>
+            <div class="appr">
+              <div class="who2" style="background:linear-gradient(135deg,#8A888C,#3A3A42)">PR</div>
+              <div class="info"><b>Credit note · ₹1.2L</b><span>Raised by Priya R. · above ₹1L threshold</span></div>
+              <div style="text-align:right"><div class="amt2 num">₹1.18L</div></div>
+            </div>
+            <div style="display:flex;gap:8px;padding:14px 18px 16px;justify-content:flex-end">
+              <button class="mini">Reject</button><button class="mini go">Approve</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div style="text-align:center;color:var(--text-3);font-size:12px;padding:4px 0 12px">
+        Fintranact · concept UI mockup — black / red / white · every action shown is RBAC-scoped &amp; audit-logged
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); }
+  function toggleTheme(){
+    const cur = document.documentElement.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  }
+</script>
