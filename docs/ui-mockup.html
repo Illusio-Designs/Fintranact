@@ -292,6 +292,54 @@
   .toggle2 button { border:0; background:transparent; color:var(--text-2); font:inherit; font-size:12.5px; font-weight:700; padding:7px 16px; border-radius:6px; cursor:pointer; }
   .toggle2 button.on { background: var(--red); color:#fff; }
 
+  /* ===== NOTIFICATIONS DRAWER ===== */
+  .icon-btn .dot-alert.num { width: auto; height: auto; min-width: 15px; top: 2px; right: 2px; padding: 0 4px; border-radius: 999px; font-size: 9.5px; font-weight: 800; color: #fff; line-height: 15px; text-align: center; }
+  .nt-scrim { display: none; position: fixed; inset: 0; background: rgba(8,8,10,.5); z-index: 55; backdrop-filter: blur(1px); }
+  body.nt-open .nt-scrim { display: block; }
+  .ntpanel {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 420px; max-width: 94vw; z-index: 60;
+    background: var(--paper-2); border-left: 1px solid var(--line);
+    transform: translateX(100%); transition: transform .26s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column; box-shadow: -18px 0 50px rgba(0,0,0,.28);
+  }
+  body.nt-open .ntpanel { transform: translateX(0); }
+  .nt-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+  .nt-head .nt-ic { width: 32px; height: 32px; border-radius: 9px; background: var(--ink); color: #fff; display: grid; place-items: center; flex: none; }
+  :root[data-theme="dark"] .nt-head .nt-ic { background: #2A2A31; }
+  @media (prefers-color-scheme: dark){ .nt-head .nt-ic { background: #2A2A31; } }
+  .nt-head h2 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+  .nt-head .nt-sub { font-size: 11.5px; color: var(--text-3); }
+  .nt-head .nt-sub b { color: var(--red); }
+  .nt-close { margin-left: auto; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--text-2); cursor: pointer; display: grid; place-items: center; }
+  .nt-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .nt-tab { border: 1px solid var(--line); background: var(--paper); color: var(--text-2); border-radius: 999px; padding: 6px 13px; font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .nt-tab .c { font-size: 10px; background: var(--line); color: var(--text-2); border-radius: 999px; padding: 0 6px; font-weight: 800; }
+  .nt-tab.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  :root[data-theme="dark"] .nt-tab.on { background: #2A2A31; border-color:#2A2A31; }
+  @media (prefers-color-scheme: dark){ .nt-tab.on { background: #2A2A31; border-color:#2A2A31; } }
+  .nt-tab.on .c { background: rgba(255,255,255,.2); color: #fff; }
+  .nt-list { flex: 1; overflow-y: auto; }
+  .nt-day { padding: 12px 18px 4px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 800; color: var(--text-3); }
+  .nt-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; }
+  .nt-item:hover { background: color-mix(in srgb, var(--red) 3%, var(--paper-2)); }
+  .nt-item.read { opacity: .62; }
+  .nt-item .nic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; }
+  .nic.crit { background: var(--red-tint); color: var(--red-ink); } .nic.warn { background: var(--warn-tint); color: var(--warn); }
+  .nic.ok { background: var(--good-tint); color: var(--good); } .nic.info { background: var(--paper); color: var(--text-2); border: 1px solid var(--line); }
+  .nt-item .ntxt { min-width: 0; }
+  .nt-item .ntxt b { font-size: 13px; font-weight: 650; display: block; }
+  .nt-item .ntxt span { font-size: 12px; color: var(--text-2); display: block; margin-top: 1px; }
+  .nt-item .ntxt .chips { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .nchip { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); color: var(--text-2); }
+  .nchip.do { background: var(--red); border-color: var(--red); color: #fff; }
+  .nt-item .nmeta { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .nt-item .ntime { font-size: 11px; color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .nt-item .unread { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+  .nt-foot { border-top: 1px solid var(--line); padding: 11px 18px; display: flex; gap: 10px; background: var(--paper); }
+  .nt-foot button { flex: 1; border: 1px solid var(--line); background: var(--paper-2); color: var(--text); border-radius: 8px; padding: 9px; font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; }
+  .nt-foot button:hover { border-color: var(--text-3); }
+  .nt-empty { padding: 40px 20px; text-align: center; color: var(--text-3); font-size: 13px; }
+
   @media (max-width: 560px) {
     .qpanel { width: 100vw; }
     .lines-head, .line-row { grid-template-columns: 48px 1fr 74px 84px 24px; }
@@ -506,7 +554,7 @@
       <div class="spacer"></div>
       <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Search… <kbd>⌘K</kbd></div>
       <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-      <button class="icon-btn" title="Alerts"><span class="dot-alert"></span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></button>
+      <button class="icon-btn" title="Notifications" onclick="openNotif()"><span class="dot-alert num" id="bellBadge">6</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></button>
       <button class="btn btn-primary" onclick="openQuick('bank')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2L4 13h6l-1 9 9-11h-6z"/></svg> Quick Entry</button>
     </div>
 
@@ -619,6 +667,29 @@
     </div>
   </div>
 </div>
+
+<!-- ===== NOTIFICATIONS DRAWER ===== -->
+<div class="nt-scrim" onclick="closeNotif()"></div>
+<aside class="ntpanel" id="ntpanel" aria-label="Notifications">
+  <div class="nt-head">
+    <div class="nt-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></div>
+    <div>
+      <h2>Notifications</h2>
+      <div class="nt-sub"><b id="ntUnreadTxt">6 unread</b> · tasks &amp; compliance alerts</div>
+    </div>
+    <button class="nt-close" onclick="closeNotif()" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="nt-tabs">
+    <button class="nt-tab on" data-f="all" onclick="ntFilter('all')">All <span class="c" id="cAll">0</span></button>
+    <button class="nt-tab" data-f="task" onclick="ntFilter('task')">Tasks <span class="c" id="cTask">0</span></button>
+    <button class="nt-tab" data-f="alert" onclick="ntFilter('alert')">Alerts <span class="c" id="cAlert">0</span></button>
+  </div>
+  <div class="nt-list" id="ntList"></div>
+  <div class="nt-foot">
+    <button onclick="ntMarkAll()">Mark all read</button>
+    <button onclick="closeNotif()">View all activity</button>
+  </div>
+</aside>
 
 <!-- ===== QUICK ENTRY ASIDE PANEL ===== -->
 <div class="qp-scrim" onclick="closeQuick()"></div>
@@ -881,8 +952,66 @@
     setTimeout(function(){ document.getElementById('qpPostLabel').textContent = old; btn.style.background = ''; }, 1400);
   }
 
+  /* ===== Notifications drawer ===== */
+  var ntFilterVal = 'all';
+  var notifs = [
+    { id:1, kind:'crit', cat:'task', day:'Today', time:'2m', title:'Vendor payment batch awaiting your approval', body:'Raised by Suresh P. · 8 bills · ₹9,74,250', chips:['Approve','Maker-checker'], read:false,
+      icon:'<path d="M5 12l4 4L19 6"/>' },
+    { id:2, kind:'crit', cat:'alert', day:'Today', time:'40m', title:'GSTR-3B (June) due in 4 days', body:'Net payable ₹6.42L · GSTIN 27…1Z8', chips:['File by 31 Jul'], read:false,
+      icon:'<circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/>' },
+    { id:3, kind:'warn', cat:'task', day:'Today', time:'1h', title:'TDS challan pending deposit', body:'194C + 194J · ₹1,84,300 · ITNS 281', chips:['Deposit by 07 Aug'], read:false,
+      icon:'<path d="M12 3v18M5 8h9a3 3 0 0 1 0 6H7"/>' },
+    { id:4, kind:'crit', cat:'alert', day:'Today', time:'3h', title:'GSTR-2B mismatch — 7 invoices', body:'ITC ₹1.12L in books not in 2B · needs review', chips:['Reconcile'], read:false,
+      icon:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>' },
+    { id:5, kind:'warn', cat:'task', day:'Today', time:'4h', title:'Payroll run (July) submitted for approval', body:'142 employees · net ₹41.8L · PF/ESI/TDS ok', chips:['Approve & post'], read:false,
+      icon:'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/>' },
+    { id:6, kind:'ok', cat:'alert', day:'Today', time:'5h', title:'e-Invoice generated — SI/26-27/0482', body:'IRN & signed QR received · Mahalaxmi Traders', chips:['View IRN'], read:false,
+      icon:'<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>' },
+    { id:7, kind:'warn', cat:'alert', day:'Yesterday', time:'26 Jul', title:'Job work ageing — 20 kg pending return', body:'Anand Fabrication · JW-OUT/0044 · 20 kg of 1000', chips:['ITC-04'], read:true,
+      icon:'<path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>' },
+    { id:8, kind:'ok', cat:'task', day:'Yesterday', time:'26 Jul', title:'Bulk run finished — 214 invoices e-signed', body:'e-Invoice + e-Way batch · 0 failures', chips:['Download log'], read:true,
+      icon:'<path d="M5 12l4 4L19 6"/>' },
+    { id:9, kind:'info', cat:'alert', day:'Yesterday', time:'25 Jul', title:'New sign-in · Priya R. (Accountant)', body:'Pune · Chrome on Windows · within policy', chips:['Security'], read:true,
+      icon:'<path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>' }
+  ];
+
+  function ntCounts(){
+    var unread = notifs.filter(function(n){ return !n.read; }).length;
+    document.getElementById('cAll').textContent = notifs.length;
+    document.getElementById('cTask').textContent = notifs.filter(function(n){ return n.cat==='task'; }).length;
+    document.getElementById('cAlert').textContent = notifs.filter(function(n){ return n.cat==='alert'; }).length;
+    document.getElementById('ntUnreadTxt').textContent = unread ? (unread + ' unread') : 'All caught up';
+    var badge = document.getElementById('bellBadge');
+    if (unread){ badge.style.display = ''; badge.textContent = unread; } else { badge.style.display = 'none'; }
+  }
+
+  function renderNotifs(){
+    var list = document.getElementById('ntList');
+    var items = notifs.filter(function(n){ return ntFilterVal==='all' || n.cat===ntFilterVal; });
+    if (!items.length){ list.innerHTML = '<div class="nt-empty">Nothing here — you’re all caught up.</div>'; ntCounts(); return; }
+    var html = ''; var lastDay = null;
+    items.forEach(function(n){
+      if (n.day !== lastDay){ html += '<div class="nt-day">' + n.day + '</div>'; lastDay = n.day; }
+      html += '<div class="nt-item ' + (n.read?'read':'') + '" onclick="ntRead(' + n.id + ')">'
+        + '<div class="nic ' + n.kind + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + n.icon + '</svg></div>'
+        + '<div class="ntxt"><b>' + n.title + '</b><span>' + n.body + '</span>'
+        + '<div class="chips">' + n.chips.map(function(c,i){ return '<span class="nchip ' + (i===0?'do':'') + '">' + c + '</span>'; }).join('') + '</div></div>'
+        + '<div class="nmeta"><span class="ntime">' + n.time + '</span>' + (n.read?'':'<span class="unread"></span>') + '</div>'
+        + '</div>';
+    });
+    list.innerHTML = html;
+    ntCounts();
+  }
+
+  function openNotif(){ document.body.classList.add('nt-open'); renderNotifs(); }
+  function closeNotif(){ document.body.classList.remove('nt-open'); }
+  function ntFilter(f){ ntFilterVal = f; document.querySelectorAll('.nt-tab').forEach(function(b){ b.classList.toggle('on', b.dataset.f===f); }); renderNotifs(); }
+  function ntRead(id){ var n = notifs.find(function(x){ return x.id===id; }); if (n){ n.read = true; renderNotifs(); } }
+  function ntMarkAll(){ notifs.forEach(function(n){ n.read = true; }); renderNotifs(); }
+  ntCounts(); // set initial bell badge on load
+
   addEventListener('keydown', function(e){
-    if (e.key === 'Escape'){ closeNav(); closeQuick(); }
+    if (e.key === 'Escape'){ closeNav(); closeQuick(); closeNotif(); }
     // Ctrl/Cmd+Enter adds a bank line quickly when panel open on bank tab
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.body.classList.contains('qp-open') && curTab === 'bank'){
       e.preventDefault(); addBankLine();
