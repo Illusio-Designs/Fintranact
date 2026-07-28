@@ -61,10 +61,10 @@ export default function DayBookPage() {
             </tbody>
             {db && entries.length > 0 && (
               <tfoot>
-                <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
-                  <td style={{ paddingLeft: 18, fontWeight: 700 }} colSpan={3}>Total for {db.date}</td>
-                  <td className="amt" style={{ fontSize: 14 }}>{inr(db.totalDebit)}</td>
-                  <td className="amt" style={{ fontSize: 14 }}>{inr(db.totalCredit)}</td>
+                <tr>
+                  <td colSpan={3}>Total for {db.date}</td>
+                  <td className="amt">{inr(db.totalDebit)}</td>
+                  <td className="amt">{inr(db.totalCredit)}</td>
                 </tr>
               </tfoot>
             )}
