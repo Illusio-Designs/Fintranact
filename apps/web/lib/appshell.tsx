@@ -55,6 +55,7 @@ function hrefFor(label: string): string {
   if (clean === 'Pending Inward Outward') return '/jobwork/pending';
   if (clean === 'ITC-04') return '/jobwork/itc04';
   if (clean === 'Payroll Run') return '/payroll/run';
+  if (clean === 'Financial Year') return '/admin/periods';
   return `/m/${slug(clean)}`;
 }
 

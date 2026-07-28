@@ -4,6 +4,7 @@ import type { VoucherCreateInput } from '@fintranact/validation';
 import { pool, withTransaction } from '../../common/db.js';
 import { Errors } from '../../common/errors.js';
 import { audit } from '../../common/audit.js';
+import { assertPeriodOpen } from './periods.service.js';
 
 interface Ctx {
   companyId: string;
@@ -54,6 +55,7 @@ export async function createVoucher(
 ): Promise<{ id: string; voucherNo: string }> {
   const date = toDate(input.date);
   return withTransaction(async (conn) => {
+    await assertPeriodOpen(ctx.companyId, date, conn); // refuse to post into a locked month
     const voucherNo = await nextVoucherNo(conn, ctx.companyId, input.type);
     const id = randomUUID();
 
