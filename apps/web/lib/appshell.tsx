@@ -50,6 +50,8 @@ function hrefFor(label: string): string {
   if (clean === 'GSTR-1') return '/gst/gstr-1';
   if (clean === 'GSTR-3B') return '/gst/gstr-3b';
   if (clean === 'GSTR-2B Reconciliation') return '/gst/gstr-2b';
+  if (clean === 'GST Invoices') return '/gst/e-invoice';
+  if (clean === 'E-Way Bills') return '/gst/e-way';
   if (clean === 'Challans ITNS 281') return '/tds/challans';
   if (clean === 'Returns 24Q 26Q 27Q') return '/tds/returns';
   if (clean === 'Pending Inward Outward') return '/jobwork/pending';
@@ -57,6 +59,8 @@ function hrefFor(label: string): string {
   if (clean === 'Payroll Run') return '/payroll/run';
   if (clean === 'Form 16') return '/payroll/form16';
   if (clean === 'Financial Year') return '/admin/periods';
+  if (clean === 'TCS Collections') return '/tcs/collections';
+  if (clean === 'Return 27EQ') return '/tcs/returns';
   return `/m/${slug(clean)}`;
 }
 

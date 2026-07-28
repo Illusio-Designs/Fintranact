@@ -415,6 +415,44 @@ export async function getForm16(): Promise<Form16Row[]> {
   return (await res.json()).data ?? [];
 }
 
+// ---- TCS (206C) ----
+export interface TcsRow { party: string; pan: string; section: string; sale: number; rate: number; tcs: number; date: string; challan: string | null }
+export interface TcsData { rows: TcsRow[]; totalSale: number; totalTcs: number; totalCollected: number; totalDue: number }
+
+export async function getTcs(): Promise<TcsData> {
+  const rows: TcsRow[] = [
+    { party: 'Mahalaxmi Traders', pan: 'AACFM9021K', section: '206C(1H)', sale: 7200000, rate: 0.1, tcs: 7200, date: '12 Jun 2026', challan: 'CIN-27EQ-441' },
+    { party: 'Tata Motors Ltd', pan: 'AAACT9M004', section: '206C(1H)', sale: 12500000, rate: 0.1, tcs: 12500, date: '18 Jun 2026', challan: 'CIN-27EQ-441' },
+    { party: 'Rajkot Steel Co', pan: 'AAECR5540Q', section: '206C(1H)', sale: 6400000, rate: 0.1, tcs: 6400, date: '24 Jun 2026', challan: null },
+    { party: 'Shree Balaji Enterprises', pan: 'AABFS2210Z', section: '206C(1H)', sale: 5100000, rate: 0.1, tcs: 5100, date: '28 Jun 2026', challan: null },
+  ];
+  const totalSale = rows.reduce((s, r) => s + r.sale, 0);
+  const totalTcs = rows.reduce((s, r) => s + r.tcs, 0);
+  const totalCollected = rows.filter((r) => r.challan).reduce((s, r) => s + r.tcs, 0);
+  return { rows, totalSale, totalTcs, totalCollected, totalDue: totalTcs - totalCollected };
+}
+
+// ---- e-Invoice / e-Way ----
+export interface EInvoiceRow { invoiceNo: string; party: string; date: string; value: number; irn: string | null; ack: string | null; status: 'generated' | 'pending' | 'cancelled' }
+export interface EWayRow { ewbNo: string | null; invoiceNo: string; party: string; from: string; to: string; distance: number; value: number; validTill: string | null; status: 'active' | 'pending' | 'expired' }
+
+export async function getEInvoices(): Promise<EInvoiceRow[]> {
+  return [
+    { invoiceNo: 'SI/26-27/0482', party: 'Mahalaxmi Traders', date: '27 Jul 2026', value: 248600, irn: '35b2…a91f', ack: '112026', status: 'generated' },
+    { invoiceNo: 'SI/26-27/0483', party: 'Rajkot Steel Co', date: '27 Jul 2026', value: 504200, irn: '9ac4…10de', ack: '112031', status: 'generated' },
+    { invoiceNo: 'SI/26-27/0484', party: 'Tata Motors Ltd', date: '28 Jul 2026', value: 320000, irn: null, ack: null, status: 'pending' },
+    { invoiceNo: 'SI/26-27/0480', party: 'Shree Balaji Enterprises', date: '26 Jul 2026', value: 104200, irn: '4f7e…88ba', ack: '111998', status: 'cancelled' },
+  ];
+}
+
+export async function getEWayBills(): Promise<EWayRow[]> {
+  return [
+    { ewbNo: '3910 4421 8890', invoiceNo: 'SI/26-27/0483', party: 'Rajkot Steel Co', from: 'Rajkot', to: 'Ahmedabad', distance: 216, value: 504200, validTill: '29 Jul 2026', status: 'active' },
+    { ewbNo: '3910 4422 0021', invoiceNo: 'SI/26-27/0482', party: 'Mahalaxmi Traders', from: 'Rajkot', to: 'Morbi', distance: 62, value: 248600, validTill: '28 Jul 2026', status: 'active' },
+    { ewbNo: null, invoiceNo: 'SI/26-27/0484', party: 'Tata Motors Ltd', from: 'Rajkot', to: 'Pune', distance: 742, value: 320000, validTill: null, status: 'pending' },
+  ];
+}
+
 // ---- Period locks ----
 export interface PeriodLock { period: string; note: string | null; lockedAt: string; lockedBy: string | null }
 
