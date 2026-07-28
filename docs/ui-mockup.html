@@ -157,6 +157,9 @@
   .row { display: grid; gap: 16px; }
   .row.a { grid-template-columns: 1.7fr 1fr; }
   .row.b { grid-template-columns: 1.4fr 1fr; }
+  .dash { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .dash .card.span-2 { grid-column: 1 / -1; }
+  @media (max-width: 1120px){ .dash { grid-template-columns: 1fr; } .dash .card.span-2 { grid-column: auto; } }
   .card { background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 0; }
   .card-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
   .card-head h3 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
@@ -610,6 +613,8 @@
         <option value="accountant">Accountant</option>
         <option value="supervisor">Process Supervisor</option>
         <option value="payroll">Payroll / HR</option>
+        <option value="compliance">Compliance Officer</option>
+        <option value="auditor">Auditor (read-only)</option>
       </select>
       <div class="spacer"></div>
       <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Search… <kbd>⌘K</kbd></div>
@@ -654,8 +659,8 @@
         </div>
       </section>
 
-      <section class="row a">
-        <div class="card">
+      <section class="dash" id="dashGrid">
+        <div class="card span-2" data-roles="controller owner accountant">
           <div class="card-head">
             <div><h3>Cash Flow</h3><div class="csub">Inflow vs outflow · last 6 months (₹ Lakh)</div></div>
             <div class="tools"><div class="seg"><button>3M</button><button class="on">6M</button><button>1Y</button></div></div>
@@ -677,7 +682,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card span-1" data-roles="controller owner accountant compliance">
           <div class="card-head"><h3>Compliance Calendar</h3><span class="pill crit" style="margin-left:auto">2 due soon</span></div>
           <div class="due-list">
             <div class="due"><div class="stripe" style="background:var(--red)"></div><div><div class="t">GSTR-3B · June</div><div class="m">Net payable ₹6.42L</div></div><div class="when"><b>31 Jul</b><span class="pill crit">4 days</span></div></div>
@@ -686,10 +691,8 @@
             <div class="due"><div class="stripe" style="background:var(--good)"></div><div><div class="t">PF ECR + ESI · July</div><div class="m">142 employees · generated</div></div><div class="when"><b>15 Aug</b><span class="pill ok">Ready</span></div></div>
           </div>
         </div>
-      </section>
 
-      <section class="row a">
-        <div class="card">
+        <div class="card span-1" data-roles="owner auditor controller">
           <div class="card-head">
             <div><h3>Profit &amp; Loss</h3><div class="csub">FY 2026–27 · live from posted entries</div></div>
             <div class="tools"><span class="pill ok">GP 45.2%</span><span class="pill ok">NP 13.4%</span></div>
@@ -708,7 +711,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card span-1" data-roles="supervisor owner controller">
           <div class="card-head"><h3>Overdue Recovery · Lien</h3><span class="pill crit" style="margin-left:auto">1 eligible</span></div>
           <div class="card-body" style="padding-top:12px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
@@ -722,10 +725,8 @@
             <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" onclick="openQuick('forfeiture')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Start lien recovery</button>
           </div>
         </div>
-      </section>
 
-      <section class="row b">
-        <div class="card">
+        <div class="card span-2" data-roles="controller accountant auditor">
           <div class="card-head"><h3>Recent Vouchers</h3><div class="tools"><div class="seg"><button class="on">All</button><button>Sales</button><button>Purchase</button><button>Payment</button></div></div></div>
           <div style="overflow-x:auto">
           <table>
@@ -741,7 +742,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card span-1" data-roles="controller owner accountant">
           <div class="card-head"><h3>Approvals · You</h3><span class="pill crit" style="margin-left:auto">3 pending</span></div>
           <div>
             <div class="appr"><div class="who2" style="background:linear-gradient(135deg,var(--red),#7A0913)">SP</div><div class="info"><b>Vendor payment batch</b><span>Raised by Suresh P. · maker-checker · 8 bills</span></div><div class="amt2 num">₹9.74L</div></div>
@@ -750,6 +751,77 @@
             <div class="appr-actions"><button class="mini">Hold</button><button class="mini go">Approve &amp; Post</button></div>
             <div class="appr"><div class="who2" style="background:linear-gradient(135deg,#8A888C,#3A3A42)">PR</div><div class="info"><b>Credit note · ₹1.2L</b><span>Raised by Priya R. · above ₹1L threshold</span></div><div class="amt2 num">₹1.18L</div></div>
             <div class="appr-actions" style="border-bottom:0"><button class="mini">Reject</button><button class="mini go">Approve</button></div>
+          </div>
+        </div>
+
+        <!-- Owner: Top customers -->
+        <div class="card span-1" data-roles="owner">
+          <div class="card-head"><h3>Top Customers · Jul</h3><span class="csub" style="margin-left:auto">by job-work revenue</span></div>
+          <div class="due-list">
+            <div class="due"><div class="stripe" style="background:var(--red)"></div><div><div class="t">Tata Motors Ltd</div><div class="m">Carburising · Induction</div></div><div class="when"><b>₹11.4L</b><span class="pill neut">29%</span></div></div>
+            <div class="due"><div class="stripe" style="background:var(--red)"></div><div><div class="t">Mahalaxmi Traders</div><div class="m">Hardening · Annealing</div></div><div class="when"><b>₹8.2L</b><span class="pill neut">21%</span></div></div>
+            <div class="due"><div class="stripe" style="background:#C9C7CB"></div><div><div class="t">Shree Balaji Enterprises</div><div class="m">Nitriding</div></div><div class="when"><b>₹5.6L</b><span class="pill neut">15%</span></div></div>
+            <div class="due"><div class="stripe" style="background:#C9C7CB"></div><div><div class="t">Ganesh Auto Parts</div><div class="m">Carburising</div></div><div class="when"><b>₹4.1L</b><span class="pill neut">11%</span></div></div>
+          </div>
+        </div>
+
+        <!-- Supervisor: Pending inward -->
+        <div class="card span-1" data-roles="supervisor">
+          <div class="card-head"><h3>Pending Inward</h3><span class="pill warn" style="margin-left:auto">6 jobs</span></div>
+          <div class="due-list">
+            <div class="due"><div class="stripe" style="background:var(--red)"></div><div><div class="t">Tata Motors · Gears</div><div class="m">Carburising · recd 27 Jul</div></div><div class="when"><b>1,000 kg</b><span class="pill crit">start</span></div></div>
+            <div class="due"><div class="stripe" style="background:var(--warn)"></div><div><div class="t">Mahalaxmi · Shafts</div><div class="m">Hardening · recd 26 Jul</div></div><div class="when"><b>500 kg</b><span class="pill warn">queued</span></div></div>
+            <div class="due"><div class="stripe" style="background:#C9C7CB"></div><div><div class="t">Ganesh Auto · Pins</div><div class="m">Annealing</div></div><div class="when"><b>250 kg</b><span class="pill neut">queued</span></div></div>
+          </div>
+        </div>
+
+        <!-- Supervisor: Pending outward -->
+        <div class="card span-1" data-roles="supervisor">
+          <div class="card-head"><h3>Pending Outward (to dispatch)</h3><span class="pill warn" style="margin-left:auto">4 jobs</span></div>
+          <div class="due-list">
+            <div class="due"><div class="stripe" style="background:var(--good)"></div><div><div class="t">JW-IN/0044 · Gears</div><div class="m">Carburising done</div></div><div class="when"><b>400 kg</b><span class="pill ok">ready</span></div></div>
+            <div class="due"><div class="stripe" style="background:var(--good)"></div><div><div class="t">JW-IN/0039 · Pins</div><div class="m">Annealing done</div></div><div class="when"><b>60 kg</b><span class="pill ok">ready</span></div></div>
+            <div class="due"><div class="stripe" style="background:var(--red)"></div><div><div class="t">JW-IN/0051 · Shafts</div><div class="m">overdue return · 1-yr rule</div></div><div class="when"><b>500 kg</b><span class="pill crit">overdue</span></div></div>
+          </div>
+        </div>
+
+        <!-- Payroll: Biometric attendance -->
+        <div class="card span-1" data-roles="payroll">
+          <div class="card-head"><h3>Attendance · Today</h3><span class="pill ok" style="margin-left:auto">biometric</span></div>
+          <div class="card-body" style="padding-top:12px">
+            <div class="kv"><span class="k">Mapped on device</span><span class="v">142 / 142</span></div>
+            <div class="kv"><span class="k">Present (punched in)</span><span class="v" style="color:var(--good)">138</span></div>
+            <div class="kv"><span class="k">On leave</span><span class="v">3</span></div>
+            <div class="kv"><span class="k">Absent / no punch</span><span class="v" style="color:var(--red)">1</span></div>
+            <div class="kv"><span class="k">Overtime hours</span><span class="v">46.5</span></div>
+            <div class="hint" style="margin-top:8px">ESSL X990 (Plant) + ZKTeco (Office) · last sync 6:10 pm</div>
+          </div>
+        </div>
+
+        <!-- Payroll: Leave & payroll status -->
+        <div class="card span-1" data-roles="payroll">
+          <div class="card-head"><h3>Leave &amp; Payroll</h3><span class="pill warn" style="margin-left:auto">4 to approve</span></div>
+          <div class="due-list">
+            <div class="due"><div class="stripe" style="background:var(--warn)"></div><div><div class="t">Amit K. · 2 days CL</div><div class="m">29–30 Jul</div></div><div class="when"><span class="pill warn">approve</span></div></div>
+            <div class="due"><div class="stripe" style="background:var(--warn)"></div><div><div class="t">Sunita R. · 1 day SL</div><div class="m">28 Jul</div></div><div class="when"><span class="pill warn">approve</span></div></div>
+            <div class="due"><div class="stripe" style="background:#C9C7CB"></div><div><div class="t">July payroll run</div><div class="m">142 employees · not run</div></div><div class="when"><b>31 Jul</b><span class="pill neut">due</span></div></div>
+          </div>
+        </div>
+
+        <!-- Auditor / Compliance: Audit trail feed -->
+        <div class="card span-2" data-roles="auditor compliance">
+          <div class="card-head"><h3>Audit Trail</h3><span class="csub" style="margin-left:auto">tamper-evident · hash-chained</span></div>
+          <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th><th style="text-align:right">Signed</th></tr></thead>
+            <tbody>
+              <tr><td class="vno">6:42 pm</td><td class="party">Rajesh J.<small>Controller</small></td><td><span class="tag">Approved &amp; signed</span></td><td>Payment PY/0208 · ₹9.74L</td><td class="amt">PIN ✓</td></tr>
+              <tr><td class="vno">5:18 pm</td><td class="party">Priya R.<small>Accountant</small></td><td><span class="tag">Posted</span></td><td>Sales SI/0482 · IRN gen</td><td class="amt">PIN ✓</td></tr>
+              <tr><td class="vno">4:03 pm</td><td class="party">Meena D.<small>Admin</small></td><td><span class="tag">Blacklist set</span></td><td>Ledger · Ganesh Auto</td><td class="amt">PIN ✓</td></tr>
+              <tr><td class="vno">2:55 pm</td><td class="party">Rajesh J.<small>Controller</small></td><td><span class="tag">Rate override</span></td><td>Rate Master · Nitriding</td><td class="amt">PIN ✓</td></tr>
+              <tr><td class="vno">11:20 am</td><td class="party">Farhan S.<small>Supervisor</small></td><td><span class="tag">Inward · Debit memo</span></td><td>JW-IN/0052 · 1,000 kg</td><td class="amt">PIN ✓</td></tr>
+            </tbody>
+          </table>
           </div>
         </div>
       </section>
@@ -1636,7 +1708,11 @@
     supervisor: { name:'Process Supervisor', desc:'6 pending inward · 4 pending outward · 3 jobs overdue for return.',
       k:[['Pending inward','6','jobs to start',''],['Pending outward','4','ready to dispatch',''],['Under process','11','on the floor',''],['Overdue return','3','1-yr rule','down']] },
     payroll: { name:'Payroll / HR', desc:'142 mapped on biometric · 138 present today · 4 leave requests · payroll not run.',
-      k:[['Headcount','142','active',''],['Present today','138','biometric','up'],['Leave requests','4','to approve',''],['Payroll · Jul','Not run','due 31 Jul','down']] }
+      k:[['Headcount','142','active',''],['Present today','138','biometric','up'],['Leave requests','4','to approve',''],['Payroll · Jul','Not run','due 31 Jul','down']] },
+    compliance: { name:'Compliance Officer', desc:'GSTR-3B due in 4 days · TDS challan pending · 7 GSTR-2B mismatches to resolve.',
+      k:[['GST liability · Jun','₹9.18<small> L</small>','file by 31 Jul','down'],['TDS payable','₹1.84<small> L</small>','deposit by 07 Aug','down'],['Returns due','3','this month',''],['2B mismatches','7','ITC ₹1.12L','down']] },
+    auditor: { name:'Auditor (read-only)', desc:'Read-only view · 486 vouchers this month · 24 signed approvals · 2 blacklist changes.',
+      k:[['Vouchers · month','486','posted',''],['Signed approvals','24','PIN-signed','up'],['Blacklist changes','2','audited',''],['Period locks','1','Jun locked','']] }
   };
   function setRole(r){
     var c = ROLES[r] || ROLES.controller;
@@ -1647,8 +1723,14 @@
       qi('k' + i + 'V').innerHTML = c.k[i][1];
       var d = qi('k' + i + 'D'); d.innerHTML = c.k[i][2]; d.className = 'delta ' + (c.k[i][3] || '');
     }
+    // show only the widget cards this role is allowed to see
+    document.querySelectorAll('#dashGrid > .card').forEach(function(card){
+      var roles = (card.getAttribute('data-roles') || '').split(/\s+/);
+      card.style.display = roles.indexOf(r) >= 0 ? '' : 'none';
+    });
     var foot = document.querySelector('.rail-foot .who span'); if (foot) foot.textContent = c.name;
   }
+  setRole('controller'); // initial role-based layout
 
   addEventListener('keydown', function(e){
     if (e.key === 'Escape'){ closeNav(); closeQuick(); closeNotif(); closePin(); }

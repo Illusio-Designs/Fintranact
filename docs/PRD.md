@@ -408,7 +408,37 @@ Fintranact adopts a **security-first, defense-in-depth** posture. "100% secure" 
 
 ### 7.2 Authorization — RBAC (Role-Based Access Control)
 - **Roles → Permissions → Resources.** Permissions are granular tuples: `{module}:{action}` (e.g., `voucher:create`, `payment:approve`, `payroll:run`, `gst_return:lock`, `report:export`, `user:manage`).
-- **Configurable permissions by role:** Tenant Admin composes custom roles from the permission catalog; system ships sensible defaults (Operator, Accountant, Controller, Compliance, Payroll, Auditor, Admin).
+- **Configurable permissions by role:** Tenant Admin composes custom roles from the permission catalog; system ships sensible defaults.
+
+#### 7.2.1 Default Role List
+| # | Role | Purpose | Representative permissions |
+|---|---|---|---|
+| R1 | **Tenant Admin / Owner** | Full control of the company, users, masters, and settings | `*` within tenant (own data); user/role mgmt; masters; view all |
+| R2 | **Finance Controller** | Approvals, controls, cash & compliance oversight | approve payments/payroll/notes; period lock; view all; sign |
+| R3 | **Accountant** | Day-to-day books, vouchers, GST/TDS working, reconciliation | voucher CRUD; invoice/bill; gst/tds working; bank reco; no approve |
+| R4 | **Data-Entry Operator** | Fast voucher/inward entry, cash memos | voucher create (draft/post); inward; limited masters (read) |
+| R5 | **Process / Store Supervisor** | Job-work floor: inward, outward, job cards, material | jobwork inward/outward; job card; stock; no financial approve |
+| R6 | **Payroll / HR Manager** | Attendance (biometric), payroll, leave, statutory | employee/salary; attendance; payroll run; leave approve |
+| R7 | **Compliance Officer** | GST/TDS/TCS returns, due dates, challans | return prepare/lock; challan; 2B reco; view compliance |
+| R8 | **Auditor** (read-only) | Independent review, no edit | read-only: reports, ledgers, **audit trail**, sign log |
+| R9 | **Employee** (self-service) | Own payslips, leave, reimbursements | self: payslip view; leave apply; reimbursement submit |
+
+Roles are **configurable** (add/rename/compose from the permission catalog) and **scoped by company/branch/GSTIN**; a user may hold different roles in different branches.
+
+#### 7.2.2 Role-wise Dashboard Plan (what each role sees)
+Each role lands on a **different dashboard** — KPI tiles + a widget set — rendered from role + permissions (a widget never shows data the user can't access):
+
+| Role | KPI tiles (4) | Widgets |
+|---|---|---|
+| **Owner / Director** | Job-work revenue · Gross profit · Receivables · Cash | P&L (gross/net) · Cash-flow chart · Top customers · Compliance status |
+| **Finance Controller** | Cash & Bank · Receivables (overdue) · Payables · GST liability | Cash-flow chart · Compliance calendar · Approvals queue · Recent vouchers |
+| **Accountant** | Vouchers today · Pending approval · Bank unmatched · 2B mismatches | Recent vouchers · Cash-flow chart · Compliance calendar · Approvals |
+| **Process Supervisor** | Pending inward · Pending outward · Under process · Overdue return | Pending inward · Pending outward · Overdue-recovery (lien) |
+| **Payroll / HR** | Headcount · Present today (biometric) · Leave requests · Payroll status | Biometric attendance · Leave & payroll status |
+| **Compliance Officer** | GST liability · TDS payable · Returns due · 2B mismatches | Compliance calendar · Audit trail |
+| **Auditor** (read) | Vouchers this month · Signed approvals · Blacklist changes · Period locks | Audit trail · P&L · Recent vouchers (read) |
+
+Dashboards are **configurable** (widget catalog, drag-arrange, saved per role/user).
 - **Scoping:** every permission is further scoped by **company** and **branch/GSTIN**, and optionally by **cost center**. A user can hold different roles in different companies/branches.
 - **Data-level rules:** row-level filters (e.g., a branch accountant sees only that branch's vouchers); field-level masking (e.g., bank/Aadhaar visible only to authorized roles).
 - **Separation of duties:** the maker of a transaction cannot be its sole approver; enforced by policy.
