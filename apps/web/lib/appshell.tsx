@@ -70,6 +70,7 @@ function hrefFor(label: string): string {
   if (clean === 'Rate Master') return '/masters/rate';
   if (clean === 'Financial Year') return '/admin/periods';
   if (clean === 'Audit Trail') return '/admin/audit';
+  if (clean === 'System & Tax Config') return '/admin/config';
   if (clean === 'TCS Collections') return '/tcs/collections';
   if (clean === 'Return 27EQ') return '/tcs/returns';
   return `/m/${slug(clean)}`;

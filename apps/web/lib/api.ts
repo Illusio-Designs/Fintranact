@@ -581,3 +581,65 @@ export async function commitImport(entity: string, file: File, financialYear: st
   if (!res.ok) throw new Error(body?.errors?.[0]?.message ?? 'Import failed');
   return body.data;
 }
+
+// ---- Settings: numbering series, company statutory profile, geo masters, voucher PDF ----
+export interface NumberingSeries { voucherType: string; label: string; prefix: string; nextNo: number; width: number }
+
+const SERIES_LABEL: Record<string, string> = {
+  payment: 'Payment', receipt: 'Receipt', contra: 'Contra', journal: 'Journal',
+  sales: 'Sales Invoice', purchase: 'Purchase Bill', credit_note: 'Credit Note', debit_note: 'Debit Note',
+  eway: 'E-Way Bill (internal ref)', einvoice: 'E-Invoice (internal ref)',
+  jobwork_inward: 'Job Work — Inward', jobwork_outward: 'Job Work — Outward', lien: 'Lien / Forfeiture', payroll: 'Payroll Run',
+};
+const labelFor = (t: string): string => SERIES_LABEL[t] ?? t;
+
+let mockSeries: NumberingSeries[] = [
+  ['payment', 'PMT/26-27/', 211], ['receipt', 'RCP/26-27/', 341], ['contra', 'CTR/26-27/', 47],
+  ['journal', 'JV/26-27/', 96], ['sales', 'SI/26-27/', 485], ['purchase', 'PB/26-27/', 372],
+  ['credit_note', 'CN/26-27/', 20], ['debit_note', 'DN/26-27/', 12],
+  ['eway', 'EWB/26-27/', 22], ['einvoice', 'EINV/26-27/', 461],
+  ['jobwork_inward', 'JW-IN/26-27/', 53], ['jobwork_outward', 'JW-OUT/26-27/', 62],
+  ['lien', 'LIEN/26-27/', 3], ['payroll', 'PAY/26-27/', 4],
+].map(([voucherType, prefix, nextNo]) => ({ voucherType: voucherType as string, label: labelFor(voucherType as string), prefix: prefix as string, nextNo: nextNo as number, width: 4 }));
+
+export async function getNumberingSeries(): Promise<NumberingSeries[]> {
+  if (MOCK) return mockSeries.map((s) => ({ ...s }));
+  const res = await fetch(`${API}/api/v1/settings/numbering`, { headers: authHeaders() });
+  const rows = (await res.json()).data ?? [];
+  return (rows as NumberingSeries[]).map((s) => ({ ...s, label: labelFor(s.voucherType) }));
+}
+
+export async function updateNumberingSeries(voucherType: string, patch: { prefix?: string; nextNo?: number; width?: number }): Promise<NumberingSeries> {
+  if (MOCK) {
+    mockSeries = mockSeries.map((s) => (s.voucherType === voucherType ? { ...s, ...patch } : s));
+    return { ...mockSeries.find((s) => s.voucherType === voucherType)! };
+  }
+  const res = await fetch(`${API}/api/v1/settings/numbering/${voucherType}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(patch),
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body?.errors?.[0]?.message ?? 'Update failed');
+  return { ...body.data, label: labelFor(voucherType) };
+}
+
+export interface CompanyProfile {
+  name: string; legalName?: string; pan?: string; gstin?: string; tan?: string; cin?: string;
+  gstRegType?: string; ptRegn?: string; pfRegn?: string; esiRegn?: string;
+  address?: string; city?: string; stateCode?: string; pincode?: string;
+}
+
+export async function getCompanyProfile(): Promise<CompanyProfile> {
+  if (MOCK) return {
+    name: 'RAVI Metal Treatment', legalName: 'RAVI Metal Treatment', pan: 'AABCS1429P', gstin: '24AABCS1429P1Z5',
+    tan: 'RKTR02914E', cin: '', gstRegType: 'regular', ptRegn: 'PT/24/RAJ/0009142', pfRegn: 'GJRAJ0456789000',
+    esiRegn: '37000123450000901', address: 'Aji Deam Unit 3, GIDC, Rajkot', city: 'Rajkot', stateCode: '24', pincode: '360003',
+  };
+  const res = await fetch(`${API}/api/v1/settings/company`, { headers: authHeaders() });
+  const d = (await res.json()).data ?? {};
+  return { name: d.name, legalName: d.legal_name, pan: d.pan, gstin: d.gstin, tan: d.tan, cin: d.cin, gstRegType: d.gst_reg_type, ptRegn: d.pt_regn, pfRegn: d.pf_regn, esiRegn: d.esi_regn, address: d.address, city: d.city, stateCode: d.state_code, pincode: d.pincode };
+}
+
+/** URL to a voucher's server-rendered PDF (empty in mock mode — needs the API). */
+export function voucherPdfUrl(id: string): string {
+  return MOCK ? '' : `${API}/api/v1/vouchers/${id}/pdf`;
+}
