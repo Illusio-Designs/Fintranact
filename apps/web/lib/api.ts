@@ -445,6 +445,50 @@ export async function getEInvoices(): Promise<EInvoiceRow[]> {
   ];
 }
 
+// ---- Lien / forfeiture ----
+export interface LienCase { customer: string; overdue: number; ageingDays: number; material: string; qty: string; assessed: number; expectedSale: number; status: 'notice' | 'held' | 'recovered' }
+export async function getLienCases(): Promise<LienCase[]> {
+  return [
+    { customer: 'Shree Balaji Enterprises', overdue: 104200, ageingDays: 95, material: 'JW-IN/0051 · shafts', qty: '500 kg', assessed: 90000, expectedSale: 115000, status: 'held' },
+    { customer: 'Ganesh Auto Parts', overdue: 61000, ageingDays: 72, material: 'JW-IN/0033 · brackets', qty: '260 kg', assessed: 48000, expectedSale: 55000, status: 'notice' },
+    { customer: 'Deep Engineering', overdue: 38400, ageingDays: 120, material: 'JW-IN/0027 · gears', qty: '180 kg', assessed: 41000, expectedSale: 44000, status: 'recovered' },
+  ];
+}
+
+// ---- Masters: process + rate ----
+export interface ProcessMaster { code: string; name: string; sac: string; uom: string; turnaround: string; active: boolean }
+export interface RateMaster { process: string; customer: string; rate: number; effective: string }
+export async function getProcessMasters(): Promise<ProcessMaster[]> {
+  return [
+    { code: 'CARB', name: 'Carburising', sac: '9988', uom: 'Per kg', turnaround: '3 days', active: true },
+    { code: 'HARD', name: 'Hardening & Tempering', sac: '9988', uom: 'Per kg', turnaround: '2 days', active: true },
+    { code: 'ANNL', name: 'Annealing', sac: '9988', uom: 'Per kg', turnaround: '2 days', active: true },
+    { code: 'NITR', name: 'Nitriding', sac: '9988', uom: 'Per kg', turnaround: '4 days', active: true },
+    { code: 'INDH', name: 'Induction Hardening', sac: '9988', uom: 'Per piece', turnaround: '1 day', active: false },
+  ];
+}
+export async function getRateMasters(): Promise<RateMaster[]> {
+  return [
+    { process: 'Carburising', customer: 'All customers (standard)', rate: 18, effective: '01 Apr 2026' },
+    { process: 'Carburising', customer: 'Tata Motors Ltd', rate: 16.5, effective: '01 Apr 2026' },
+    { process: 'Hardening & Tempering', customer: 'All customers (standard)', rate: 22, effective: '01 Apr 2026' },
+    { process: 'Annealing', customer: 'All customers (standard)', rate: 14, effective: '01 Apr 2026' },
+    { process: 'Nitriding', customer: 'Mahalaxmi Traders', rate: 26, effective: '01 Apr 2026' },
+  ];
+}
+
+// ---- Documents ----
+export interface DocRow { name: string; type: string; category: string; linkedTo: string | null; size: string; uploadedBy: string; date: string }
+export async function getDocuments(): Promise<DocRow[]> {
+  return [
+    { name: 'PO-Mahalaxmi-Jun.pdf', type: 'PDF', category: 'Purchase Order', linkedTo: 'SI/26-27/0482', size: '184 KB', uploadedBy: 'Priya R.', date: '27 Jul 2026' },
+    { name: 'GRN-Gujarat-Poly.pdf', type: 'PDF', category: 'Goods Receipt', linkedTo: 'PB/26-27/0311', size: '96 KB', uploadedBy: 'Suresh P.', date: '25 Jul 2026' },
+    { name: 'EWB-3910442188.pdf', type: 'PDF', category: 'e-Way Bill', linkedTo: 'SI/26-27/0483', size: '58 KB', uploadedBy: 'System', date: '27 Jul 2026' },
+    { name: 'Bank-stmt-HDFC-Jun.xlsx', type: 'SHEET', category: 'Bank Statement', linkedTo: null, size: '412 KB', uploadedBy: 'Rajesh J.', date: '02 Jul 2026' },
+    { name: 'Lien-notice-Balaji.pdf', type: 'PDF', category: 'Legal', linkedTo: 'JW-IN/0051', size: '72 KB', uploadedBy: 'Rajesh J.', date: '20 Jul 2026' },
+  ];
+}
+
 export async function getEWayBills(): Promise<EWayRow[]> {
   return [
     { ewbNo: '3910 4421 8890', invoiceNo: 'SI/26-27/0483', party: 'Rajkot Steel Co', from: 'Rajkot', to: 'Ahmedabad', distance: 216, value: 504200, validTill: '29 Jul 2026', status: 'active' },
