@@ -78,3 +78,24 @@ export async function getGstr1(companyId: string): Promise<Gstr1> {
   const totalTax = round2(cgst + sgst + igst);
   return { invoices: Number(cnt[0]?.n ?? 0), outward: { taxable, igst, cgst, sgst }, totalTax, totalValue: round2(taxable + totalTax) };
 }
+
+export interface Gstr2bBooks { booksItc: number; purchaseInvoices: number }
+
+/**
+ * Books side of the GSTR-2B reconciliation — total input tax credit claimed in
+ * the books and the number of purchase invoices. The portal (2B) side is fetched
+ * from GSTN and matched against this on the client.
+ */
+export async function getGstr2bBooks(companyId: string): Promise<Gstr2bBooks> {
+  const b = await gstBalances(companyId);
+  const booksItc = round2(
+    ((b.input_cgst?.dr ?? 0) - (b.input_cgst?.cr ?? 0)) +
+    ((b.input_sgst?.dr ?? 0) - (b.input_sgst?.cr ?? 0)) +
+    ((b.input_igst?.dr ?? 0) - (b.input_igst?.cr ?? 0)),
+  );
+  const [cnt] = await pool.query<RowDataPacket[]>(
+    "SELECT COUNT(*) AS n FROM vouchers WHERE company_id = ? AND type IN ('purchase','debit_note')",
+    [companyId],
+  );
+  return { booksItc, purchaseInvoices: Number(cnt[0]?.n ?? 0) };
+}

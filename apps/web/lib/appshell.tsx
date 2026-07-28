@@ -49,6 +49,7 @@ function hrefFor(label: string): string {
   if (clean === 'Balance Sheet') return '/reports/balance-sheet';
   if (clean === 'GSTR-1') return '/gst/gstr-1';
   if (clean === 'GSTR-3B') return '/gst/gstr-3b';
+  if (clean === 'GSTR-2B Reconciliation') return '/gst/gstr-2b';
   return `/m/${slug(clean)}`;
 }
 
