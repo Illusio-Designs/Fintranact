@@ -29,9 +29,12 @@ const num = (v: unknown): number => {
  * Render a branded voucher PDF from the DB rows and return it as a Buffer.
  * The company statutory block (GSTIN/PAN/TAN) is drawn from the company profile.
  */
+export interface PrintBank { bankName: string; accountNo: string; ifsc: string | null; branch: string | null; upi: string | null }
+
 export function renderVoucherPdf(
   voucher: RowDataPacket,
   company: RowDataPacket | null,
+  bank?: PrintBank | null,
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 48 });
@@ -113,6 +116,20 @@ export function renderVoucherPdf(
       .text(inr(totDr), cDr, y + 7, { width: 92, align: 'right' })
       .text(inr(totCr), cCr, y + 7, { width: 92, align: 'right' });
     y += 40;
+
+    // ---- Bank details for payment (selected in Settings) ----
+    if (bank) {
+      doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#0f172a').text('Bank details for payment', left, y + 6);
+      doc.font('Helvetica').fontSize(9).fillColor('#334155');
+      const bl = [
+        `Bank: ${bank.bankName}`,
+        `A/C No: ${bank.accountNo}`,
+        bank.ifsc ? `IFSC: ${bank.ifsc}` : null,
+        bank.branch ? `Branch: ${bank.branch}` : null,
+        bank.upi ? `UPI: ${bank.upi}` : null,
+      ].filter(Boolean).join('\n');
+      doc.text(bl, left, y + 22, { width: 260 });
+    }
 
     // ---- Signature block ----
     doc.font('Helvetica').fontSize(9.5).fillColor('#475569')

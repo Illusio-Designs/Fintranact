@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { PencilEdit01Icon, Download01Icon, PrinterIcon, Delete02Icon, Add01Icon, Search01Icon, FilterIcon, Copy01Icon } from 'hugeicons-react';
 import { AppShell } from './appshell';
 import { Dropdown, DatePicker, fmtDate, RowMenu } from './components';
-import { listVouchers } from './api';
+import { listVouchers, voucherPdfUrl } from './api';
 
 /** Generic module list screen assembled entirely from the shared UI library. */
 
@@ -135,8 +135,8 @@ export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: 
                   <td>
                     <div className="rowacts">
                       <span className="tip"><button className="ib"><PencilEdit01Icon size={16} color="currentColor" /></button><span className="tip-txt">Edit</span></span>
-                      <span className="tip"><button className="ib"><Download01Icon size={16} color="currentColor" /></button><span className="tip-txt">Download</span></span>
-                      <span className="tip"><button className="ib"><PrinterIcon size={16} color="currentColor" /></button><span className="tip-txt">Print</span></span>
+                      <span className="tip"><button className="ib" onClick={() => window.open(voucherPdfUrl(r.id), '_blank')}><Download01Icon size={16} color="currentColor" /></button><span className="tip-txt">Download PDF</span></span>
+                      <span className="tip"><button className="ib" onClick={() => window.open(voucherPdfUrl(r.id), '_blank')}><PrinterIcon size={16} color="currentColor" /></button><span className="tip-txt">Print</span></span>
                       <RowMenu items={[
                         { label: 'Duplicate', icon: <Copy01Icon size={15} color="currentColor" /> },
                         { label: 'Export', icon: <Download01Icon size={15} color="currentColor" /> },

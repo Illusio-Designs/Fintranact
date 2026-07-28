@@ -64,6 +64,7 @@ function hrefFor(label: string): string {
   if (clean === 'ITC-04') return '/jobwork/itc04';
   if (clean === 'Lien Forfeiture') return '/jobwork/lien';
   if (clean === 'Payroll Run') return '/payroll/run';
+  if (clean === 'Attendance & Leave') return '/payroll/leave';
   if (clean === 'Form 16') return '/payroll/form16';
   if (clean === 'Process Master') return '/masters/process';
   if (clean === 'Rate Master') return '/masters/rate';

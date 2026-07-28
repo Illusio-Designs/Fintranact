@@ -29,9 +29,20 @@ export const config = {
    * IRP (e-invoice), NIC (e-way) and Meta Cloud API (WhatsApp).
    */
   integrations: {
+    // GSP is Whitebooks (whitebooks.in) — one credential set drives e-invoice + e-way.
+    gsp: {
+      provider: process.env.GSP_PROVIDER ?? 'whitebooks',
+      baseUrl: process.env.GSP_BASE_URL ?? 'https://api.whitebooks.in',
+      email: process.env.GSP_EMAIL ?? '',
+      username: process.env.GSP_USERNAME ?? '',
+      password: process.env.GSP_PASSWORD ?? '',
+      clientId: process.env.GSP_CLIENT_ID ?? '',
+      clientSecret: process.env.GSP_CLIENT_SECRET ?? '',
+      gstin: process.env.GSP_GSTIN ?? '',
+    },
     einvoice: {
       mode: process.env.EINVOICE_MODE ?? 'sandbox', // 'sandbox' | 'live'
-      apiUrl: process.env.EINVOICE_API_URL ?? '',    // GSP/IRP endpoint
+      apiUrl: process.env.EINVOICE_API_URL ?? '',    // GSP/IRP endpoint (falls back to gsp.baseUrl)
       apiKey: process.env.EINVOICE_API_KEY ?? '',
     },
     eway: {
