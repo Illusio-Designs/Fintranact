@@ -46,6 +46,7 @@ function hrefFor(label: string): string {
   if (clean === 'Trial Balance') return '/reports/trial-balance';
   if (clean === 'Day Book') return '/reports/day-book';
   if (clean === 'Profit & Loss') return '/reports/profit-loss';
+  if (clean === 'Balance Sheet') return '/reports/balance-sheet';
   return `/m/${slug(clean)}`;
 }
 

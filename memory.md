@@ -65,7 +65,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Trial Balance report**: backend `GET /api/v1/reports/trial-balance` aggregates `voucher_lines` per ledger → net debit/credit closing + totals + balanced flag (`modules/reports`); web `/reports/trial-balance` page built from the UI library (FY dropdown, search, balanced banner, category pills, totals row), sidebar Reports→Trial Balance routes to it.
 - [x] **Day Book** (`GET /api/v1/reports/day-book?date=`) — vouchers on a date with particulars + debit/credit totals; page `/reports/day-book` (DatePicker + type filter).
 - [x] **Profit & Loss** (`GET /api/v1/reports/pnl`) — income − direct (cost of sales) = gross profit; − indirect = net profit; page `/reports/profit-loss` (KPI tiles + two-column statement).
-- [ ] Remaining: web screens for ledger create + voucher pass-entry against live API; period locks; Balance Sheet report; Process/Rate masters CRUD
+- [x] **Balance Sheet** (`GET /api/v1/reports/balance-sheet`) — assets vs liabilities+equity, period profit carried to equity, balanced flag + suspense handling; page `/reports/balance-sheet` (two-sided).
+- [ ] Remaining: web screens for ledger create + voucher pass-entry against live API; period locks; Process/Rate masters CRUD; GST returns (GSTR-1/3B)
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -250,3 +251,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 ### 2026-07-28 — Task 28: Proper report grand-total (tfoot) styling
 - Added a dedicated **report total-row** style to the UI library (`globals.css`, scoped to `table tfoot td` — only the Trial Balance & Day Book report tables use a real `<tfoot>`): tinted band, 2px top rule, uppercase bold "TOTAL", tabular-nums amounts with an accounting-style **double-rule** (inset box-shadow) under the grand total. Removed the ad-hoc inline styles from the Trial Balance and Day Book total rows so they use the shared class.
 - `next build` passes; verified the total line renders as a proper statement footer. Merged to main.
+
+### 2026-07-28 — Task 29: Balance Sheet report (backend + UI-library page)
+- **Backend** (`modules/reports`): `GET /api/v1/reports/balance-sheet` classifies ledgers into **assets** (debit-nature: bank/cash/debtors/fixed assets), **liabilities** (credit-nature: creditors/duties/provisions), **equity** (capital/reserves); `tax` and uncategorised ledgers fall to the correct side by balance sign; P&L ledgers are excluded and their **net profit is carried to equity as "Profit for the period."** Returns totals + `balanced`. `report:view`. API typechecks.
+- **Web**: `getBalanceSheet()` (mock-aware, balanced dataset), page `/reports/balance-sheet` built from the UI library — two-sided `ui-grid` (Assets | Liabilities & Equity with Liabilities/Equity subheads), the shared `<ReportBanner>` (balanced/empty/mismatch with a **suspense difference row** on the short side), `money`, and the report **tfoot grand-total** styling. Sidebar **Reports → Balance Sheet** routes to it. Verified balanced: assets = liab+equity = ₹2,71,70,520 (Profit for the period ₹70,00,000 in equity).
+- Completes the core report set (Trial Balance · Day Book · P&L · Balance Sheet). `next build` passes (12 routes). Merged to main.
