@@ -97,6 +97,40 @@ export const pendingOutward = [
   { t: 'JW-IN/0051 · Shafts', m: 'overdue · 1-yr rule', qty: '500 kg', tag: 'overdue', tone: 'crit' },
 ];
 
+/** Catalog of every dashboard widget — used by the Widgets gallery page. */
+export interface Widget {
+  key: string;
+  name: string;
+  desc: string;
+  group: 'Finance' | 'Compliance' | 'Job Work' | 'Payroll' | 'Audit';
+  roles: string[];
+  size: 'S' | 'M' | 'L';
+  defaultOn?: boolean;
+}
+
+export const WIDGETS: Widget[] = [
+  { key: 'kpi-cash', name: 'Cash & Bank', desc: 'Live cash + bank balance with month-on-month trend.', group: 'Finance', roles: ['controller', 'owner'], size: 'S', defaultOn: true },
+  { key: 'kpi-receivables', name: 'Receivables', desc: 'Outstanding + overdue ageing (30/60/90).', group: 'Finance', roles: ['controller', 'owner', 'accountant'], size: 'S', defaultOn: true },
+  { key: 'kpi-payables', name: 'Payables', desc: 'Bills due this week / this month.', group: 'Finance', roles: ['controller'], size: 'S', defaultOn: true },
+  { key: 'kpi-gst', name: 'GST Liability', desc: 'Net GST payable after ITC for the period.', group: 'Compliance', roles: ['controller', 'compliance'], size: 'S', defaultOn: true },
+  { key: 'cashflow', name: 'Cash Flow', desc: 'Inflow vs outflow chart, last 6 months.', group: 'Finance', roles: ['controller', 'owner', 'accountant'], size: 'L', defaultOn: true },
+  { key: 'pnl', name: 'Profit & Loss', desc: 'Gross & net profit waterfall with GP%/NP% margins.', group: 'Finance', roles: ['owner', 'controller', 'auditor'], size: 'M', defaultOn: true },
+  { key: 'compliance', name: 'Compliance Calendar', desc: 'GSTR/TDS/TCS/PF due dates with countdown.', group: 'Compliance', roles: ['controller', 'compliance', 'accountant'], size: 'M', defaultOn: true },
+  { key: 'gst2b', name: 'GSTR-2B Reconciliation', desc: 'Matched / mismatch / missing ITC buckets.', group: 'Compliance', roles: ['compliance', 'accountant'], size: 'M' },
+  { key: 'vouchers', name: 'Recent Vouchers', desc: 'Latest posted vouchers with status.', group: 'Finance', roles: ['controller', 'accountant', 'auditor'], size: 'L', defaultOn: true },
+  { key: 'approvals', name: 'Approvals · You', desc: 'Maker-checker items awaiting your sign-off.', group: 'Finance', roles: ['controller', 'owner'], size: 'M', defaultOn: true },
+  { key: 'top-customers', name: 'Top Customers', desc: 'Top parties by job-work revenue.', group: 'Finance', roles: ['owner'], size: 'M' },
+  { key: 'pending-inward', name: 'Pending Inward', desc: 'Customer material received, awaiting process.', group: 'Job Work', roles: ['supervisor'], size: 'M', defaultOn: true },
+  { key: 'pending-outward', name: 'Pending Outward', desc: 'Processed material ready to dispatch (vs pending qty).', group: 'Job Work', roles: ['supervisor'], size: 'M', defaultOn: true },
+  { key: 'material-ageing', name: 'Material Ageing', desc: 'Job-work stock ageing vs 1-year return rule.', group: 'Job Work', roles: ['supervisor', 'compliance'], size: 'S' },
+  { key: 'lien', name: 'Overdue Recovery · Lien', desc: 'Forfeit & sell overdue party material to recover dues.', group: 'Job Work', roles: ['controller', 'supervisor', 'owner'], size: 'M' },
+  { key: 'attendance', name: 'Biometric Attendance', desc: 'Today’s device punches, present / leave / OT.', group: 'Payroll', roles: ['payroll'], size: 'M', defaultOn: true },
+  { key: 'leave-payroll', name: 'Leave & Payroll', desc: 'Leave approvals + payroll run status.', group: 'Payroll', roles: ['payroll'], size: 'M' },
+  { key: 'headcount', name: 'Headcount', desc: 'Active employees, joiners, exits.', group: 'Payroll', roles: ['payroll', 'owner'], size: 'S' },
+  { key: 'audit', name: 'Audit Trail', desc: 'Tamper-evident, PIN-signed action log.', group: 'Audit', roles: ['auditor', 'compliance'], size: 'L' },
+  { key: 'tds-tcs', name: 'TDS / TCS Register', desc: 'Deductions, challans, return-ready summaries.', group: 'Compliance', roles: ['compliance', 'accountant'], size: 'M' },
+];
+
 export const recentVouchers = [
   { no: 'SI/26-27/0482', party: 'Mahalaxmi Traders', type: 'Sales · IRN ✓', status: 'Posted', amount: '₹2,48,600' },
   { no: 'PB/26-27/0311', party: 'Gujarat Poly Pvt Ltd', type: 'Purchase · TDS 194C', status: 'Pending', amount: '₹1,12,000' },

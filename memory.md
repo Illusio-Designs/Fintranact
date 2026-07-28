@@ -62,6 +62,11 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **`next build` passes** — 5 static routes; deploy on Vercel with Root Directory=`apps/web`, no env needed
 - [ ] Flesh out dashboard widgets to match the HTML mockup; wire more real endpoints when API is hosted
 
+## Web app — dashboard/widgets/icons
+- [x] Huge **round nav icons** via the **Hugeicons** dependency (`hugeicons-react`) — distinct icon per module group in a 38px round badge
+- [x] **Widgets page live** (`/widgets`): catalog of all 20 dashboard widgets (WIDGETS in mock.ts) with search, group filter (Finance/Compliance/Job Work/Payroll/Audit), size chips, role tags, and Add/Added toggle (mock "on your dashboard" count). Linked from Overview nav.
+- [ ] Wire "Add" to actually persist per-role dashboard layout; make more module pages real (Ledgers/Vouchers list+form on live API)
+
 ## Later phases (see PRD §16)
 - Phase 1 (cont.) Masters · Documents
 - Phase 2 GST · Invoicing · e-Invoice/e-Way
