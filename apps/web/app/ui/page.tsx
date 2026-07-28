@@ -10,7 +10,7 @@ import {
   MinusSignIcon, PlusSignIcon,
 } from 'hugeicons-react';
 import { AppShell } from '../../lib/appshell';
-import { Dropdown, Calendar, DatePicker } from '../../lib/components';
+import { Dropdown, Calendar, DatePicker, RowMenu } from '../../lib/components';
 
 /** @fintranact/ui — shared component library / design system reference. */
 
@@ -82,7 +82,6 @@ export default function UILibrary() {
   const [asc, setAsc] = useState(true);
   const [pageSize, setPageSize] = useState(10);
   const [sel, setSel] = useState<Set<string>>(new Set());
-  const [rowMenu, setRowMenu] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
   const [toast, setToast] = useState(false);
 
@@ -373,20 +372,17 @@ export default function UILibrary() {
                   <td>{r.type}</td>
                   <td><span className={`pill ${statusPill[r.status]}`}>{r.status}</span></td>
                   <td className="amt">{inr(r.amount)}</td>
-                  <td style={{ position: 'relative' }}>
+                  <td>
                     <div className="rowacts">
                       <span className="tip"><button className="ib" onClick={() => setModal(true)}><PencilEdit01Icon size={16} color="currentColor" /></button><span className="tip-txt">Edit</span></span>
                       <span className="tip"><button className="ib"><Download01Icon size={16} color="currentColor" /></button><span className="tip-txt">Download</span></span>
                       <span className="tip"><button className="ib"><PrinterIcon size={16} color="currentColor" /></button><span className="tip-txt">Print</span></span>
-                      <button className="ib" onClick={() => setRowMenu((v) => (v === r.id ? null : r.id))}><MoreVerticalIcon size={16} color="currentColor" /></button>
+                      <RowMenu items={[
+                        { label: 'Duplicate', icon: <Copy01Icon size={15} color="currentColor" /> },
+                        { label: 'Mark filed', icon: <CheckmarkCircle02Icon size={15} color="currentColor" /> },
+                        { label: 'Delete', icon: <Delete02Icon size={15} color="currentColor" />, danger: true, onClick: () => setModal(true) },
+                      ]} />
                     </div>
-                    {rowMenu === r.id && (
-                      <div className="dropdown-menu" style={{ right: 8, left: 'auto' }} onMouseLeave={() => setRowMenu(null)}>
-                        <button><Copy01Icon size={15} color="currentColor" /> Duplicate</button>
-                        <button><CheckmarkCircle02Icon size={15} color="currentColor" /> Mark filed</button>
-                        <button style={{ color: 'var(--red-ink)' }} onClick={() => { setRowMenu(null); setModal(true); }}><Delete02Icon size={15} color="currentColor" /> Delete</button>
-                      </div>
-                    )}
                   </td>
                 </tr>
               ))}

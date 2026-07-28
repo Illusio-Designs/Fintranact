@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { MoreVerticalIcon, PencilEdit01Icon, Download01Icon, PrinterIcon, Delete02Icon, Add01Icon, Search01Icon, FilterIcon } from 'hugeicons-react';
+import { PencilEdit01Icon, Download01Icon, PrinterIcon, Delete02Icon, Add01Icon, Search01Icon, FilterIcon, Copy01Icon } from 'hugeicons-react';
 import { AppShell } from './appshell';
-import { Dropdown, DatePicker, fmtDate } from './components';
+import { Dropdown, DatePicker, fmtDate, RowMenu } from './components';
 import { MOCK, listVouchers } from './api';
 
 /** Generic module list screen assembled entirely from the shared UI library. */
@@ -63,7 +63,6 @@ export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: 
   const [asc, setAsc] = useState(true);
   const [pageSize, setPageSize] = useState(10);
   const [sel, setSel] = useState<Set<string>>(new Set());
-  const [rowMenu, setRowMenu] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     let r = base.filter((x) =>
@@ -154,19 +153,17 @@ export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: 
                   <td style={{ color: 'var(--text-2)', fontSize: 12.5 }}>{r.date}</td>
                   <td><span className={`pill ${statusPill[r.status]}`}>{r.status}</span></td>
                   <td className="amt">{inr(r.amount)}</td>
-                  <td style={{ position: 'relative' }}>
+                  <td>
                     <div className="rowacts">
                       <span className="tip"><button className="ib"><PencilEdit01Icon size={16} color="currentColor" /></button><span className="tip-txt">Edit</span></span>
                       <span className="tip"><button className="ib"><Download01Icon size={16} color="currentColor" /></button><span className="tip-txt">Download</span></span>
                       <span className="tip"><button className="ib"><PrinterIcon size={16} color="currentColor" /></button><span className="tip-txt">Print</span></span>
-                      <button className="ib" onClick={() => setRowMenu((v) => (v === r.id ? null : r.id))}><MoreVerticalIcon size={16} color="currentColor" /></button>
+                      <RowMenu items={[
+                        { label: 'Duplicate', icon: <Copy01Icon size={15} color="currentColor" /> },
+                        { label: 'Export', icon: <Download01Icon size={15} color="currentColor" /> },
+                        { label: 'Delete', icon: <Delete02Icon size={15} color="currentColor" />, danger: true },
+                      ]} />
                     </div>
-                    {rowMenu === r.id && (
-                      <div className="dropdown-menu" style={{ right: 8, left: 'auto' }} onMouseLeave={() => setRowMenu(null)}>
-                        <button><Download01Icon size={15} color="currentColor" /> Export</button>
-                        <button style={{ color: 'var(--red-ink)' }}><Delete02Icon size={15} color="currentColor" /> Delete</button>
-                      </div>
-                    )}
                   </td>
                 </tr>
               ))}
