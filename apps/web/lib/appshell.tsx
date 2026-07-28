@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type ComponentType, type ReactNode } from 'react';
+import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { QuickPanel } from './quickpanel';
 import {
   DashboardCircleIcon,
@@ -109,43 +109,83 @@ export function AppShell({
   const roleName = role ? ROLES[role]?.name : 'Finance Controller';
   const [quick, setQuick] = useState(false);
 
+  // Which group holds the active route — used as the default-open group.
+  const activeGroup = NAV.find((g) => g.pages.some((p) => hrefFor(p) === pathname))?.group ?? NAV[0]!.group;
+  const [openGroup, setOpenGroup] = useState<string | null>(activeGroup);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Restore the persisted open-group + collapsed state after mount (survives reload).
+  useEffect(() => {
+    const g = localStorage.getItem('fx-open-group');
+    if (g !== null) setOpenGroup(g === '' ? null : g);
+    setCollapsed(localStorage.getItem('fx-rail-collapsed') === '1');
+  }, []);
+
+  const toggleGroup = (group: string) => {
+    setOpenGroup((cur) => {
+      const next = cur === group ? null : group; // accordion: one open at a time
+      localStorage.setItem('fx-open-group', next ?? '');
+      return next;
+    });
+  };
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem('fx-rail-collapsed', next ? '1' : '0');
+      return next;
+    });
+  };
+
+  const renderPages = (g: (typeof NAV)[number]) =>
+    g.pages.map((p, i) => {
+      const href = hrefFor(p);
+      const hashIdx = p.indexOf('#');
+      const tail = hashIdx >= 0 ? p.slice(hashIdx + 1) : '';
+      const label = p.replace(/#.*/, '').trim();
+      const active = pathname === href;
+      return (
+        <Link key={i} href={href} className={`page ${active ? 'active' : ''}`} onClick={closeNav}>
+          <span className="pdot" />
+          {label}
+          {tail && <span className="tail red">{tail}</span>}
+        </Link>
+      );
+    });
+
   return (
     <>
       <div className="scrim" onClick={closeNav} />
-      <div className="app">
+      <div className={`app ${collapsed ? 'rail-collapsed' : ''}`}>
         <aside className="rail">
           <div className="brand">
             <div className="logo-panel"><img src="/ravi-logo.gif" alt="RAVI Metal Treatment" style={{ width: '100%', maxWidth: 178, height: 'auto', display: 'block' }} /></div>
             <div className="brand-tag">Aji Deam Unit 3 · Rajkot · <b>Fintranact</b></div>
           </div>
           <nav className="nav">
-            {NAV.map((g, gi) => (
-              <details className="grp" key={gi} open={g.open}>
-                <summary>
-                  <GIcon group={g.group} />
-                  {g.group}
-                  {g.badge && <span className="count alert">{g.badge}</span>}
-                  <Chev />
-                </summary>
-                <div className="sub">
-                  {g.pages.map((p, i) => {
-                    const href = hrefFor(p);
-                    const hashIdx = p.indexOf('#');
-                    const tail = hashIdx >= 0 ? p.slice(hashIdx + 1) : '';
-                    const label = p.replace(/#.*/, '').trim();
-                    const active = pathname === href;
-                    return (
-                      <Link key={i} href={href} className={`page ${active ? 'active' : ''}`} onClick={closeNav}>
-                        <span className="pdot" />
-                        {label}
-                        {tail && <span className="tail red">{tail}</span>}
-                      </Link>
-                    );
-                  })}
+            {NAV.map((g, gi) => {
+              const isOpen = openGroup === g.group;
+              return (
+                <div className={`grp ${isOpen ? 'open' : ''}`} key={gi}>
+                  <button className="grp-head" onClick={() => toggleGroup(g.group)} aria-expanded={isOpen} title={g.group}>
+                    <GIcon group={g.group} />
+                    <span className="grp-name">{g.group}</span>
+                    {g.badge && <span className="count alert">{g.badge}</span>}
+                    <Chev />
+                  </button>
+                  <div className="sub">{renderPages(g)}</div>
+                  {/* Flyout shown on hover when the rail is collapsed */}
+                  <div className="flyout">
+                    <div className="fly-title">{g.group}{g.badge && <span className="count alert">{g.badge}</span>}</div>
+                    <div className="fly-pages">{renderPages(g)}</div>
+                  </div>
                 </div>
-              </details>
-            ))}
+              );
+            })}
           </nav>
+          <button className="collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-label="Toggle sidebar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path d={collapsed ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6'} /></svg>
+            <span className="cb-label">Collapse</span>
+          </button>
           <div className="rail-foot">
             <div className="avatar">RJ</div>
             <div className="who"><b>Rajesh J.</b><span>{roleName}</span></div>

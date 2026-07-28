@@ -309,3 +309,12 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Backend** (`modules/accounting/periods`): `isPeriodLocked` / `assertPeriodOpen`; **wired into `createVoucher`** (inside the txn) so any voucher whose date falls in a locked month is rejected (`Period YYYY-MM is locked`). Routes: `GET /periods`, `POST /periods/lock`, `POST /periods/unlock` — lock/unlock are **`voucher:approve`-gated and audited** (`period.lock` / `period.unlock`). Mounted; API typechecks. (Since every composer posts via `createVoucher`, all voucher types inherit the guard.)
 - **Web** (mock-aware `listPeriodLocks`/`lockPeriod`/`unlockPeriod`), page `/admin/periods` from the UI library — an info banner, a "Close a month" card (period Dropdown + reason + Lock) and a "Locked periods" table (period, note, locked-by, on, Unlock). Sidebar **Masters → Financial Year** routes to it.
 - `next build` passes (21 routes). Merged to main.
+
+### 2026-07-28 — Task 37: Sidebar UX — collapse, persistence, accordion, flyout
+- Reworked `lib/appshell.tsx` nav from native `<details>` to controlled React state:
+  - **Accordion** — only one group open at a time (`openGroup`); clicking a header opens it and closes the rest.
+  - **Persistence** — `openGroup` and collapsed state saved to `localStorage` (`fx-open-group`, `fx-rail-collapsed`) and restored on mount, so the open drawer survives a reload; defaults to the active route's group.
+  - **Collapse toggle** — a `.collapse-btn` shrinks the rail to a 76px icon-only strip (`.app.rail-collapsed`); state persists.
+  - **Collapsed = tooltips + flyout** — group headers carry `title` tooltips; hovering a collapsed group opens a **floating menu** (`.flyout`) with the group name, badge and all its page links (positioned to the right; nav `overflow` opened in collapsed mode so it isn't clipped).
+- Converted the CSS selectors (`details.grp > summary` → `.grp .grp-head`, `[open]` → `.grp.open`), added `.sub` show/hide, collapse-mode, flyout and tooltip styles to `globals.css`.
+- `next build` passes. Verified: accordion single-open, collapsed icon rail with alert dot, and the GST flyout listing its pages. Merged to main.
