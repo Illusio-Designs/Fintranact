@@ -389,6 +389,32 @@ export async function getPayrollRun(month: string): Promise<PayrollRun> {
   return (await res.json()).data;
 }
 
+export interface Form16Row { name: string; pan: string; grossAnnual: number; stdDeduction: number; ptDeduction: number; ded80C: number; taxableIncome: number; tax: number; tds: number }
+
+function form16(name: string, pan: string, basic: number): Form16Row {
+  const s = slip(name, '', basic);
+  const grossAnnual = r2(s.gross * 12), stdDeduction = 50000, ptDeduction = r2(s.pt * 12), ded80C = Math.min(r2(s.pf * 12), 150000);
+  const taxableIncome = Math.max(0, r2(grossAnnual - stdDeduction - ptDeduction - ded80C));
+  const tax = r2(annualTax(taxableIncome));
+  return { name, pan, grossAnnual, stdDeduction, ptDeduction, ded80C, taxableIncome, tax, tds: tax };
+}
+
+export async function getForm16(): Promise<Form16Row[]> {
+  if (MOCK) {
+    return [
+      form16('Rajesh Joshi', 'AJKPJ4021K', 60000),
+      form16('Priya Rao', 'BQRPR7788L', 32000),
+      form16('Suresh Patel', 'CDMPP1120M', 28000),
+      form16('Meena Iyer', 'DEFPI9034N', 25000),
+      form16('Kiran Desai', 'EFGPD2245P', 22000),
+      form16('Amit Shah', 'FGHPS6677Q', 18000),
+      form16('Ravi Chauhan', 'GHJPC3390R', 13000),
+    ];
+  }
+  const res = await fetch(`${API}/api/v1/payroll/form16`, { headers: authHeaders() });
+  return (await res.json()).data ?? [];
+}
+
 // ---- Period locks ----
 export interface PeriodLock { period: string; note: string | null; lockedAt: string; lockedBy: string | null }
 
