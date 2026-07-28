@@ -74,7 +74,7 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Payroll run + statutory** (`modules/payroll`): computes gross (basic+40% HRA+10% allowance), PF (12% of ≤₹15k), ESI (0.75% if gross ≤₹21k), Gujarat PT, TDS 192 (annual slabs /12) per employee → net + PF/ESI/PT/TDS deposit summary. Page `/payroll/run`.
 - [x] **Period locks** (`modules/accounting/periods`, migration `009_period_locks.sql`): lock/unlock a month; **`createVoucher` calls `assertPeriodOpen`** so posting into a locked month is rejected server-side; page `/admin/periods` (Masters→Financial Year). Unlock is `voucher:approve`-gated + audited.
 - [x] **Form 16** (`GET /api/v1/payroll/form16`): annual Part-B computation per employee (gross×12 − std 50k − PT − 80C(PF) → taxable → old-regime tax +4% cess = TDS 192); page `/payroll/form16` (employee list + Part-B detail + sample PDF served from `public/`).
-- [ ] Remaining: real ledger-create + master forms against live API; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); lien/forfeiture posting; documents module
+- [x] **Feature-complete (per PRD, mock-aware UI)**: TCS (collections + 27EQ), GST **e-Invoice** (IRN/QR) + **e-Way** bills, **Lien/Forfeiture** recovery, **Process/Rate masters** (add-form CRUD), **Documents** repository, **Ageing** (receivable/payable buckets), **Compliance Calendar**, **Audit Trail**. Remaining generic list screens use `ModuleScreen`; live-API wiring/period runtime is the follow-up.
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -334,3 +334,15 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Backend** (`modules/payroll`): `computeForm16` / `listForm16` + `GET /api/v1/payroll/form16` — annualises each payslip (gross×12), applies **std deduction ₹50k, PT u/s 16(iii), 80C = PF (cap ₹1.5L)** → taxable income → old-regime `annualTax` (+4% cess) = TDS u/s 192. `report:view`. API typechecks; verified (basic 60k → taxable ₹10,06,000, TDS ₹1,18,872).
 - **Web** (mock-aware `getForm16`), page `/payroll/form16` from the UI library — tiles (employees / total TDS / certificates), an **employee list** (name, PAN, gross, TDS, per-row PDF link) with a total row, and a **Part-B computation** panel for the selected employee (gross → deductions → taxable → tax → TDS). The **sample Form 16 PDF** is copied to `apps/web/public/Form16_sample.pdf` and linked from the header + each row. Added **Form 16** to the Payroll & HR sidebar group and routed it.
 - `next build` passes (22 routes). Merged to main. Payroll block now: run + statutory + Form 16.
+
+### 2026-07-28 — Task 41: Complete remaining PRD screens (feature-complete)
+- Built the remaining distinctive pages, all from the UI library, mock-aware, sidebar-routed:
+  - **TCS**: `/tcs/collections` (206C(1H) with deposit status) + `/tcs/returns` (27EQ buyer statement).
+  - **GST**: `/gst/e-invoice` (IRN/ack/QR status + generate) + `/gst/e-way` (consignments, distance, validity).
+  - **Job work**: `/jobwork/lien` (overdue vs material held, assessed vs expected sale, surplus/shortfall).
+  - **Masters**: `/masters/process` and `/masters/rate` (add-form + table, RowMenu actions).
+  - **Documents**: `/documents` (dropzone upload, category filter, voucher links) — Documents nav now points here (import stays at `/import`, linked).
+  - **Reports**: `/reports/ageing` (receivable/payable 0-30/31-60/61-90/90+ buckets with totals).
+  - **Overview**: `/compliance` (all statutory due dates ranked by urgency), `/admin/audit` (hash-chained audit log viewer).
+- **Smoke-tested all 30 routes → HTTP 200.** `next build` passes. Merged to main in 3 batches (TCS+eInv/eWay · lien+masters+docs · ageing+compliance+audit).
+- **Status:** every PRD module now has a working screen (bespoke where distinctive, generic `ModuleScreen` list for the rest). The app is navigable end-to-end in mock mode; the remaining backend work is live-API wiring + Phase-0 runtime (MySQL/argon2/migrate/seed) and the Windows device bridge.
