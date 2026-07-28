@@ -305,6 +305,23 @@
   .jbal.bad .jbal-status { color: var(--red-ink); }
   .btn[disabled] { opacity: .42; cursor: not-allowed; }
   .btn-primary[disabled]:hover { background: var(--red); }
+
+  /* ===== PIN SIGN MODAL ===== */
+  .pin-scrim { display: none; position: fixed; inset: 0; background: rgba(8,8,10,.55); z-index: 70; backdrop-filter: blur(2px); align-items: center; justify-content: center; }
+  body.pin-open .pin-scrim { display: flex; }
+  .pin-card { width: 344px; max-width: 92vw; background: var(--paper-2); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.45); padding: 24px; text-align: center; }
+  .pin-ic { width: 46px; height: 46px; border-radius: 12px; background: var(--red); color: #fff; display: grid; place-items: center; margin: 0 auto 12px; }
+  .pin-card h3 { margin: 0 0 4px; font-size: 17px; font-weight: 800; }
+  .pin-card p { margin: 0 0 16px; font-size: 12.5px; color: var(--text-2); }
+  .pin-input { width: 100%; text-align: center; letter-spacing: .5em; font-size: 22px; font-weight: 700; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--text); font-variant-numeric: tabular-nums; }
+  .pin-input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 0 3px var(--red-tint); }
+  .pin-err { display: none; color: var(--red-ink); font-size: 12px; font-weight: 600; margin-top: 9px; }
+  .pin-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .pin-actions .btn { flex: 1; justify-content: center; }
+  /* top selects (role / FY) */
+  .topsel { border: 1px solid var(--line); background: var(--paper-2); color: var(--text); border-radius: 999px; padding: 6px 10px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  @media (max-width: 1120px){ .topsel.fy { display: none; } }
+  @media (max-width: 860px){ .topsel.role { display: none; } }
   .toggle2 { display:inline-flex; background: var(--paper); border:1px solid var(--line); border-radius: 8px; padding: 2px; margin-bottom: 12px; }
   .toggle2 button { border:0; background:transparent; color:var(--text-2); font:inherit; font-size:12.5px; font-weight:700; padding:7px 16px; border-radius:6px; cursor:pointer; }
   .toggle2 button.on { background: var(--red); color:#fff; }
@@ -493,16 +510,17 @@
       <details class="grp">
         <summary>
           <svg class="g-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>
-          Job Work
+          Job Work &amp; Process
           <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
         </summary>
         <div class="sub">
-          <a class="page"><span class="pdot"></span>Outward Challans (Rule 45)</a>
           <a class="page"><span class="pdot"></span>Inward Challans</a>
-          <a class="page"><span class="pdot"></span>Reconciliation</a>
+          <a class="page"><span class="pdot"></span>Job Cards (Cash / Debit)</a>
+          <a class="page"><span class="pdot"></span>Outward Challans (Rule 45)</a>
+          <a class="page"><span class="pdot"></span>Pending — Inward / Outward<span class="tail red">10</span></a>
+          <a class="page"><span class="pdot"></span>Material Ageing</a>
           <a class="page"><span class="pdot"></span>ITC-04</a>
-          <a class="page"><span class="pdot"></span>Stock — RM / SFG / FG</a>
-          <a class="page"><span class="pdot"></span>Job Workers</a>
+          <a class="page"><span class="pdot"></span>Customers &amp; Job Workers</a>
         </div>
       </details>
 
@@ -520,6 +538,22 @@
           <a class="page"><span class="pdot"></span>Payslips</a>
           <a class="page"><span class="pdot"></span>Statutory — PF / ESI / PT</a>
           <a class="page"><span class="pdot"></span>Reimbursements</a>
+        </div>
+      </details>
+
+      <details class="grp">
+        <summary>
+          <svg class="g-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="1.4" fill="currentColor"/><circle cx="14" cy="12" r="1.4" fill="currentColor"/><circle cx="10" cy="17" r="1.4" fill="currentColor"/></svg>
+          Masters
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="sub">
+          <a class="page"><span class="pdot"></span>Process Master</a>
+          <a class="page"><span class="pdot"></span>Rate Master</a>
+          <a class="page"><span class="pdot"></span>Item / Material Master</a>
+          <a class="page"><span class="pdot"></span>Ledger Categories</a>
+          <a class="page"><span class="pdot"></span>Financial Year</a>
+          <a class="page"><span class="pdot"></span>Numbering Series</a>
         </div>
       </details>
 
@@ -568,6 +602,14 @@
       <button class="hamb" onclick="openNav()" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
       <div class="crumbs">Home / <b>Dashboard</b></div>
       <button class="switcher"><span class="dot"></span> RAVI Metal Treatment <span class="gstin">· 27AABCS1429P1Z8 · Pune</span> ▾</button>
+      <select class="topsel fy" id="fySel" title="Financial year"><option>FY 2026–27</option><option>FY 2025–26</option><option>FY 2024–25</option></select>
+      <select class="topsel role" id="roleSel" onchange="setRole(this.value)" title="Role-based dashboard">
+        <option value="controller">Finance Controller</option>
+        <option value="owner">Owner / Director</option>
+        <option value="accountant">Accountant</option>
+        <option value="supervisor">Process Supervisor</option>
+        <option value="payroll">Payroll / HR</option>
+      </select>
       <div class="spacer"></div>
       <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Search… <kbd>⌘K</kbd></div>
       <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
@@ -578,9 +620,9 @@
     <div class="content">
       <div class="page-head">
         <div>
-          <div class="eyebrow">FY 2026–27 · Q2 · as on 27 Jul 2026</div>
+          <div class="eyebrow" id="hEyebrow">FY 2026–27 · Q2 · Controller dashboard · as on 27 Jul 2026</div>
           <h1 class="display">Good evening, Rajesh</h1>
-          <p>3 approvals awaiting you · GSTR-3B for Jun due in 4 days · TDS challan pending deposit.</p>
+          <p id="hDesc">3 approvals awaiting you · GSTR-3B for Jun due in 4 days · TDS challan pending deposit.</p>
         </div>
         <div class="head-actions">
           <button class="btn btn-ghost"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg> Export</button>
@@ -590,27 +632,24 @@
 
       <section class="kpis">
         <div class="tile">
-          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg> Cash &amp; Bank</div>
-          <div class="value num">₹<span>84.62</span><small> L</small></div>
-          <div class="delta up">▲ 6.4% vs last month</div>
-          <svg class="spark" width="70" height="26" viewBox="0 0 70 26" fill="none"><polyline points="0,20 12,18 24,21 35,13 47,15 58,7 70,5" stroke="var(--good)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="label" id="k0L">Cash &amp; Bank</div>
+          <div class="value num" id="k0V">₹84.62<small> L</small></div>
+          <div class="delta up" id="k0D">▲ 6.4% vs last month</div>
         </div>
         <div class="tile">
-          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M12 3v18M17 6H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg> Receivables</div>
-          <div class="value num">₹<span>1.42</span><small> Cr</small></div>
-          <div class="delta down">₹38.1L overdue · 30+ days</div>
-          <svg class="spark" width="70" height="26" viewBox="0 0 70 26" fill="none"><polyline points="0,9 12,11 24,8 35,13 47,11 58,17 70,19" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="label" id="k1L">Receivables</div>
+          <div class="value num" id="k1V">₹1.42<small> Cr</small></div>
+          <div class="delta down" id="k1D">₹38.1L overdue · 30+ days</div>
         </div>
         <div class="tile">
-          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M20 7H4M20 7l-3-3M20 7l-3 3M4 17h16M4 17l3-3M4 17l3 3"/></svg> Payables</div>
-          <div class="value num">₹<span>67.90</span><small> L</small></div>
-          <div class="delta">12 bills · 5 due this week</div>
-          <svg class="spark" width="70" height="26" viewBox="0 0 70 26" fill="none"><polyline points="0,15 12,13 24,16 35,11 47,14 58,10 70,12" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="label" id="k2L">Payables</div>
+          <div class="value num" id="k2V">₹67.90<small> L</small></div>
+          <div class="delta" id="k2D">12 bills · 5 due this week</div>
         </div>
         <div class="tile accent">
-          <div class="label"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg> GST Liability · Jun</div>
-          <div class="value num">₹<span>9.18</span><small> L</small></div>
-          <div class="delta down">Net payable after ITC ₹6.4L</div>
+          <div class="label" id="k3L">GST Liability · Jun</div>
+          <div class="value num" id="k3V">₹9.18<small> L</small></div>
+          <div class="delta down" id="k3D">Net payable after ITC ₹6.4L</div>
         </div>
       </section>
 
@@ -737,8 +776,14 @@
       </optgroup>
       <optgroup label="Operations">
         <option value="bank">Bank — multi-line entry</option>
-        <option value="job">Job Work Challan</option>
+        <option value="job">Job Work — Inward / Outward</option>
+        <option value="jobcard">Job Card (Cash / Debit)</option>
         <option value="payroll">Payroll Run</option>
+      </optgroup>
+      <optgroup label="Masters">
+        <option value="ledger">Ledger (party) master</option>
+        <option value="process">Process master</option>
+        <option value="rate">Rate master</option>
       </optgroup>
     </select>
     <div class="vt-meta"><span class="vt-badge" id="vtSeries">PMT/26-27</span> <span id="vtDesc">Money going out through bank or cash.</span></div>
@@ -1033,9 +1078,117 @@
         <div class="kv"><span class="k">PF (employee 12%)</span><span class="v">—</span></div>
         <div class="kv"><span class="k">ESI + Professional Tax</span><span class="v">—</span></div>
         <div class="kv"><span class="k">TDS on salary (192)</span><span class="v">—</span></div>
-        <div class="kv"><span class="k" style="font-weight:700;color:var(--text)">Net payable (bank)</span><span class="v" style="font-size:15px">₹41,79,800</span></div>
+        <div class="kv"><span class="k" style="font-weight:700;color:var(--text)">Net payable (bank)</span><span class="v" style="font-size:15px">—</span></div>
       </div>
-      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Approve to post the salary journal to GL and stage <b>PF ECR · ESI · PT · 24Q</b>. Disbursement is maker-checker gated.</div>
+      <div class="fld" style="margin-top:12px"><label>Attendance source</label>
+        <select class="ctl"><option>Biometric machine — ESSL X990 (Plant gate)</option><option>Biometric machine — ZKTeco (Office)</option><option>Manual / import</option></select>
+        <div class="hint">Live punches synced from device · <b>142/142 mapped</b> · last sync 6:10 pm. <span class="badge-auto">biometric</span></div>
+      </div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Runs off biometric attendance → LOP/overtime. Approve to post the salary journal to GL and stage <b>PF ECR · ESI · PT · 24Q</b>. Disbursement is signed &amp; maker-checker gated.</div>
+    </div>
+
+    <!-- ===== JOB CARD (Cash / Debit memo) ===== -->
+    <div class="qp-pane" id="qp-jobcard">
+      <div class="grid2">
+        <div class="fld"><label>Job card no.</label><input class="ctl" value="JC/26-27/0512"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Memo type</label>
+        <div class="toggle2" id="jcMemo">
+          <button type="button" class="on" data-memo="debit" onclick="setMemo('debit')">Debit (bill to ledger)</button>
+          <button type="button" data-memo="cash" onclick="setMemo('cash')">Cash (collect on delivery)</button>
+        </div>
+      </div>
+      <div class="fld"><label>Customer</label>
+        <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Mahalaxmi Traders — 27AACFM…9K1</option><option>Shree Balaji Enterprises — 27AAB…2Z1</option><option>Tata Motors Ltd — 27AAA…9M4</option></select>
+      </div>
+      <div class="fld"><label>Against inward challan</label>
+        <select class="ctl" id="jcInward" onchange="calcJobCard()">
+          <option value="" disabled selected>— Select —</option>
+          <option value="1000|400">JW-IN/0044 · Gears · recd 1,000 · pending 400 kg</option>
+          <option value="500|500">JW-IN/0051 · Shafts · recd 500 · pending 500 kg</option>
+          <option value="250|60">JW-IN/0039 · Pins · recd 250 · pending 60 kg</option>
+        </select>
+        <div class="hint">Outward is limited to the <b>pending quantity</b> of the selected inward. <span class="badge-auto">pending <b id="jcPending">0</b> kg</span></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Process</label>
+          <select class="ctl" id="jcProc" onchange="calcJobCard()"><option value="" disabled selected>— Select —</option><option data-rate="18">Carburising</option><option data-rate="22">Hardening &amp; Tempering</option><option data-rate="14">Annealing</option><option data-rate="28">Nitriding</option><option data-rate="20">Induction Hardening</option></select>
+        </div>
+        <div class="fld"><label>Return / dispatch qty (kg)</label><input class="ctl" id="jcQty" inputmode="decimal" oninput="calcJobCard()" placeholder="0"></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Rate ₹/kg (Rate Master)</label><input class="ctl" id="jcRate" inputmode="decimal" oninput="calcJobCard()" placeholder="auto"></div>
+        <div class="fld"><label>GST rate</label><select class="ctl" id="jcGst" onchange="calcJobCard()"><option value="18" selected>18% (SAC 9988)</option><option value="12">12%</option><option value="5">5%</option></select></div>
+      </div>
+      <div class="calc-box" id="jcBox"></div>
+      <div class="qp-note" id="jcNote"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> <span id="jcNoteTxt">Debit memo → charge posts to the customer ledger (receivable) with GST + TDS 194C where deducted.</span></div>
+    </div>
+
+    <!-- ===== LEDGER MASTER (categories · multi-address · blacklist) ===== -->
+    <div class="qp-pane" id="qp-ledger">
+      <div class="fld"><label>Ledger name</label><input class="ctl big" placeholder="Party / ledger name"></div>
+      <div class="grid2">
+        <div class="fld"><label>Category</label>
+          <select class="ctl"><option value="" disabled selected>— Select —</option><option>Customer</option><option>Supplier</option><option>Job-Worker</option><option>Transporter</option><option>Expense</option><option>Bank</option><option>Cash</option><option>Statutory</option></select>
+        </div>
+        <div class="fld"><label>Under group</label>
+          <select class="ctl"><option value="" disabled selected>— Select —</option><option>Sundry Debtors</option><option>Sundry Creditors</option><option>Direct Expenses</option><option>Bank Accounts</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>GSTIN</label><input class="ctl" placeholder="27AABCS…1Z8"></div>
+        <div class="fld"><label>PAN</label><input class="ctl" placeholder="AABCS1429P"></div>
+      </div>
+      <div class="sec-label" style="display:flex;align-items:center">Addresses <button type="button" class="mini go" style="margin-left:auto;padding:3px 9px" onclick="addAddress()">+ Add address</button></div>
+      <div id="addrList"></div>
+      <div class="fld" style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px">
+        <label style="margin:0;flex:1;text-transform:none;letter-spacing:0;font-size:13px;color:var(--text)"><b style="font-weight:700">Blacklist this party</b><br><span style="color:var(--text-3);font-size:12px">Blocks / warns on new transactions · approval-gated to remove</span></label>
+        <div class="toggle2" id="blToggle">
+          <button type="button" data-bl="off" class="on" onclick="setBlacklist('off')">Active</button>
+          <button type="button" data-bl="on" onclick="setBlacklist('on')">Blacklisted</button>
+        </div>
+      </div>
+      <div class="fld" id="blReasonFld" style="display:none"><label>Blacklist reason</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Payment defaulter</option><option>Disputed dues</option><option>Credit hold</option><option>Statutory block</option></select></div>
+    </div>
+
+    <!-- ===== PROCESS MASTER ===== -->
+    <div class="qp-pane" id="qp-process">
+      <div class="grid2">
+        <div class="fld"><label>Process code</label><input class="ctl" placeholder="e.g. CARB"></div>
+        <div class="fld"><label>Process name</label><input class="ctl" placeholder="e.g. Carburising"></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>SAC</label><input class="ctl" value="9988"></div>
+        <div class="fld"><label>Charge basis (UoM)</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Per kg</option><option>Per piece</option><option>Per lot</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Standard turnaround</label><input class="ctl" placeholder="e.g. 3 days"></div>
+        <div class="fld"><label>Status</label><select class="ctl"><option>Active</option><option>Inactive</option></select></div>
+      </div>
+      <div class="fld"><label>Description / notes</label><input class="ctl" placeholder="Furnace / cycle notes"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Processes drive inward, job cards, and Rate Master lookup. This is a job-work / heat-treatment house — no manufacturing BOM.</div>
+    </div>
+
+    <!-- ===== RATE MASTER ===== -->
+    <div class="qp-pane" id="qp-rate">
+      <div class="fld"><label>Process</label>
+        <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Carburising</option><option>Hardening &amp; Tempering</option><option>Annealing</option><option>Nitriding</option><option>Induction Hardening</option></select>
+      </div>
+      <div class="fld"><label>Customer (blank = standard rate)</label>
+        <select class="ctl"><option value="" selected>All customers — standard rate</option><option>Mahalaxmi Traders</option><option>Shree Balaji Enterprises</option><option>Tata Motors Ltd</option></select>
+        <div class="hint">A customer-specific <b>contract rate</b> overrides the standard rate on job cards. <span class="badge-auto">auto</span></div>
+      </div>
+      <div class="grid3">
+        <div class="fld"><label>Rate ₹</label><input class="ctl" placeholder="0.00"></div>
+        <div class="fld"><label>Per (UoM)</label><select class="ctl"><option>kg</option><option>piece</option><option>lot</option></select></div>
+        <div class="fld"><label>GST rate</label><select class="ctl"><option value="18" selected>18%</option><option value="12">12%</option><option value="5">5%</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Min charge ₹</label><input class="ctl" placeholder="optional"></div>
+        <div class="fld"><label>Effective from</label><input class="ctl" value="01 Apr 2026"></div>
+      </div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Effective-dated. Job cards auto-pick the applicable rate; a rate override on a job is approval-gated.</div>
     </div>
   </div>
 
@@ -1048,6 +1201,21 @@
     <button class="btn btn-primary" id="qpPost" onclick="postQuick()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12l4 4L19 6"/></svg> <span id="qpPostLabel">Post</span></button>
   </div>
 </aside>
+
+<!-- ===== PIN SIGN MODAL ===== -->
+<div class="pin-scrim" id="pinScrim">
+  <div class="pin-card">
+    <div class="pin-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+    <h3>Sign to post</h3>
+    <p>Enter your secret signing PIN to authorise this action as <b>Rajesh J.</b> (Finance Controller).</p>
+    <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••" onkeydown="if(event.key==='Enter')confirmPin()">
+    <div class="pin-err" id="pinErr">Incorrect PIN — enter at least 4 digits.</div>
+    <div class="pin-actions">
+      <button class="btn btn-ghost" onclick="closePin()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPin()">Sign &amp; post</button>
+    </div>
+  </div>
+</div>
 
 <script>
   function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); }
@@ -1075,7 +1243,11 @@
     debitnote:  { s:'DN/26-27',  d:'Reduce a purchase bill (return).',             post:'Post debit note' },
     bank:       { s:'BNK/26-27', d:'One bank, many contra lines.',                 post:'Post lines' },
     job:        { s:'JW/26-27',  d:'Rule 45 job-work challan movement.',           post:'Save challan' },
-    payroll:    { s:'PAY/26-27', d:'Monthly salary run posted to GL.',             post:'Send for approval' }
+    jobcard:    { s:'JC/26-27',  d:'Process job card — Cash or Debit memo.',        post:'Sign & save job card' },
+    payroll:    { s:'PAY/26-27', d:'Monthly salary run posted to GL.',             post:'Send for approval' },
+    ledger:     { s:'LEDGER',    d:'Party ledger — category, addresses, blacklist.', post:'Save ledger' },
+    process:    { s:'PROCESS',   d:'Heat-treatment / job-work process.',           post:'Save process' },
+    rate:       { s:'RATE',      d:'Process charge rate (contract / standard).',    post:'Save rate' }
   };
   var bankLines = [];
 
@@ -1164,10 +1336,19 @@
   function postQuick(){
     var btn = document.getElementById('qpPost');
     if (btn.disabled) return;
-    var old = document.getElementById('qpPostLabel').textContent;
-    document.getElementById('qpPostLabel').textContent = 'Posted ✓';
-    btn.style.background = 'var(--good)';
-    setTimeout(function(){ document.getElementById('qpPostLabel').textContent = old; btn.style.background = ''; updatePostState(); }, 1400);
+    // masters just save; financial vouchers require the user's signing PIN
+    if (['ledger', 'process', 'rate'].indexOf(curTab) >= 0){ doPost(); } else { openPin(); }
+  }
+  function openPin(){ document.body.classList.add('pin-open'); var f = qi('pinInput'); if (f){ f.value = ''; setTimeout(function(){ f.focus(); }, 60); } qi('pinErr').style.display = 'none'; }
+  function closePin(){ document.body.classList.remove('pin-open'); }
+  function confirmPin(){
+    var v = (qi('pinInput').value || '').replace(/\D/g, '');
+    if (v.length >= 4){ closePin(); doPost(); } else { qi('pinErr').style.display = 'block'; qi('pinInput').focus(); }
+  }
+  function doPost(){
+    var btn = qi('qpPost'), old = qi('qpPostLabel').textContent;
+    qi('qpPostLabel').textContent = 'Posted ✓'; btn.style.background = 'var(--good)';
+    setTimeout(function(){ qi('qpPostLabel').textContent = old; btn.style.background = ''; updatePostState(); }, 1500);
   }
 
   /* ---- live computation + post validation ---- */
@@ -1208,12 +1389,62 @@
       : (diff > 0 ? 'Credit short by ' + inr2(diff) : 'Debit short by ' + inr2(-diff)));
     updatePostState();
   }
+  /* Job Card — memo type, pending-qty guard, rate-master auto-fill */
+  var jcMemo = 'debit', jcLastAuto = '';
+  function setMemo(m){
+    jcMemo = m;
+    qi('jcMemo').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.memo === m); });
+    qi('jcNoteTxt').textContent = m === 'cash'
+      ? 'Cash memo → charge collected on delivery; a receipt is raised. No receivable is created.'
+      : 'Debit memo → charge posts to the customer ledger (receivable) with GST + TDS 194C where deducted.';
+  }
+  function calcJobCard(){
+    var inw = qi('jcInward').value, pending = inw ? parseFloat(inw.split('|')[1]) : 0;
+    qi('jcPending').textContent = pending.toLocaleString('en-IN');
+    var opt = qi('jcProc').options[qi('jcProc').selectedIndex];
+    var autoRate = (opt && opt.dataset && opt.dataset.rate) ? opt.dataset.rate : '';
+    var rateEl = qi('jcRate');
+    if (autoRate && (rateEl.value === '' || rateEl.value === jcLastAuto)){ rateEl.value = autoRate; jcLastAuto = autoRate; }
+    var qty = pnum(qi('jcQty').value), rate = pnum(rateEl.value), gst = pnum(qi('jcGst').value);
+    var charge = qty * rate, tax = charge * gst / 100, over = pending > 0 && qty > pending;
+    var html = kvRow('Process charge (' + (qty || 0) + ' × ₹' + (rate || 0) + ')', charge)
+             + kvRow('GST @ ' + gst + '%', tax) + kvRow('Job card total', charge + tax, true);
+    if (over) html += '<div class="jbal-status" style="color:var(--red-ink);margin-top:8px">⚠ Dispatch ' + qty + ' exceeds pending ' + pending + ' kg — reduce quantity.</div>';
+    qi('jcBox').innerHTML = html;
+    updatePostState();
+  }
+
+  /* Ledger master — multi-address + blacklist */
+  var addresses = [];
+  function initAddresses(){ if (!addresses.length) addresses = [{ type: 'Registered / Billing' }]; renderAddresses(); }
+  function addAddress(){ addresses.push({ type: 'Shipping / Delivery' }); renderAddresses(); }
+  function delAddress(i){ addresses.splice(i, 1); renderAddresses(); }
+  function renderAddresses(){
+    qi('addrList').innerHTML = addresses.map(function(a, i){
+      function optt(t){ return '<option' + (a.type === t ? ' selected' : '') + '>' + t + '</option>'; }
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:9px">'
+        + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">'
+        + '<select class="ctl" style="flex:1">' + optt('Registered / Billing') + optt('Shipping / Delivery') + optt('Works / Plant') + '</select>'
+        + (addresses.length > 1 ? '<button class="l-del" onclick="delAddress(' + i + ')" title="Remove">&times;</button>' : '')
+        + '</div>'
+        + '<input class="ctl" placeholder="Address line, city, PIN" style="margin-bottom:8px">'
+        + '<div class="grid2"><input class="ctl" placeholder="GSTIN (state-wise)"><select class="ctl"><option value="" disabled selected>State (place of supply)</option><option>Maharashtra</option><option>Gujarat</option><option>Karnataka</option></select></div>'
+        + '</div>';
+    }).join('');
+  }
+  function setBlacklist(v){
+    qi('blToggle').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.bl === v); });
+    qi('blReasonFld').style.display = v === 'on' ? 'block' : 'none';
+  }
+
   function recalcFor(type){
     if (type === 'sales') calcSales();
     else if (type === 'purchase') calcPurchase();
     else if (type === 'creditnote') calcNote('cn');
     else if (type === 'debitnote') calcNote('dn');
     else if (type === 'journal') calcJournal();
+    else if (type === 'jobcard') calcJobCard();
+    else if (type === 'ledger') initAddresses();
   }
   function updatePostState(){
     var btn = qi('qpPost'); if (!btn) return; var ok = true;
@@ -1223,6 +1454,7 @@
     else if (curTab === 'purchase'){ ok = pnum(qi('pQty').value) > 0 && pnum(qi('pRate').value) > 0 && pnum(qi('pGst').value) > 0 && !!qi('pPos').value; }
     else if (curTab === 'creditnote'){ ok = pnum(qi('cnTax').value) > 0 && pnum(qi('cnGst').value) > 0; }
     else if (curTab === 'debitnote'){ ok = pnum(qi('dnTax').value) > 0 && pnum(qi('dnGst').value) > 0; }
+    else if (curTab === 'jobcard'){ var inw = qi('jcInward').value, pend = inw ? parseFloat(inw.split('|')[1]) : 0, q = pnum(qi('jcQty').value); ok = !!inw && q > 0 && pnum(qi('jcRate').value) > 0 && q <= pend; }
     btn.disabled = !ok;
   }
 
@@ -1284,8 +1516,33 @@
   function ntMarkAll(){ notifs.forEach(function(n){ n.read = true; }); renderNotifs(); }
   ntCounts(); // set initial bell badge on load
 
+  /* ===== Role-based dashboard ===== */
+  var ROLES = {
+    controller: { name:'Finance Controller', desc:'3 approvals awaiting you · GSTR-3B for Jun due in 4 days · TDS challan pending deposit.',
+      k:[['Cash & Bank','₹84.62<small> L</small>','▲ 6.4% vs last month','up'],['Receivables','₹1.42<small> Cr</small>','₹38.1L overdue · 30+ days','down'],['Payables','₹67.90<small> L</small>','12 bills · 5 due this week',''],['GST Liability · Jun','₹9.18<small> L</small>','Net payable after ITC ₹6.4L','down']] },
+    owner: { name:'Owner / Director', desc:'Job-work revenue up 6% this month · top customer Tata Motors · 2 compliance items due.',
+      k:[['Job-work revenue · Jul','₹38.6<small> L</small>','▲ 6.1% vs Jun','up'],['Receivables','₹1.42<small> Cr</small>','collection 22 days',''],['Cash & Bank','₹84.62<small> L</small>','healthy runway','up'],['Jobs completed · Jul','1,284','across 5 processes','']] },
+    accountant: { name:'Accountant', desc:'12 vouchers pending · bank reco 2 unmatched · GSTR-2B mismatch on 7 invoices.',
+      k:[['Vouchers today','48','entered by you',''],['Pending approval','5','awaiting controller',''],['Bank unmatched','2','needs reconciling','down'],['2B mismatches','7','ITC ₹1.12L at risk','down']] },
+    supervisor: { name:'Process Supervisor', desc:'6 pending inward · 4 pending outward · 3 jobs overdue for return.',
+      k:[['Pending inward','6','jobs to start',''],['Pending outward','4','ready to dispatch',''],['Under process','11','on the floor',''],['Overdue return','3','1-yr rule','down']] },
+    payroll: { name:'Payroll / HR', desc:'142 mapped on biometric · 138 present today · 4 leave requests · payroll not run.',
+      k:[['Headcount','142','active',''],['Present today','138','biometric','up'],['Leave requests','4','to approve',''],['Payroll · Jul','Not run','due 31 Jul','down']] }
+  };
+  function setRole(r){
+    var c = ROLES[r] || ROLES.controller;
+    qi('hEyebrow').textContent = 'FY 2026–27 · Q2 · ' + c.name + ' dashboard · as on 27 Jul 2026';
+    qi('hDesc').textContent = c.desc;
+    for (var i = 0; i < 4; i++){
+      qi('k' + i + 'L').innerHTML = c.k[i][0];
+      qi('k' + i + 'V').innerHTML = c.k[i][1];
+      var d = qi('k' + i + 'D'); d.innerHTML = c.k[i][2]; d.className = 'delta ' + (c.k[i][3] || '');
+    }
+    var foot = document.querySelector('.rail-foot .who span'); if (foot) foot.textContent = c.name;
+  }
+
   addEventListener('keydown', function(e){
-    if (e.key === 'Escape'){ closeNav(); closeQuick(); closeNotif(); }
+    if (e.key === 'Escape'){ closeNav(); closeQuick(); closeNotif(); closePin(); }
     // Ctrl/Cmd+Enter adds a bank line quickly when panel open on bank tab
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.body.classList.contains('qp-open') && curTab === 'bank'){
       e.preventDefault(); addBankLine();

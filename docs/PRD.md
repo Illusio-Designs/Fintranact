@@ -39,7 +39,9 @@
 
 ### 1.1 Summary
 
-**Fintranact** is a secure, multi-tenant, role-based accounting and payroll platform purpose-built for Indian businesses. It unifies double-entry financial accounting, statutory compliance (GST, TDS, TCS), manufacturing job-work tracking, and end-to-end payroll into a single system of record. It is engineered as a production-grade SaaS/ERP product with an enterprise security posture, high-throughput data entry, approval-based financial controls, and a modern, responsive UI.
+**Fintranact** is a secure, multi-tenant, role-based accounting and payroll platform purpose-built for Indian businesses. It unifies double-entry financial accounting, statutory compliance (GST, TDS, TCS), **job-work / process tracking**, and end-to-end payroll into a single system of record. It is engineered as a production-grade SaaS/ERP product with an enterprise security posture, high-throughput data entry, approval-based financial controls, and a modern, responsive UI.
+
+> **Reference deployment — RAVI Metal Treatment.** The first target customer is a **job-work / heat-treatment processing house**: it receives customers' material, applies a metallurgical **process** (carburising, hardening, annealing, nitriding, coating, …) and returns it, billing **process charges** — it **does not manufacture or sell its own goods**. Accordingly the product's operational core is **inward → process → outward** job-work (with outward driven by the **pending quantity** of inward), Process & Rate masters, and job-card cash/debit memos — not a manufacturing BOM/finished-goods model.
 
 The platform is designed for the realities of Indian operations: multi-company groups, multi-branch (multi-GSTIN) entities, place-of-supply-driven CGST/SGST/IGST computation, reverse charge, e-invoicing (IRN/QR), e-way bills, TDS/TCS sections and challans, PF/ESI/PT statutory payroll, and the audit rigor expected by chartered accountants and statutory auditors.
 
@@ -147,12 +149,16 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 - Roles: Admin (create/edit), Accountant (edit non-structural), Operator (read/select).
 
 ### 5.2 Ledger Management
-- Party ledgers (customers/vendors) with GSTIN, PAN, MSME/Udyam, TDS section defaults, credit limits.
+- Party ledgers (customers/vendors/job-workers) with GSTIN, PAN, MSME/Udyam, TDS section defaults, credit limits.
+- **Ledger categories:** every ledger is tagged to a configurable category (e.g., Customer, Supplier, Job-Worker, Transporter, Expense, Bank, Cash, Statutory, Employee-related) driving default behaviour, reports, and filtered pickers during voucher entry. Categories are a master (§5.17) — add/rename/deactivate with audit.
+- **Multi-address management:** a single ledger can hold **multiple addresses** — Registered/Billing, one or more Shipping/Delivery, and Works/Plant addresses — each with its own GSTIN, state (place-of-supply), contact person, phone, and email. One address per type is marked default; on a voucher/challan the user picks which billing and which delivery address applies (dropdown), and the correct GSTIN + place of supply flow into the GST computation.
+- **Blacklist option:** a ledger can be **blacklisted/flagged** (e.g., defaulter, disputed, credit-hold, statutory-blocked) with reason, effective date, and the user who set it. Blacklisted parties are visibly marked and, per policy, **blocked from new transactions** (hard block) or **warned + approval-gated** (soft block); removing a blacklist is approval-gated and audited.
 - Ledger statements with running balance, drill-down to vouchers.
 - Opening balances and carry-forward across financial years (Apr–Mar).
 - Bill-wise / reference-wise tracking (outstanding, ageing).
 - Bank & cash ledgers with reconciliation status.
 - Multi-currency capture at ledger level (INR base; forex optional/Phase 2).
+- Roles: Accountant/Admin (create/edit), Controller (approve blacklist add/remove), Operator (select).
 
 ### 5.3 Vouchers
 - Voucher types: **Payment, Receipt, Contra, Journal, Sales, Purchase, Debit Note, Credit Note**, plus configurable custom types.
@@ -216,22 +222,28 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 - Interplay guard: avoid double application of TDS 194Q and TCS 206C(1H) on the same transaction per rules (configurable precedence).
 - Roles: Accountant (collect/prepare), Compliance Officer (verify), Controller (approve).
 
-### 5.10 Job Work Management
-- **Outward job work:** issue material to job worker under delivery challan (Rule 45 / job-work challan) with quantities, description, and expected return date.
-- **Inward job work:** receive processed goods; capture consumption, wastage/scrap, and returned quantity.
-- Reconciliation of material sent vs received; ageing of pending job-work stock (statutory 1-year/3-year return norms for inputs/capital goods).
-- Job-worker ledger and charges billing (with GST on job-work charges and TDS 194C where applicable).
-- ITC-04 supporting data (goods sent to and received from job worker).
-- Roles: Store Supervisor (issue/receive), Accountant (charges/GST), Controller (approve write-offs).
+### 5.10 Job Work Management (core business — processing house)
 
-### 5.11 Inventory / Stock States (RM, SFG, FG)
-- Item master with stock groups, UoM, HSN, valuation method (FIFO/Weighted Avg — configurable).
-- Stock states: **Raw Material (RM) → Semi-Finished Goods (SFG) → Finished Goods (FG)**; movement tracking across states and locations/branches.
-- Stock ledgers, valuation reports, and reorder levels.
-- Integration with job work (material in job-worker custody as a distinct stock location).
-- Roles: Store Supervisor (movements), Accountant (valuation), Controller (adjustments approval).
+> **Business context.** RAVI Metal Treatment is a **job-work / heat-treatment processing house** — it receives customers' material, applies a **process** (carburising, hardening & tempering, annealing, nitriding, surface coating, etc.), and returns the processed material, billing **job-work/process charges**. The company **does not manufacture or sell its own finished goods**, so the model is inward → process → outward against the customer, plus the mirror flow when work is sub-let to another job-worker.
 
-*(Inventory in MVP is lightweight — quantity + valuation to support job work and invoicing; full warehouse management is Phase 2.)*
+- **Inward (customer → us):** receive customer material under a job-work/delivery challan — customer, material, quantity, UoM, incoming challan ref, and the **process** to be applied (from **Process Master**, §5.17).
+- **Outward (us → customer):** dispatch processed material back. **Outward works on the pending quantity of the corresponding inward** — the system tracks, per inward challan/line, `received − already returned = pending`, and an outward challan can only dispatch **up to the pending quantity** (partial dispatches allowed across multiple outward challans until pending = 0). Wastage/scrap/burning-loss is captured so `returned + wastage + pending` reconciles to the received quantity. The same pending-quantity logic governs material we **sub-let** to another job-worker (our outward → their inward, their return reduces our pending).
+- **Job Card / Job Memo:** each job is tracked on a **Job Card** carrying process, material, in/out quantities, rate, and a **memo type — Cash or Debit (credit/account)**:
+  - **Cash memo** → charges collected immediately (counter/cash-processing job), receipt raised on delivery.
+  - **Debit memo** → charges billed to the customer's ledger (on account), added to receivables and settled later.
+- **Rate & charge computation:** process charges are picked from **Rate Master** (§5.17) — rate per kg / per piece / per lot by process + customer (contract rate) — and auto-computed on the job card (qty × rate), with GST on job-work charges (SAC 9988) and **TDS 194C** handled where the customer deducts.
+- **Pending / ageing views:** live "pending inward" and "pending outward" registers, plus statutory ageing (1-year/3-year job-work return norms) and alerts on overdue material.
+- **ITC-04** supporting data for goods received-for-processing and returned; e-way bill on movement where applicable.
+- Roles: Store/Process Supervisor (inward/outward, job card), Accountant (charges/GST/TDS), Controller (approve write-offs/wastage & rate overrides).
+
+### 5.11 Inventory & Material Master (job-work model)
+- **Item / Material Master** (§5.17): items are primarily **customer material received for processing** (identified by customer + grade/description + UoM + HSN) and **own consumables** (furnace LPG/gas, quenching oil, salts, packing) — **not** own finished goods, since the company does not manufacture.
+- **Stock by custody/location:** material tracked as **In customer custody / Received (in-plant, awaiting or under process) / Dispatched-back**, and, when sub-let, **In job-worker custody** — rather than a manufacturing RM→SFG→FG ladder.
+- Consumables inventory with UoM, reorder level, valuation (Weighted Avg default), and issue-to-process consumption.
+- Stock/movement ledgers and material-position reports feed the job-work pending/ageing views.
+- Roles: Store Supervisor (movements), Accountant (consumable valuation), Controller (adjustment approval).
+
+*(Inventory in MVP is lightweight — quantity + custody position + consumable valuation to support job work; there is deliberately no manufacturing/BOM/FG module because it is out of this business's scope.)*
 
 ### 5.12 Payroll Processing
 - Employee master (PAN, Aadhaar (masked/encrypted), UAN, ESIC IP number, bank details, DoJ, designation, branch).
@@ -245,31 +257,52 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 - Roles: Payroll Manager (run), Controller/Compliance (approve & disburse), Employee (self-service).
 
 ### 5.13 Attendance, Leave, Salary Structure, Deductions, Reimbursements, Payslips, Statutory
-- **Attendance:** manual/import/biometric-import; present/absent/half-day/overtime; LOP (loss of pay) computation.
-- **Leave:** leave types (CL/SL/EL/comp-off), balances, accrual policies, apply/approve workflow, encashment.
+- **Biometric attendance integration:** direct connection to **biometric attendance machines** (fingerprint/face/RFID — e.g., ESSL/eSSL, ZKTeco, Matrix and similar). Employees are mapped by **biometric/enrollment ID → employee**; punch logs are ingested (device pull via SDK/API, `.dat`/CSV import, or a push endpoint), de-duplicated, and converted into first-in/last-out, shift, overtime, and LOP. Multi-device and multi-branch supported; unmapped punches are queued for review. Manual override with reason (audited) for missed/erroneous punches.
+- **Attendance:** biometric-first, with manual/import fallback; present/absent/half-day/overtime; LOP (loss of pay) computation from punches and shift rules.
+- **Leave:** leave types (CL/SL/EL/comp-off), balances, accrual policies, apply/approve workflow, encashment; leave reconciled against biometric punches.
 - **Statutory payroll flows:** PF/ESI/PT registration numbers per entity, monthly generation of ECR/challans, TDS on salary quarterly (24Q), annual Form 16.
 - Configurable pay calendar, cut-off dates, and lock after disbursement.
+- Roles: Payroll Manager (map devices, run), HR (attendance review), Controller (approve).
 
 ### 5.14 Reports and Dashboards
 - **Financial:** Trial Balance, Profit & Loss, Balance Sheet, Cash Flow, Day Book, Ledger statements, Ageing (receivable/payable).
 - **GST:** GSTR-1/3B working, 2B reco, HSN summary, tax liability & ITC.
 - **TDS/TCS:** deduction registers, challan status, return-ready summaries, 26AS reco.
 - **Payroll:** salary register, statutory summaries, cost-to-company reports, headcount.
-- **Dashboards:** role-based (Controller cash/AR/AP & compliance calendar; Owner P&L & sales; Payroll headcount & payout).
+- **Role-based dashboard design:** each role sees a **different dashboard**, composed of the widgets relevant to that role, respecting branch/company scope:
+  - **Owner/Director** — revenue (job-work charges), receivables, cash position, top customers, compliance status.
+  - **Finance Controller** — cash/bank, AR/AP ageing, approvals queue, compliance calendar, GST/TDS liability.
+  - **Accountant** — day book, pending vouchers, GST/TDS working, bank reconciliation.
+  - **Process/Store Supervisor** — pending inward, pending outward, jobs under process, material ageing, today's job cards.
+  - **Payroll/HR Manager** — headcount, today's biometric attendance, leave requests, payroll run status.
+  - **Compliance Officer** — due-date calendar, return status, challan deposits, 2B mismatches.
+  - Dashboards are **configurable** (widget catalog, drag-arrange, saved per role/user); the layout is driven by the user's role and permissions, and no widget renders data the user isn't authorized to see.
 - Export to PDF/Excel/CSV; scheduled report email (Phase 2).
 - Roles: all (scoped by permission & branch).
 
-### 5.15 User Management
+### 5.15 User Management & User-wise Digital Signing
 - Invite/onboard users; assign roles and branch/company scope.
 - User status (active/suspended), password policy, MFA enrollment.
 - Delegation (temporary approver), session revocation.
-- Roles: Tenant Admin (manage), Controller (view).
+- **User-wise sign option with a secret PIN:** each user can be enabled to **digitally sign** actions (approving/posting a voucher, authorizing a payment or payroll run, signing off a job card, locking a period). Signing requires the user's own **secret signing PIN** — a step-up secret **separate from the login password**, set and changed only by that user, stored **hashed (never in plaintext)**, and never shared. A successful sign stamps the record with the signer's identity, role, timestamp, and a signature reference; the signed PIN gates the action so approvals cannot be performed without it. PIN attempts are rate-limited and lock after repeated failure; every sign/failed-sign is audit-logged. (Optional Phase 2: bind to a digital signature certificate / DSC for statutory documents.)
+- Roles: Tenant Admin (manage users, enable signing), each user (set/rotate own PIN), Controller (view sign log).
 
 ### 5.16 Permissions and Audit Trail
 - Role builder with granular permissions per module/action (§7).
 - **Immutable audit log** of every critical action (create/edit/delete/approve/login/export) with actor, timestamp, before/after snapshot, IP, and device.
 - Audit search, filter, and export for auditors.
 - Roles: Admin/Compliance (view), Auditor (read).
+
+### 5.17 Masters & Configuration
+All operational data is driven by versioned, effective-dated masters so day-to-day entry stays fast and consistent, and rules change by configuration rather than code.
+
+- **Financial Year management:** define and manage financial years (India **Apr–Mar**); open/active/closed states; **year-end close & carry-forward** of ledger balances and stock/pending positions into the new FY; period locks within a year; the ability to work in a new FY while the previous one is being finalised; and controlled, approval-gated **reopen** of a closed year. All documents, numbering series, and reports are FY-scoped.
+- **Ledger Categories master:** the category catalog (Customer, Supplier, Job-Worker, Transporter, Expense, Bank, Cash, Statutory, Employee-related, …) used to classify ledgers (§5.2), driving pickers, defaults, and grouped reports.
+- **Item / Material Master:** customer materials (grade/description, UoM, HSN) and own consumables (§5.11); default process and rate linkage where applicable.
+- **Process Master:** the catalog of processes the plant offers — **Carburising, Hardening & Tempering, Annealing, Normalising, Nitriding, Induction Hardening, Surface/Zinc Coating, Stress Relieving,** etc. Each process carries a code, description, SAC (9988 for job-work services), default UoM (per kg / per piece / per lot), standard cycle/turnaround, and status. Used on inward, job cards, and rate lookup.
+- **Rate Master:** charge rates for **process × UoM × customer** — standard rates plus **customer-specific contract rates**, effective-dated (valid-from/valid-to), with optional slab/min-charge and GST rate. The job card and job-work billing auto-pick the applicable rate (contract rate overrides standard); rate overrides on a job are approval-gated and audited.
+- **Other masters:** numbering series, cost centres, tax rates, TDS/TCS sections, PT slabs, banks, UoM, address types, approval thresholds.
+- Roles: Admin/Accountant (maintain masters), Controller (approve rate/FY-close/reopen), Operator (consume via pickers).
 
 ---
 
@@ -313,12 +346,13 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 4. Accountant resolves each; ITC is claimed only for eligible matched lines; unresolved ITC is deferred.
 5. Working is reviewed and **locked** by Compliance Officer; GSTR-3B ITC figure is derived from the locked reco.
 
-### 6.6 Job Work Outward → Inward Reconciliation
-1. Store Supervisor issues 1,000 kg RM to Job Worker A under a **job-work challan** (no GST, delivery challan under Rule 45).
-2. Material moves to "Job Worker A" stock location; ageing clock starts.
-3. Job Worker returns 950 kg SFG + reports 30 kg scrap; 20 kg pending.
-4. System reconciles sent vs received; flags pending and wastage; supports write-off (approval-gated).
-5. Job-work **charges bill** received → GST input + TDS 194C on charges; ITC-04 data updated.
+### 6.6 Job Work Inward → Process → Outward (against pending quantity)
+1. Store Supervisor books an **inward** job-work challan: Customer *Mahalaxmi Traders* sends **1,000 kg** of gears for **Carburising** (process picked from **Process Master**). Pending-to-return starts at 1,000 kg; ageing clock starts.
+2. A **Job Card** is created for the job — process, material, quantity, **rate auto-picked from Rate Master** (say ₹18/kg contract rate → charge ₹18,000 + GST), and **memo type**: *Debit* (bill to customer's ledger) or *Cash* (collect on delivery).
+3. Material is processed; **burning/handling loss 20 kg** is recorded.
+4. First **outward** dispatch returns **600 kg** — the system checks this against **pending (1,000 kg)** and allows it; pending becomes **380 kg** (`1000 − 600 − 20 loss`). A second outward later returns the remaining 380 kg; **outward can never exceed pending**.
+5. On final delivery the job card closes; charges post per memo type — *Debit* → customer receivable + output GST (+ **TDS 194C** where the customer deducts); *Cash* → receipt raised.
+6. **ITC-04** and pending/ageing registers update throughout; any short/excess reconciles as loss (approval-gated).
 
 ### 6.7 Monthly Payroll Run (with Approval & GL Posting)
 1. Payroll Manager locks attendance/leave for the cycle; LOP computed.
@@ -708,20 +742,20 @@ apps/admin/src/app/
 
 **In scope (MVP):**
 1. **Foundations:** multi-company + multi-branch/GSTIN, IAM with RBAC (default roles + configurable permissions), MFA for privileged roles, secure sessions, audit logging, encryption of sensitive fields.
-2. **Accounting core:** Chart of Accounts, ledgers, all standard voucher types, double-entry, numbering series, bill-wise tracking, period locks, financial-year handling.
+2. **Accounting core:** Chart of Accounts, ledgers (**ledger categories, multi-address, blacklist**), all standard voucher types, double-entry, numbering series, bill-wise tracking, period locks, and **Financial Year management** (open/active/closed, carry-forward, controlled reopen).
 3. **Sales/Purchase & Invoicing:** GST-compliant invoices with auto CGST/SGST/IGST/Cess by place of supply, credit/debit notes, ITC flags. **E-invoice (IRN/QR) and E-way bill via GSP** for eligible tenants.
 4. **GST reporting:** GSTR-1 & GSTR-3B working (return-ready export as JSON/CSV) and **GSTR-2B reconciliation**; HSN summary.
 5. **TDS:** section-aware deduction with threshold tracking, TDS payable/receivable ledgers, challan (ITNS 281) tracking, and **26Q/24Q return-ready output**.
 6. **TCS:** 206C(1H) collection with threshold tracking, TCS ledgers, challan tracking, **27EQ return-ready output**, 194Q/206C interplay guard.
-7. **Job work (core):** outward/inward challans, sent-vs-received reconciliation, job-worker charges (GST + 194C), basic stock states (RM/SFG/FG), ITC-04 supporting data.
-8. **Payroll (core):** employee master, salary structures, attendance/leave, monthly run with PF/ESI/PT/TDS deductions, reimbursements, payslips (self-service), GL posting, and statutory outputs (PF ECR, ESI, PT, 24Q data).
-9. **Controls:** configurable maker-checker approval on payments, credit notes, period reopen, payroll disbursement, and permission changes.
-10. **Automation:** keyboard-first fast entry, voucher templates, and one-click bulk actions (bulk invoice/payment/e-invoice/challan/payslip/import) via worker jobs with result logs.
-11. **Reporting:** Trial Balance, P&L, Balance Sheet, Day Book, ledger statements, ageing, and role-based dashboards.
-12. **Shared UI library** (`@fintranact/ui`) powering web + internal `Ravi Matel` admin.
-13. **Platform admin (`Ravi Matel`):** tenant provisioning, ops dashboard, and system/statutory-rate configuration (internal).
+7. **Job work (core business):** inward → process → outward with **outward gated by pending inward quantity**, partial dispatch, wastage/loss reconciliation, **Job Card with Cash/Debit memo**, **Process Master** & **Rate Master** (contract rates), job-work charges (GST on SAC 9988 + TDS 194C), pending/ageing registers, ITC-04 supporting data.
+8. **Masters:** Financial Year, Ledger Categories, Item/Material master, Process Master, Rate Master, numbering series, cost centres, UoM, address types.
+9. **Payroll (core):** employee master, salary structures, **biometric-machine attendance integration**, leave, monthly run with PF/ESI/PT/TDS deductions, reimbursements, payslips (self-service), GL posting, statutory outputs (PF ECR, ESI, PT, 24Q data).
+10. **Controls & signing:** configurable maker-checker approval on payments, credit notes, period reopen, payroll disbursement, permission changes; **user-wise digital signing with a secret PIN** on approve/post/sign actions.
+11. **Automation:** keyboard-first fast entry, voucher templates, and one-click bulk actions via worker jobs with result logs.
+12. **Reporting & dashboards:** Trial Balance, P&L, Balance Sheet, Day Book, ledger statements, ageing, and **role-based (per-role) dashboards**.
+13. **Shared UI library** (`@fintranact/ui`) powering web + internal `Ravi Matel` admin, and **platform admin** (tenant provisioning, ops, system/statutory-rate config).
 
-**Explicitly deferred from MVP (see §16):** direct GSTN/TRACES e-filing, bank payment initiation, full inventory/warehouse, native mobile app, SSO, advanced analytics, multi-currency/forex, fixed-asset depreciation engine.
+**Explicitly deferred from MVP (see §16):** direct GSTN/TRACES e-filing, bank payment initiation, native mobile app, SSO, advanced analytics, multi-currency/forex, fixed-asset depreciation, and any manufacturing/BOM/finished-goods module (out of scope for a job-work business).
 
 ---
 
@@ -761,11 +795,20 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - AC-8: 26Q/24Q (TDS) and 27EQ (TCS) return-ready outputs reconcile to the deduction/collection registers.
 - AC-9: The 194Q/206C(1H) interplay guard prevents double application per configured precedence.
 
-**Job Work**
-- AC-10: Outward challan reduces available stock and creates job-worker-custody stock; inward reconciles sent vs received with wastage; ITC-04 data reflects the movements.
+**Job Work (core)**
+- AC-10: For an inward of 1,000 kg, cumulative **outward can never exceed the pending quantity**; a partial 600 kg dispatch leaves pending = 400 kg (less recorded loss), and once pending = 0 the job card closes; ITC-04 reflects the movements.
+- AC-10a: A **Job Card** correctly applies the **Rate Master** rate (customer contract rate overriding standard) and settles per **memo type** — *Debit* posts to the customer ledger + GST (+194C where deducted); *Cash* raises a receipt on delivery.
+- AC-10b: Selecting a **Process** from the Process Master carries its SAC and default UoM into the job card and rate lookup.
+
+**Masters & Ledgers**
+- AC-10c: A ledger can hold **multiple addresses**; choosing a delivery address with a different state flips place-of-supply (CGST+SGST ↔ IGST) on the document.
+- AC-10d: A **blacklisted** party is blocked (hard) or warned + approval-gated (soft) per policy; removing the blacklist is approval-gated and audited.
+- AC-10e: **Financial-year** close carries forward balances and pending job-work positions; posting into a closed FY is rejected unless an approved reopen occurs.
 
 **Payroll**
 - AC-11: A payroll run computes gross/net with PF/ESI/PT/TDS correctly, prorates LOP, posts a balanced salary journal to GL, and publishes payslips; PF ECR and ESI/PT/24Q outputs are generated.
+- AC-11a: **Biometric** punch logs ingested from the device map to employees, de-duplicate, and produce first-in/last-out, overtime, and LOP; unmapped punches are queued, not silently dropped.
+- AC-11b (**signing**): An approve/post/sign action requires the acting user's **secret signing PIN**; a wrong PIN blocks the action and is logged, and a successful sign stamps signer identity + timestamp on the record.
 
 **Security & Controls**
 - AC-12: A user without a permission is denied the action **server-side** (not just hidden in UI); denial is logged.
@@ -800,6 +843,11 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 12. **Statutory update cadence:** Who owns keeping reference rates current, and what is the SLA for pushing rate changes post-budget?
 13. **Number/date localization:** Confirm Indian numbering (lakh/crore), amount-in-words, and financial-year (Apr–Mar) as system-wide defaults.
 14. **Notification channels:** Email only in MVP, or SMS/WhatsApp for reminders and approvals?
+15. **Biometric devices:** Which make/model(s) are in use (ESSL/ZKTeco/Matrix…), and is integration via device SDK pull, `.dat`/CSV import, or a push API? Any multi-branch device consolidation?
+16. **Signing PIN vs DSC:** Is a hashed secret **signing PIN** sufficient for internal approvals, or do statutory documents also need a certificate-based **DSC** in v1?
+17. **Job-work rate model:** Confirm charge basis (per kg / per piece / per lot), and whether customer-specific contract rates and minimum charges are needed at launch.
+18. **Blacklist policy:** Should blacklisting a party be a **hard block** on transactions or a **soft warning + approval**, and who can override?
+19. **Pending-quantity tolerance:** Allowed over/under-return tolerance and how burning/handling loss is treated (auto-write-off vs approval) for job work.
 
 ---
 
@@ -810,7 +858,11 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - **A3.** MVP produces **return-ready exports** (GSTN/TRACES-compatible JSON/CSV); **direct filing** is Phase 2 via GSP/ASP.
 - **A4.** **E-invoice and e-way bill** require a third-party **GSP/ASP**; availability depends on that integration.
 - **A5.** **Bank payment initiation** is out of MVP; the system exports payment batches/files for upload to the bank.
-- **A6.** Inventory in MVP is **lightweight** (quantity + valuation) to support job work and invoicing; full WMS is Phase 2.
+- **A6.** Inventory in MVP is **lightweight** (customer-material custody position + consumable valuation) to support job work; there is **no manufacturing/BOM/finished-goods** module because the reference business is a **job-work / process house only**.
+- **A6b.** Job-work **outward is constrained to the pending quantity** of the linked inward; partial dispatches are allowed until pending reaches zero, and burning/handling loss is reconciled explicitly.
+- **A6c.** A **Job Card** carries a **memo type — Cash** (collect on delivery) or **Debit** (bill to ledger); process comes from **Process Master** and charge from **Rate Master** (contract rate overrides standard).
+- **A6d.** **User signing** uses a per-user **secret PIN stored hashed**, separate from the login password; DSC binding is Phase 2.
+- **A6e.** **Biometric attendance** is integrated for payroll; exact device integration mode (SDK/import/push) is per deployment (see Open Q15).
 - **A7.** **`Ravi Matel`** is the **internal platform-admin** module (not a tenant feature), present in both backend (`modules/ravi-matel`) and frontend (`apps/admin/ravi-matel`), behind a separate Super-Admin realm.
 - **A8.** "100% secure" is implemented as a **defense-in-depth, security-first mindset**; no absolute security guarantee is claimed — see R7.
 - **A9.** Hosting is **India-region**; the platform aligns with **DPDP Act 2023** principles.
