@@ -105,6 +105,30 @@ export async function createPurchaseInvoice(input: PurchaseInvoiceInput): Promis
   return postInvoice('purchase', input);
 }
 
+/** Unified composer for payment / receipt / contra / journal / credit-note / debit-note. */
+export type VoucherComposeInput =
+  | { kind: 'payment'; bankLedgerId: string; partyLedgerId: string; amount: number; tdsRate?: number; date: string; narration?: string }
+  | { kind: 'receipt'; bankLedgerId: string; partyLedgerId: string; amount: number; date: string; narration?: string }
+  | { kind: 'contra'; fromLedgerId: string; toLedgerId: string; amount: number; date: string; narration?: string }
+  | { kind: 'journal'; debitLedgerId: string; creditLedgerId: string; amount: number; date: string; narration?: string }
+  | { kind: 'credit_note'; partyLedgerId: string; salesLedgerId: string; placeOfSupply: 'intra' | 'inter'; taxable: number; gstRate: number; date: string; narration?: string }
+  | { kind: 'debit_note'; partyLedgerId: string; purchaseLedgerId: string; placeOfSupply: 'intra' | 'inter'; taxable: number; gstRate: number; date: string; narration?: string };
+
+const SERIES: Record<string, string> = { payment: 'PMT/26-27/0210', receipt: 'RCP/26-27/0342', contra: 'CTR/26-27/0068', journal: 'JV/26-27/0129', credit_note: 'CN/26-27/0021', debit_note: 'DN/26-27/0013' };
+
+export async function composeVoucher(input: VoucherComposeInput): Promise<{ voucherNo: string; type: string; total: number }> {
+  if (MOCK) {
+    const total = 'amount' in input ? input.amount : Math.round((input.taxable ?? 0) * (1 + (input.gstRate ?? 0) / 100));
+    return { voucherNo: SERIES[input.kind] ?? 'VCH/26-27/0001', type: input.kind, total };
+  }
+  const res = await fetch(`${API}/api/v1/vouchers/compose`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(input),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json?.errors?.[0]?.message ?? 'Post failed');
+  return json.data;
+}
+
 export interface TrialBalanceRow { ledgerId: string; name: string; category: string | null; debit: number; credit: number }
 export interface TrialBalance { rows: TrialBalanceRow[]; totalDebit: number; totalCredit: number; balanced: boolean }
 

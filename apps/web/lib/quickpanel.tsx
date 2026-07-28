@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { createSalesInvoice, createPurchaseInvoice } from './api';
+import { createSalesInvoice, createPurchaseInvoice, composeVoucher } from './api';
 
 /** Quick Entry aside panel — voucher-type-driven pass-entry with live GST / journal-balance / job-work gating.
  *  Ported from the HTML mockup into React (mock-mode; posting is simulated + PIN-gated). */
@@ -119,17 +119,28 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
     : vType === 'job' ? (jobDir === 'inward' ? 'Sign & save inward' : 'Sign & save outward') : meta.post;
 
   const doPost = async () => {
-    // Sales/Purchase call the real composer API (mock returns a canned voucher no.).
+    // Every voucher type posts through the composer API (mock returns a canned no.).
+    const date = '2026-07-27';
     try {
+      let no: string | null = null;
       if (vType === 'sales') {
-        const r = await createSalesInvoice({ partyLedgerId: 'l-mahalaxmi', placeOfSupply: (v.sPos as 'intra' | 'inter') || 'intra', date: '2026-07-27', items: [{ salesLedgerId: 'l-jobwork', taxable: pnum(v.sQty) * pnum(v.sRate), gstRate: pnum(v.sGst) }] });
-        setPostedNo(r.voucherNo);
+        no = (await createSalesInvoice({ partyLedgerId: 'l-mahalaxmi', placeOfSupply: (v.sPos as 'intra' | 'inter') || 'intra', date, items: [{ salesLedgerId: 'l-jobwork', taxable: pnum(v.sQty) * pnum(v.sRate), gstRate: pnum(v.sGst) }] })).voucherNo;
       } else if (vType === 'purchase') {
-        const r = await createPurchaseInvoice({ partyLedgerId: 'l-gujpoly', placeOfSupply: (v.pPos as 'intra' | 'inter') || 'intra', date: '2026-07-24', items: [{ purchaseLedgerId: 'l-material', taxable: pnum(v.pQty) * pnum(v.pRate), gstRate: pnum(v.pGst) }] });
-        setPostedNo(r.voucherNo);
-      } else {
-        setPostedNo(null);
+        no = (await createPurchaseInvoice({ partyLedgerId: 'l-gujpoly', placeOfSupply: (v.pPos as 'intra' | 'inter') || 'intra', date, items: [{ purchaseLedgerId: 'l-material', taxable: pnum(v.pQty) * pnum(v.pRate), gstRate: pnum(v.pGst) }] })).voucherNo;
+      } else if (vType === 'payment') {
+        no = (await composeVoucher({ kind: 'payment', bankLedgerId: 'l-hdfc', partyLedgerId: 'l-gujpoly', amount: pnum(v.payAmt) || 100000, date })).voucherNo;
+      } else if (vType === 'receipt') {
+        no = (await composeVoucher({ kind: 'receipt', bankLedgerId: 'l-hdfc', partyLedgerId: 'l-mahalaxmi', amount: pnum(v.rcpAmt) || 100000, date })).voucherNo;
+      } else if (vType === 'contra') {
+        no = (await composeVoucher({ kind: 'contra', fromLedgerId: 'l-hdfc', toLedgerId: 'l-cash', amount: pnum(v.ctrAmt) || 50000, date })).voucherNo;
+      } else if (vType === 'journal') {
+        no = (await composeVoucher({ kind: 'journal', debitLedgerId: 'l-dep', creditLedgerId: 'l-accdep', amount: jDr, date })).voucherNo;
+      } else if (vType === 'creditnote') {
+        no = (await composeVoucher({ kind: 'credit_note', partyLedgerId: 'l-balaji', salesLedgerId: 'l-jobwork', placeOfSupply: 'intra', taxable: pnum(v.cnTax), gstRate: pnum(v.cnGst), date })).voucherNo;
+      } else if (vType === 'debitnote') {
+        no = (await composeVoucher({ kind: 'debit_note', partyLedgerId: 'l-gujpoly', purchaseLedgerId: 'l-material', placeOfSupply: 'intra', taxable: pnum(v.dnTax), gstRate: pnum(v.dnGst), date })).voucherNo;
       }
+      setPostedNo(no);
     } catch { setPostedNo(null); }
     setPosted(true);
     setTimeout(() => { setPosted(false); setPostedNo(null); }, 2200);

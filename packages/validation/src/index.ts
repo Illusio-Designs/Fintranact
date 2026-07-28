@@ -205,3 +205,24 @@ export const purchaseInvoiceSchema = z.object({
   tdsRate: z.coerce.number().min(0).max(30).optional(),
 });
 export type PurchaseInvoiceInput = z.infer<typeof purchaseInvoiceSchema>;
+
+// ---- Unified voucher composer for the remaining types — PRD §5.3 ----
+const amount = z.coerce.number().positive('Amount must be > 0');
+const gstFields = { placeOfSupply: z.enum(['intra', 'inter']), taxable: amount, gstRate: z.coerce.number().min(0).max(28) };
+
+/** One endpoint composes payment / receipt / contra / journal / credit-note / debit-note into a balanced voucher. */
+export const voucherComposeSchema = z.discriminatedUnion('kind', [
+  // Dr party/expense (gross); Cr TDS payable (if any); Cr bank (net)
+  z.object({ kind: z.literal('payment'), bankLedgerId: z.string().min(1), partyLedgerId: z.string().min(1), amount, tdsRate: z.coerce.number().min(0).max(30).optional(), date: z.string().min(1), narration: z.string().optional() }),
+  // Dr bank; Cr party
+  z.object({ kind: z.literal('receipt'), bankLedgerId: z.string().min(1), partyLedgerId: z.string().min(1), amount, date: z.string().min(1), narration: z.string().optional() }),
+  // Dr to-account; Cr from-account (own bank/cash only)
+  z.object({ kind: z.literal('contra'), fromLedgerId: z.string().min(1), toLedgerId: z.string().min(1), amount, date: z.string().min(1), narration: z.string().optional() }),
+  // Dr one ledger; Cr another (adjustment)
+  z.object({ kind: z.literal('journal'), debitLedgerId: z.string().min(1), creditLedgerId: z.string().min(1), amount, date: z.string().min(1), narration: z.string().optional() }),
+  // sales return: Dr sales income + Dr output GST; Cr party
+  z.object({ kind: z.literal('credit_note'), partyLedgerId: z.string().min(1), salesLedgerId: z.string().min(1), ...gstFields, date: z.string().min(1), narration: z.string().optional() }),
+  // purchase return: Dr party; Cr purchase/expense + Cr input GST
+  z.object({ kind: z.literal('debit_note'), partyLedgerId: z.string().min(1), purchaseLedgerId: z.string().min(1), ...gstFields, date: z.string().min(1), narration: z.string().optional() }),
+]);
+export type VoucherComposeInput = z.infer<typeof voucherComposeSchema>;
