@@ -42,7 +42,7 @@ function hrefFor(label: string): string {
   if (clean === 'Dashboard') return '/dashboard';
   if (clean === 'Widgets') return '/widgets';
   if (clean === 'UI Library') return '/ui';
-  if (clean === 'Documents') return '/import';
+  if (clean === 'Documents') return '/documents';
   if (clean === 'Trial Balance') return '/reports/trial-balance';
   if (clean === 'Day Book') return '/reports/day-book';
   if (clean === 'Profit & Loss') return '/reports/profit-loss';
@@ -56,8 +56,11 @@ function hrefFor(label: string): string {
   if (clean === 'Returns 24Q 26Q 27Q') return '/tds/returns';
   if (clean === 'Pending Inward Outward') return '/jobwork/pending';
   if (clean === 'ITC-04') return '/jobwork/itc04';
+  if (clean === 'Lien Forfeiture') return '/jobwork/lien';
   if (clean === 'Payroll Run') return '/payroll/run';
   if (clean === 'Form 16') return '/payroll/form16';
+  if (clean === 'Process Master') return '/masters/process';
+  if (clean === 'Rate Master') return '/masters/rate';
   if (clean === 'Financial Year') return '/admin/periods';
   if (clean === 'TCS Collections') return '/tcs/collections';
   if (clean === 'Return 27EQ') return '/tcs/returns';
