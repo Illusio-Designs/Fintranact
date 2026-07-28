@@ -55,6 +55,13 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Sales invoice composer** (`modules/sales`): high-level `{party, placeOfSupply, items[{salesLedgerId,taxable,gstRate}]}` → auto-builds the balanced multi-line voucher (Dr party; Cr service a/c; Cr Output CGST+SGST intra / IGST inter). System GST/income ledgers seeded (`006_system_ledgers.sql`, `system_key`). Math verified to balance (intra/inter/multi-item).
 - [ ] Purchase invoice composer (mirror: Dr expense + Input GST, Cr supplier; + TDS); web screens for ledger create + voucher/sales pass-entry; period locks; day book/trial-balance; Process/Rate masters CRUD
 
+## Web app — mock mode for Vercel demo
+- [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
+- [x] Mock layer: `lib/mock.ts` (roles/KPIs/vouchers/compliance/import) + `lib/api.ts` (mock by default; real API when `NEXT_PUBLIC_USE_MOCK=false`)
+- [x] Pages: `/dashboard` (role-switch KPIs + vouchers + compliance), `/import` (validate grid + commit), `/login` (mock enter); shared `Shell` with demo banner
+- [x] **`next build` passes** — 5 static routes; deploy on Vercel with Root Directory=`apps/web`, no env needed
+- [ ] Flesh out dashboard widgets to match the HTML mockup; wire more real endpoints when API is hosted
+
 ## Later phases (see PRD §16)
 - Phase 1 (cont.) Masters · Documents
 - Phase 2 GST · Invoicing · e-Invoice/e-Way
@@ -138,3 +145,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - Answered "how a sales voucher posts party + service + GST": added `modules/sales` composer that turns a high-level invoice into the balanced double-entry (Dr party; Cr income a/c; Cr Output CGST/SGST or IGST by place of supply).
 - `salesInvoiceSchema` (+ `income`/`tax` ledger categories) in validation; `006_system_ledgers.sql` seeds Output/Input CGST/SGST/IGST + Job Work Charges + Round Off with a `system_key` the composer resolves.
 - Endpoint `POST /api/v1/invoices/sales`. Composition verified to balance for intra/inter/multi-item. Typecheck green across workspaces. API README updated.
+
+### 2026-07-28 — Task 14: Web mock mode for Vercel
+- Made `apps/web` self-contained (removed @fintranact/* deps + transpilePackages) so it deploys on Vercel alone.
+- Added `lib/mock.ts` + `lib/api.ts` (mock ON by default; flips to real API via `NEXT_PUBLIC_USE_MOCK=false` + `NEXT_PUBLIC_API_URL`), a shared `Shell` (dark nav + demo banner), and a real `/dashboard` (role-switch KPIs, recent vouchers, compliance) + updated `/import` and `/login`.
+- Fixed Next resolution (dropped `.js` import extensions for bundler). **`pnpm --filter @fintranact/web build` passes** → 5 static routes. Added `apps/web/README.md` (Vercel: Root Directory=apps/web, no env).
