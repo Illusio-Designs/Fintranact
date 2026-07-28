@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CheckmarkCircle02Icon, Alert01Icon, InformationCircleIcon } from 'hugeicons-react';
+import { createPortal } from 'react-dom';
+import { CheckmarkCircle02Icon, Alert01Icon, InformationCircleIcon, MoreVerticalIcon } from 'hugeicons-react';
 
 /** Shared design-system components: custom Dropdown + Calendar / DatePicker + report primitives. */
 
@@ -89,6 +90,54 @@ export function Dropdown({
         </div>
       )}
     </div>
+  );
+}
+
+export type RowMenuItem = { label: string; icon?: ReactNode; danger?: boolean; onClick?: () => void };
+
+/**
+ * Table row-action menu. Renders the popover in a fixed-position portal so it
+ * is never clipped by the table's `overflow` scroll container.
+ */
+export function RowMenu({ items, label = 'Row actions' }: { items: RowMenuItem[]; label?: string }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const place = () => {
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 6, left: Math.max(8, r.right - 200) });
+  };
+  const toggle = () => { if (!open) place(); setOpen((o) => !o); };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    const onDown = (e: MouseEvent) => { if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false); };
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    document.addEventListener('mousedown', onDown);
+    return () => { window.removeEventListener('scroll', close, true); window.removeEventListener('resize', close); document.removeEventListener('mousedown', onDown); };
+  }, [open]);
+
+  return (
+    <>
+      <button ref={btnRef} className="ib" onClick={toggle} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+        <MoreVerticalIcon size={16} color="currentColor" />
+      </button>
+      {open && mounted && createPortal(
+        <div className="dropdown-menu" style={{ position: 'fixed', top: pos.top, left: pos.left, minWidth: 190, zIndex: 200 }} role="menu">
+          {items.map((it, i) => (
+            <button key={i} role="menuitem" style={it.danger ? { color: 'var(--red-ink)' } : undefined} onClick={() => { setOpen(false); it.onClick?.(); }}>
+              {it.icon}{it.label}
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 

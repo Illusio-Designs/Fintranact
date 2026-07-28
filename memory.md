@@ -323,3 +323,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - Audited every page for ad-hoc colours; only `/dashboard` still had 5 hardcoded hex values (chart outflow line + legend `#6C6C76`, neutral stripes `#C9C7CB`, avatar gradient `#7A0913`). Replaced with design tokens (`var(--text-3)`, `var(--red-ink)`) — the dashboard is already built from library components (`.tile`, `.card`, `.kv`, `.pill`, table styles, chart), now with **zero hardcoded hex**.
 - Confirmed **all pages** (dashboard, reports, GST, TDS, job-work, payroll, periods, import, login, module screens, UI library) are component-based with no 6-digit hex — the compulsory UI-library rule holds across the app.
 - `next build` passes; dashboard verified rendering (KPI tiles, cash-flow chart, compliance, P&L) with tokens. Merged to main.
+
+### 2026-07-28 — Task 39: Dropdown QA — fix clipped row-action menus (portal RowMenu)
+- Ran an interactive audit of every dropdown: custom `Dropdown` (open/select/close), searchable `Dropdown` (type-to-filter), `DatePicker` calendar (open/pick/close) — all pass. **Found one bug:** the table **row-action 3-dot menu was clipped** by the table's `overflow-x:auto` scroll wrapper.
+- **Fix:** new shared `<RowMenu>` component (`lib/components.tsx`) renders its popover in a **fixed-position React portal** (`createPortal` to `document.body`), positioned from the trigger's `getBoundingClientRect`, so it can never be clipped; closes on outside-click, scroll, resize, or item select. Replaced the inline row menus in `ModuleScreen` and the `/ui` data table with `<RowMenu>`.
+- Verified after fix: row menu `position=fixed`, parent=BODY, `clip=ok`, closes on select. All other dropdowns unaffected. `next build` passes. Merged to main.
