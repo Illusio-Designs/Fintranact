@@ -352,3 +352,10 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Voucher post feedback**: Quick Entry `doPost` now fires a success toast — e.g. **"Voucher PMT/26-27/0210 posted — books balanced."** (or "… saved" for masters, error toast on failure) and closes the panel. Verified end-to-end.
 - **Notifications bell works**: `lib/notifications.tsx` `<NotificationDrawer>` (uses the existing `.ntpanel/.nt-*` design-system CSS) — right-side drawer with All/Tasks/Alerts tabs + counts, day grouping, per-item icon/title/body/action-chips/unread dot, **click-to-read** and **mark-all-read**. Notifications seeded in `mock.ts`. The topbar bell opens it and shows a **live unread badge** (hides at 0). Verified: opens with 9 items; badge clears after mark-all-read.
 - `next build` passes. Merged to main.
+
+### 2026-07-28 — Task 43: Header dropdowns use the UI library Dropdown
+- The dashboard/topbar had **native `<select>`** for FY and role (and a plain button switcher) — not the design-system component. Replaced all three with the shared `<Dropdown>` (`lib/components.tsx`):
+  - **Company/branch switcher** (green dot icon, unit + GSTIN hint, tick on selected),
+  - **Financial year** selector,
+  - **Role** selector (wired to `setRole`; switching updates dashboard KPIs + rail footer).
+- Added compact pill styling for `.topsel-dd .dd-trigger` and preserved the responsive hide (FY <1120px, role/branch <860px) in `globals.css`. Verified: role menu has 7 options, selecting "Owner / Director" switches the view; branch menu opens with both units. `next build` passes. Merged to main.
