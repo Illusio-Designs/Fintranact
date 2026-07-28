@@ -16,6 +16,7 @@ import { ledgersRouter } from './modules/accounting/ledgers.routes.js';
 import { vouchersRouter } from './modules/accounting/vouchers.routes.js';
 import { salesRouter } from './modules/sales/sales.routes.js';
 import { purchaseRouter } from './modules/purchase/purchase.routes.js';
+import { reportsRouter } from './modules/reports/reports.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -44,6 +45,7 @@ export function createApp(): Express {
   app.use('/api/v1', vouchersRouter);
   app.use('/api/v1', salesRouter);
   app.use('/api/v1', purchaseRouter);
+  app.use('/api/v1', reportsRouter);
   // Future modules mount here: compliance, jobwork, payroll, documents…
 
   app.use(errorHandler);

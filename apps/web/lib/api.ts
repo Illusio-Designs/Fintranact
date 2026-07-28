@@ -105,6 +105,33 @@ export async function createPurchaseInvoice(input: PurchaseInvoiceInput): Promis
   return postInvoice('purchase', input);
 }
 
+export interface TrialBalanceRow { ledgerId: string; name: string; category: string | null; debit: number; credit: number }
+export interface TrialBalance { rows: TrialBalanceRow[]; totalDebit: number; totalCredit: number; balanced: boolean }
+
+export async function getTrialBalance(): Promise<TrialBalance> {
+  if (MOCK) {
+    const rows: TrialBalanceRow[] = [
+      { ledgerId: 'l1', name: 'HDFC Bank — Current', category: 'bank', debit: 4186220, credit: 0 },
+      { ledgerId: 'l2', name: 'Cash in Hand', category: 'cash', debit: 184300, credit: 0 },
+      { ledgerId: 'l3', name: 'Sundry Debtors', category: 'customer', debit: 14200000, credit: 0 },
+      { ledgerId: 'l4', name: 'Plant & Machinery', category: 'asset', debit: 8600000, credit: 0 },
+      { ledgerId: 'l5', name: 'Sundry Creditors', category: 'supplier', debit: 0, credit: 3860000 },
+      { ledgerId: 'l6', name: 'Output CGST', category: 'tax', debit: 0, credit: 459000 },
+      { ledgerId: 'l7', name: 'Output SGST', category: 'tax', debit: 0, credit: 459000 },
+      { ledgerId: 'l8', name: 'TDS Payable', category: 'liability', debit: 0, credit: 184300 },
+      { ledgerId: 'l9', name: 'Job Work / Process Charges', category: 'income', debit: 0, credit: 21500000 },
+      { ledgerId: 'l10', name: 'Furnace Fuel & Gas', category: 'expense', debit: 3860000, credit: 0 },
+      { ledgerId: 'l11', name: 'Salaries & Wages', category: 'expense', debit: 5210000, credit: 0 },
+      { ledgerId: 'l12', name: 'Capital Account', category: 'equity', debit: 0, credit: 9778220 },
+    ];
+    const totalDebit = rows.reduce((s, r) => s + r.debit, 0);
+    const totalCredit = rows.reduce((s, r) => s + r.credit, 0);
+    return { rows, totalDebit, totalCredit, balanced: totalDebit === totalCredit };
+  }
+  const res = await fetch(`${API}/api/v1/reports/trial-balance`, { headers: authHeaders() });
+  return (await res.json()).data ?? { rows: [], totalDebit: 0, totalCredit: 0, balanced: true };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();

@@ -43,6 +43,7 @@ function hrefFor(label: string): string {
   if (clean === 'Widgets') return '/widgets';
   if (clean === 'UI Library') return '/ui';
   if (clean === 'Documents') return '/import';
+  if (clean === 'Trial Balance') return '/reports/trial-balance';
   return `/m/${slug(clean)}`;
 }
 
