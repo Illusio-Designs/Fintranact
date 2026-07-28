@@ -226,6 +226,40 @@ export async function getBalanceSheet(): Promise<BalanceSheet> {
   return (await res.json()).data ?? { assets: [], liabilities: [], equity: [], totalAssets: 0, totalLiabilities: 0, totalEquity: 0, totalLiabEquity: 0, netProfit: 0, balanced: true };
 }
 
+// ---- GST returns ----
+export interface TaxTriplet { taxable: number; igst: number; cgst: number; sgst: number }
+export interface Gstr3b { outward: TaxTriplet; itc: { igst: number; cgst: number; sgst: number }; netPayable: { igst: number; cgst: number; sgst: number; total: number } }
+export interface Gstr1Rate { rate: number; taxable: number; igst: number; cgst: number; sgst: number }
+export interface Gstr1 { invoices: number; outward: TaxTriplet; totalTax: number; totalValue: number; b2b: Gstr1Rate[]; b2c: Gstr1Rate[] }
+
+export async function getGstr3b(): Promise<Gstr3b> {
+  if (MOCK) {
+    return {
+      outward: { taxable: 21500000, igst: 1290000, cgst: 459000, sgst: 459000 },
+      itc: { igst: 246000, cgst: 187000, sgst: 187000 },
+      netPayable: { igst: 1044000, cgst: 272000, sgst: 272000, total: 1588000 },
+    };
+  }
+  const res = await fetch(`${API}/api/v1/gst/gstr-3b`, { headers: authHeaders() });
+  return (await res.json()).data;
+}
+
+export async function getGstr1(): Promise<Gstr1> {
+  if (MOCK) {
+    const b2b: Gstr1Rate[] = [
+      { rate: 18, taxable: 14200000, igst: 1290000, cgst: 306000, sgst: 306000 },
+      { rate: 12, taxable: 2550000, igst: 0, cgst: 153000, sgst: 153000 },
+    ];
+    const b2c: Gstr1Rate[] = [{ rate: 18, taxable: 4750000, igst: 0, cgst: 0, sgst: 0 }];
+    const outward = { taxable: 21500000, igst: 1290000, cgst: 459000, sgst: 459000 };
+    const totalTax = outward.igst + outward.cgst + outward.sgst;
+    return { invoices: 214, outward, totalTax, totalValue: outward.taxable + totalTax, b2b, b2c };
+  }
+  const res = await fetch(`${API}/api/v1/gst/gstr-1`, { headers: authHeaders() });
+  const d = (await res.json()).data;
+  return { ...d, b2b: [], b2c: [] };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();
