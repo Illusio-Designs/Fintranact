@@ -91,14 +91,23 @@ function quickTypeFor(path: string): string {
   if (/masters\/rate/.test(p)) return 'rate';
   // Payroll & HR
   if (/payroll|employees|salary|attendance|payslip|form16|statutory/.test(p)) return 'payroll';
+  // Parties (customers / vendors) → party ledger master
+  if (/customer|vendor|party/.test(p)) return 'ledger';
   // Accounting
   if (/bank-cash|bank/.test(p)) return 'bank';
   if (/ledger|chart-of-accounts|group/.test(p)) return 'ledger';
-  if (/receipt/.test(p)) return 'receipt';
+  if (/tcs\/collection|receipt/.test(p)) return 'receipt';
   if (/contra/.test(p)) return 'contra';
   if (/voucher|day-book|journal/.test(p)) return 'journal';
   // Default pass entry
   return 'payment';
+}
+/** For Job Work, which direction the page is about (dispatch vs receive). */
+function quickJobDir(path: string): 'inward' | 'outward' | undefined {
+  const p = path || '';
+  if (/outward/.test(p)) return 'outward';
+  if (/inward|job-card/.test(p)) return 'inward';
+  return undefined;
 }
 
 /** Distinct Hugeicons icon per nav group, rendered inside a large round badge. */
@@ -262,7 +271,7 @@ export function AppShell({
           <div className="content">{children}</div>
         </div>
       </div>
-      <QuickPanel open={quick} onClose={() => setQuick(false)} initialType={quickTypeFor(pathname)} />
+      <QuickPanel open={quick} onClose={() => setQuick(false)} initialType={quickTypeFor(pathname)} initialJobDir={quickJobDir(pathname)} />
       <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} items={notifs} setItems={setNotifs} />
       <ToastHost />
       <SuccessHost />
