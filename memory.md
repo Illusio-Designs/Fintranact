@@ -318,3 +318,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - **Collapsed = tooltips + flyout** — group headers carry `title` tooltips; hovering a collapsed group opens a **floating menu** (`.flyout`) with the group name, badge and all its page links (positioned to the right; nav `overflow` opened in collapsed mode so it isn't clipped).
 - Converted the CSS selectors (`details.grp > summary` → `.grp .grp-head`, `[open]` → `.grp.open`), added `.sub` show/hide, collapse-mode, flyout and tooltip styles to `globals.css`.
 - `next build` passes. Verified: accordion single-open, collapsed icon rail with alert dot, and the GST flyout listing its pages. Merged to main.
+
+### 2026-07-28 — Task 38: Dashboard fully on UI components (hex audit clean)
+- Audited every page for ad-hoc colours; only `/dashboard` still had 5 hardcoded hex values (chart outflow line + legend `#6C6C76`, neutral stripes `#C9C7CB`, avatar gradient `#7A0913`). Replaced with design tokens (`var(--text-3)`, `var(--red-ink)`) — the dashboard is already built from library components (`.tile`, `.card`, `.kv`, `.pill`, table styles, chart), now with **zero hardcoded hex**.
+- Confirmed **all pages** (dashboard, reports, GST, TDS, job-work, payroll, periods, import, login, module screens, UI library) are component-based with no 6-digit hex — the compulsory UI-library rule holds across the app.
+- `next build` passes; dashboard verified rendering (KPI tiles, cash-flow chart, compliance, P&L) with tokens. Merged to main.

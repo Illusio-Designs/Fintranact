@@ -34,13 +34,13 @@ export default function Dashboard() {
           <div className="card span-2">
             <div className="card-head"><div><h3>Cash Flow</h3><div className="csub">Inflow vs outflow · last 6 months (₹ Lakh)</div></div></div>
             <div className="chart-wrap">
-              <div className="chart-legend"><span className="lg"><i style={{ background: 'var(--red)' }} />Inflow</span><span className="lg"><i style={{ background: '#6C6C76' }} />Outflow</span></div>
+              <div className="chart-legend"><span className="lg"><i style={{ background: 'var(--red)' }} />Inflow</span><span className="lg"><i style={{ background: 'var(--text-3)' }} />Outflow</span></div>
               <svg viewBox="0 0 640 230" width="100%" height="220" preserveAspectRatio="none" role="img" aria-label="Cash flow">
                 <defs><linearGradient id="fillRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--red)" stopOpacity="0.28" /><stop offset="100%" stopColor="var(--red)" stopOpacity="0" /></linearGradient></defs>
                 <g stroke="var(--line)" strokeWidth={1}><line x1="0" y1="40" x2="640" y2="40" /><line x1="0" y1="95" x2="640" y2="95" /><line x1="0" y1="150" x2="640" y2="150" /><line x1="0" y1="200" x2="640" y2="200" /></g>
                 <path d="M0,145 L106,115 L213,130 L320,78 L426,92 L533,52 L640,58 L640,200 L0,200 Z" fill="url(#fillRed)" />
                 <path d="M0,145 L106,115 L213,130 L320,78 L426,92 L533,52 L640,58" fill="none" stroke="var(--red)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M0,168 L106,162 L213,172 L320,145 L426,156 L533,135 L640,142" fill="none" stroke="#6C6C76" strokeWidth={2} strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M0,168 L106,162 L213,172 L320,145 L426,156 L533,135 L640,142" fill="none" stroke="var(--text-3)" strokeWidth={2} strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" />
                 <circle cx="640" cy="58" r="4.5" fill="var(--red)" />
                 <g fill="var(--text-3)" fontSize="11" textAnchor="middle"><text x="20" y="220">Feb</text><text x="106" y="220">Mar</text><text x="213" y="220">Apr</text><text x="320" y="220">May</text><text x="426" y="220">Jun</text><text x="533" y="220">Jul</text></g>
               </svg>
@@ -54,7 +54,7 @@ export default function Dashboard() {
             <div className="due-list">
               {compliance.map((c, i) => (
                 <div className="due" key={i}>
-                  <div className="stripe" style={{ background: c.tone === 'crit' ? 'var(--red)' : c.tone === 'ok' ? 'var(--good)' : '#C9C7CB' }} />
+                  <div className="stripe" style={{ background: c.tone === 'crit' ? 'var(--red)' : c.tone === 'ok' ? 'var(--good)' : 'var(--text-3)' }} />
                   <div><div className="t">{c.t}</div><div className="m">{c.m}</div></div>
                   <div className="when"><b>{c.when}</b><span className={`pill ${c.tone}`}>{c.tag}</span></div>
                 </div>
@@ -81,7 +81,7 @@ export default function Dashboard() {
             <div className="card-head"><h3>Pending Inward</h3><span className="pill warn" style={{ marginLeft: 'auto' }}>6 jobs</span></div>
             <div className="due-list">
               {pendingInward.map((c, i) => (
-                <div className="due" key={i}><div className="stripe" style={{ background: c.tone === 'crit' ? 'var(--red)' : c.tone === 'warn' ? 'var(--warn)' : '#C9C7CB' }} /><div><div className="t">{c.t}</div><div className="m">{c.m}</div></div><div className="when"><b>{c.qty}</b><span className={`pill ${c.tone}`}>{c.tag}</span></div></div>
+                <div className="due" key={i}><div className="stripe" style={{ background: c.tone === 'crit' ? 'var(--red)' : c.tone === 'warn' ? 'var(--warn)' : 'var(--text-3)' }} /><div><div className="t">{c.t}</div><div className="m">{c.m}</div></div><div className="when"><b>{c.qty}</b><span className={`pill ${c.tone}`}>{c.tag}</span></div></div>
               ))}
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function Dashboard() {
             <div>
               {approvals.map((a, i) => (
                 <div key={i}>
-                  <div className="appr"><div className="who2" style={{ background: 'linear-gradient(135deg,var(--red),#7A0913)' }}>{a.who}</div><div className="info"><b>{a.title}</b><span>{a.sub}</span></div><div className="amt2 num">{a.amt}</div></div>
+                  <div className="appr"><div className="who2" style={{ background: 'linear-gradient(135deg,var(--red),var(--red-ink))' }}>{a.who}</div><div className="info"><b>{a.title}</b><span>{a.sub}</span></div><div className="amt2 num">{a.amt}</div></div>
                   <div className="appr-actions" style={{ borderBottom: i < approvals.length - 1 ? '1px solid var(--line)' : 0 }}><button className="mini">Reject</button><button className="mini go">Approve</button></div>
                 </div>
               ))}
