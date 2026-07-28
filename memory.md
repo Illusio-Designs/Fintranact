@@ -67,7 +67,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Profit & Loss** (`GET /api/v1/reports/pnl`) — income − direct (cost of sales) = gross profit; − indirect = net profit; page `/reports/profit-loss` (KPI tiles + two-column statement).
 - [x] **Balance Sheet** (`GET /api/v1/reports/balance-sheet`) — assets vs liabilities+equity, period profit carried to equity, balanced flag + suspense handling; page `/reports/balance-sheet` (two-sided).
 - [x] **All voucher types compose & post**: unified `POST /api/v1/vouchers/compose` (discriminated union) for payment / receipt / contra / journal / credit-note / debit-note; Quick Entry wires every type through the composer API (mock-aware). Sales & Purchase composers already existed. All 8 compositions verified balanced.
-- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; GST returns (GSTR-1/3B)
+- [x] **GST returns — GSTR-3B & GSTR-1** (`modules/gst`): GSTR-3B computes output tax vs ITC → net payable from the GST ledger balances; GSTR-1 outward-supplies summary. Pages `/gst/gstr-3b` (3.1/4/5.1 tables + tiles) and `/gst/gstr-1` (B2B/B2C rate-wise). Sidebar routed.
+- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; GSTR-2B reconciliation; e-Invoice/e-Way; TDS/TCS returns; job-work; payroll
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -262,3 +263,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Backend** (`modules/vouchers/compose.*`): one endpoint `POST /api/v1/vouchers/compose` takes a **discriminated union** (`kind`: payment | receipt | contra | journal | credit_note | debit_note) and builds a balanced double-entry voucher, then posts it via the shared voucher engine (which re-checks Dr==Cr). Payment supports TDS (Dr party gross; Cr TDS payable; Cr bank net); credit-note reverses output GST (Dr income + Dr output GST; Cr party); debit-note reverses input ITC (Dr party; Cr expense + Cr input GST); contra/journal guard same-ledger. `voucherComposeSchema` added to `@fintranact/validation`; router mounted. **All 8 compositions verified balanced** (incl. TDS + intra/inter GST notes). API typechecks.
 - **Web**: `composeVoucher()` added to `lib/api.ts` (mock-aware, returns a series voucher no.). **Quick Entry now posts every voucher type** through the composer/invoice APIs after the signing PIN — smoke-tested Payment → "Posted ✓ PMT/26-27/0210". Sales & Purchase continue via their composers.
 - `next build` passes. Merged to main. Together with the earlier Sales/Purchase composers, the full voucher set (8 types) is now postable end-to-end.
+
+### 2026-07-28 — Task 31: GST returns — GSTR-3B & GSTR-1
+- **Backend** (`modules/gst`): `GET /api/v1/gst/gstr-3b` derives output tax (output CGST/SGST/IGST credit balances) vs eligible ITC (input GST debit balances) and computes **net payable in cash per head** = max(0, output − ITC); `GET /api/v1/gst/gstr-1` returns the outward-supplies summary (taxable + output tax + sales/CN invoice count). Both `report:view`. API typechecks.
+- **Web** (mock-aware `getGstr3b`/`getGstr1`), two pages from the UI library:
+  - `/gst/gstr-3b` — KPI tiles (output / ITC / net payable), **3.1 outward**, **4 eligible ITC**, and **5.1 tax payable & paid in cash** (Output − ITC set-off = cash) tables with report tfoot totals. Verified: 22,08,000 − 6,20,000 = 15,88,000 net.
+  - `/gst/gstr-1` — summary tiles + **B2B / B2C rate-wise** tables (rate pill, taxable, IGST/CGST/SGST) with totals.
+  - Sidebar **GST & Returns → GSTR-1 / GSTR-3B** route to them.
+- `next build` passes (14 routes). Merged to main. First slice of the GST-returns phase.
