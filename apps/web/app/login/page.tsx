@@ -32,7 +32,10 @@ export default function LoginPage() {
   return (
     <main style={{ minHeight: '100vh', background: C.paper, display: 'grid', placeItems: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       <div style={{ width: 360, padding: 24 }}>
-        <div style={{ display: 'grid', placeItems: 'center', width: 40, height: 40, borderRadius: 10, background: C.red, color: '#fff', fontWeight: 900, fontSize: 22, marginBottom: 12 }}>F</div>
+        <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '14px 16px', display: 'inline-flex', marginBottom: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ravi-logo.gif" alt="RAVI Metal Treatment" style={{ height: 48, width: 'auto', display: 'block' }} />
+        </div>
         <h2 style={{ marginBottom: 2 }}>Sign in</h2>
         <p style={{ color: C.muted, marginTop: 0, fontSize: 13 }}>Fintranact · RAVI Metal Treatment {MOCK && '· demo'}</p>
         <form onSubmit={onSubmit}>
