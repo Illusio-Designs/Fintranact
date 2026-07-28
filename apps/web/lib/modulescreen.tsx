@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MoreVerticalIcon, PencilEdit01Icon, Download01Icon, PrinterIcon, Delete02Icon, Add01Icon, Search01Icon, FilterIcon } from 'hugeicons-react';
 import { AppShell } from './appshell';
 import { Dropdown, DatePicker, fmtDate } from './components';
+import { MOCK, listVouchers } from './api';
 
 /** Generic module list screen assembled entirely from the shared UI library. */
 
@@ -36,7 +37,23 @@ const prefixFor = (slug: string) => {
 type SortKey = 'ref' | 'party' | 'date' | 'status' | 'amount';
 
 export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: string; readyNote?: string }) {
-  const base = useMemo(() => rowsFor(prefixFor(slug)), [slug]);
+  const mockBase = useMemo(() => rowsFor(prefixFor(slug)), [slug]);
+  const [live, setLive] = useState<Rec[] | null>(null);
+  useEffect(() => {
+    if (MOCK) return;
+    if (!/(voucher|sales|purchase|invoice|bill|note|day-book|ledger)/.test(slug)) return;
+    listVouchers()
+      .then((vs) => setLive(vs.map((v, i) => ({
+        id: v.id || String(i + 1),
+        ref: v.voucherNo,
+        party: v.party || '—',
+        date: v.date || '—',
+        status: (v.status === 'Posted' ? 'Posted' : v.status === 'Pending' ? 'Pending' : 'Draft') as Rec['status'],
+        amount: typeof v.amount === 'number' ? v.amount : Number(String(v.amount ?? '').replace(/[^0-9.]/g, '')) || 0,
+      }))))
+      .catch(() => {});
+  }, [slug]);
+  const base = live ?? mockBase;
   const [status, setStatus] = useState('all');
   const [party, setParty] = useState('all');
   const [from, setFrom] = useState<Date | undefined>();
