@@ -350,6 +350,45 @@ export async function getItc04(): Promise<Itc04Summary> {
   return (await res.json()).data ?? { inwardChallans: 0, outwardChallans: 0, qtyReceived: 0, qtyReturned: 0, qtyPending: 0 };
 }
 
+// ---- Payroll ----
+export interface PayslipRow { name: string; designation: string; basic: number; hra: number; allowances: number; gross: number; pf: number; esi: number; pt: number; tds: number; deductions: number; net: number }
+export interface PayrollRun { month: string; rows: PayslipRow[]; gross: number; totalDeductions: number; net: number; statutory: { pfEmployee: number; pfEmployer: number; esiEmployee: number; esiEmployer: number; pt: number; tds: number } }
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
+function annualTax(t: number): number { let x = 0; if (t > 1e6) { x += (t - 1e6) * 0.3; t = 1e6; } if (t > 5e5) { x += (t - 5e5) * 0.2; t = 5e5; } if (t > 25e4) x += (t - 25e4) * 0.05; return x * 1.04; }
+function slip(name: string, designation: string, basic: number): PayslipRow {
+  const hra = r2(basic * 0.4), allowances = r2(basic * 0.1), gross = r2(basic + hra + allowances);
+  const pf = r2(0.12 * Math.min(basic, 15000)), esi = gross <= 21000 ? r2(0.0075 * gross) : 0;
+  const pt = gross > 12000 ? 200 : gross > 9000 ? 150 : 0;
+  const tds = r2(annualTax(Math.max(0, gross * 12 - 50000 - Math.min(pf * 12, 150000))) / 12);
+  const deductions = r2(pf + esi + pt + tds);
+  return { name, designation, basic, hra, allowances, gross, pf, esi, pt, tds, deductions, net: r2(gross - deductions) };
+}
+
+export async function getPayrollRun(month: string): Promise<PayrollRun> {
+  if (MOCK) {
+    const rows = [
+      slip('Rajesh Joshi', 'Plant Manager', 60000),
+      slip('Priya Rao', 'Accountant', 32000),
+      slip('Suresh Patel', 'Shift Supervisor', 28000),
+      slip('Meena Iyer', 'HR Executive', 25000),
+      slip('Kiran Desai', 'QC Inspector', 22000),
+      slip('Amit Shah', 'Furnace Operator', 18000),
+      slip('Ravi Chauhan', 'Helper', 13000),
+    ];
+    const gross = r2(rows.reduce((s, r) => s + r.gross, 0));
+    const totalDeductions = r2(rows.reduce((s, r) => s + r.deductions, 0));
+    const pfEmployee = r2(rows.reduce((s, r) => s + r.pf, 0));
+    const esiEmployee = r2(rows.reduce((s, r) => s + r.esi, 0));
+    return {
+      month, rows, gross, totalDeductions, net: r2(gross - totalDeductions),
+      statutory: { pfEmployee, pfEmployer: pfEmployee, esiEmployee, esiEmployer: r2(esiEmployee * (3.25 / 0.75)), pt: r2(rows.reduce((s, r) => s + r.pt, 0)), tds: r2(rows.reduce((s, r) => s + r.tds, 0)) },
+    };
+  }
+  const res = await fetch(`${API}/api/v1/payroll/run?month=${encodeURIComponent(month)}`, { headers: authHeaders() });
+  return (await res.json()).data;
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();
