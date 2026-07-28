@@ -313,6 +313,18 @@ All operational data is driven by versioned, effective-dated masters so day-to-d
 - **Other masters:** numbering series, cost centres, tax rates, TDS/TCS sections, PT slabs, banks, UoM, address types, approval thresholds.
 - Roles: Admin/Accountant (maintain masters), Controller (approve rate/FY-close/reopen), Operator (consume via pickers).
 
+### 5.18 Document Management & Uploads (Document Root)
+A built-in document store so every record can carry its supporting paperwork, with a central, secure per-tenant **document root** as the single source of truth for files.
+
+- **Attach to any record:** upload and attach documents to vouchers/invoices/bills, party ledgers, inward/outward & job cards, GST returns & e-invoice/e-way PDFs, TDS/TCS **challans**, payroll/employee records, **lien notices**, and masters. Multiple files per record, each with a **document type** (e.g., Purchase Bill, GST Certificate, PAN, e-Way Bill, Weighment Slip, Lien Notice, KYC, Bank Proof) and notes.
+- **Document Root (repository):** a per-tenant root organised as a tree — **Company → Branch/GSTIN → Financial Year → Module → Entity** — so files are addressable and consistently filed. A central **Documents** browser lets users search, filter (by type/date/party/module), preview, and download; recent and pinned documents surface quickly.
+- **Auto-filed system documents:** generated artefacts (invoice/e-invoice PDF with IRN-QR, e-way bill, payslip, challan, return JSON/CSV, forfeiture/scrap invoice) are **auto-saved into the document root** and linked to their record — no manual upload needed.
+- **Supported files & limits:** PDF, images (JPG/PNG), Office/CSV, XML/JSON; configurable per-file **size limit** and allowed MIME types; drag-and-drop and **bulk upload** with per-file result log; client + server validation.
+- **Versioning & lifecycle:** re-uploading keeps **version history** (who/when), supports supersede/replace, soft-delete with recovery window, and **retention policies** (align to statutory ≥ 8 years); expiry reminders for documents that lapse (e.g., certificates).
+- **Security (first-class):** files stored in **encrypted object storage** under the tenant's isolated document root; access is **RBAC-scoped** (a user sees a document only if permitted on its parent record and branch); downloads use **short-lived signed URLs** (never public); every upload/view/download/delete is **audit-logged**; uploads pass **malware/virus scanning** and type/size checks; sensitive documents (PAN/Aadhaar/bank) are access-restricted and masked in listings. No file is served without an authorization check.
+- **Search & OCR:** metadata/full-text search across filenames, types, tags, and linked party; **OCR text extraction** for scanned bills/challans to make them searchable (Phase 2), feeding future auto-capture/reconciliation.
+- Roles: Operator/Accountant (upload/attach), all (view within permission scope), Controller/Admin (delete/retention), Auditor (read + audit).
+
 ---
 
 ## 6. Detailed Workflows
@@ -581,7 +593,8 @@ Dashboards are **configurable** (widget catalog, drag-arrange, saved per role/us
 - `employees` (encrypted PAN/Aadhaar/bank, UAN, ESIC), `salary_structures`, `salary_components`, `attendance`, `leave_types`, `leave_balances`, `leave_requests`, `payroll_runs`, `payroll_lines`, `payroll_deductions`, `reimbursements`, `payslips`, `statutory_configs` (PF/ESI/PT numbers, rates), `form16_data`.
 
 **Controls & Platform**
-- `approval_policies`, `approval_requests`, `approval_steps`, `audit_logs` (hash-chained), `outbox_events`, `background_jobs`, `notifications`, `reference_rates` (versioned tax config), `attachments`.
+- `approval_policies`, `approval_requests`, `approval_steps`, `audit_logs` (hash-chained), `outbox_events`, `background_jobs`, `notifications`, `reference_rates` (versioned tax config).
+- **Documents:** `documents` (id, company/branch, financial_year, module, entity_type, entity_id, doc_type, filename, storage_key in object store, mime, size, checksum, version, uploaded_by/at, deleted_at, retention_until, scan_status), `document_versions`, `document_types` (master). Files live in **encrypted object storage** under the tenant document root (`<company>/<branch>/<FY>/<module>/<entity>/…`); the DB holds only metadata + storage keys, never the bytes.
 
 ### 9.2 Design Principles
 - **Immutability of postings:** ledger entries never updated in place; reversals create linked entries with reason and approval.
@@ -636,6 +649,11 @@ Dashboards are **configurable** (widget catalog, drag-arrange, saved per role/us
 **Bulk & Approvals**
 - `POST /bulk/{operation}` → returns `jobId`; `GET /jobs/{jobId}` for progress/result log
 - `GET /approvals`, `POST /approvals/{id}/approve`, `POST /approvals/{id}/reject`
+
+**Documents**
+- `POST /documents` (multipart or presigned-upload init) → attach to `{entity_type, entity_id, doc_type}`; returns metadata after malware/type/size checks
+- `GET /documents?entity_type=&entity_id=` list; `GET /documents/{id}` metadata; `GET /documents/{id}/download` → **short-lived signed URL** (authorization-checked)
+- `POST /documents/{id}/version` (supersede); `DELETE /documents/{id}` (soft-delete, retention-aware); `POST /documents/bulk` (background job)
 
 **Audit**
 - `GET /audit-logs` (filter by actor/entity/date), `GET /audit-logs/export`
@@ -711,6 +729,7 @@ apps/api/src/
 │   ├── inventory/               # items, stock states (RM/SFG/FG), valuation
 │   ├── payroll/                 # employees, salary, attendance, leave, statutory
 │   ├── reporting/               # financial/compliance/payroll reports
+│   ├── documents/               # uploads, document root, versions, signed URLs, scanning
 │   ├── approvals/               # maker-checker engine
 │   └── ravi-matel/              # ★ Ravi Matel — internal platform admin/back-office
 │       ├── ravi-matel.module.ts
@@ -795,6 +814,7 @@ apps/admin/src/app/
 6. **TCS:** 206C(1H) collection with threshold tracking, TCS ledgers, challan tracking, **27EQ return-ready output**, 194Q/206C interplay guard.
 7. **Job work (core business):** inward → process → outward with the **Cash/Debit memo and charge on the inward entry**, **outward gated by pending inward quantity**, partial dispatch, wastage/loss reconciliation, **Process Master** & **Rate Master** (contract rates), job-work charges (GST on SAC 9988 + TDS 194C), pending/ageing registers, ITC-04 supporting data.
 8. **Masters:** Financial Year, Ledger Categories, Item/Material master, Process Master, Rate Master, numbering series, cost centres, UoM, address types.
+8b. **Document management:** upload/attach documents to any record, per-tenant **document root**, auto-filing of generated PDFs (invoice/e-way/payslip/challan), versioning, encrypted storage, RBAC-scoped access via signed URLs, malware scan, and audit.
 9. **Payroll (core):** employee master, salary structures, **biometric-machine attendance integration**, leave, monthly run with PF/ESI/PT/TDS deductions, reimbursements, payslips (self-service), GL posting, statutory outputs (PF ECR, ESI, PT, 24Q data).
 10. **Controls & signing:** configurable maker-checker approval on payments, credit notes, period reopen, payroll disbursement, permission changes; **user-wise digital signing with a secret PIN** on approve/post/sign actions.
 11. **Automation:** keyboard-first fast entry, voucher templates, and one-click bulk actions via worker jobs with result logs.
@@ -865,6 +885,10 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - AC-15: Every critical action produces a tamper-evident audit-log entry with actor, before/after, IP, and timestamp; the hash chain verifies.
 - AC-16: Sessions expire on idle/absolute timeout; "revoke all sessions" immediately invalidates tokens; step-up re-auth is enforced on sensitive actions.
 
+**Documents**
+- AC-DOC-1: A document uploaded against a record is stored **encrypted** in the tenant document root, is retrievable only via a **short-lived signed URL after an authorization check** (not a public URL), and every upload/view/download/delete is audit-logged; a user without access to the parent record cannot list or fetch it.
+- AC-DOC-2: Generated PDFs (invoice/e-way/payslip/challan) are **auto-filed** into the document root and linked to their record; re-upload creates a new **version** without losing the prior one; disallowed type/oversize/malware uploads are rejected with a clear reason.
+
 **Multi-tenancy & Automation**
 - AC-17: A user scoped to Branch A cannot read/write Branch B data via any endpoint (verified by isolation tests).
 - AC-18: A bulk action (e.g., 500 invoices) runs as a background job, reports per-row results, isolates failures, is idempotent on retry, and is fully audited.
@@ -912,6 +936,7 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - **A6c.** The **Inward entry** carries the **memo type — Cash** (collect on delivery) or **Debit** (bill to ledger) and books the charge; process comes from **Process Master** and rate from **Rate Master** (contract rate overrides standard). **Outward** is a physical dispatch against pending only (no re-billing). A Job Card is a process traveller, not the memo owner.
 - **A6d.** **User signing** uses a per-user **secret PIN stored hashed**, separate from the login password; DSC binding is Phase 2.
 - **A6e.** **Biometric attendance** is integrated for payroll; exact device integration mode (SDK/import/push) is per deployment (see Open Q15).
+- **A6f.** **Documents** are held in **encrypted object storage** under a per-tenant **document root**; the database stores only metadata + storage keys. Files are served exclusively via **authorization-checked, short-lived signed URLs** (never public), and uploads are malware/type/size-scanned.
 - **A7.** **`Ravi Matel`** is the **internal platform-admin** module (not a tenant feature), present in both backend (`modules/ravi-matel`) and frontend (`apps/admin/ravi-matel`), behind a separate Super-Admin realm.
 - **A8.** "100% secure" is implemented as a **defense-in-depth, security-first mindset**; no absolute security guarantee is claimed — see R7.
 - **A9.** Hosting is **India-region**; the platform aligns with **DPDP Act 2023** principles.

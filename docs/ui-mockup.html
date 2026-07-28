@@ -309,6 +309,16 @@
   .btn[disabled] { opacity: .42; cursor: not-allowed; }
   .btn-primary[disabled]:hover { background: var(--red); }
 
+  /* document attach strip */
+  .qp-attach { border-top: 1px solid var(--line); padding: 12px 18px; background: var(--paper-2); }
+  .attach-drop { display: flex; align-items: center; gap: 9px; border: 1px dashed var(--line); border-radius: 9px; padding: 10px 12px; cursor: pointer; color: var(--text-2); font-size: 12.5px; font-weight: 600; }
+  .attach-drop:hover { border-color: var(--red); color: var(--text); }
+  .attach-drop .ah { margin-left: auto; font-weight: 500; color: var(--text-3); font-size: 11px; }
+  .attach-list { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .attach-file { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 5px 9px; }
+  .attach-file .ft { color: var(--text-3); font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: .04em; }
+  .attach-file .fx { margin-left: auto; color: var(--good); font-weight: 700; font-size: 11px; }
+
   /* ===== PIN SIGN MODAL ===== */
   .pin-scrim { display: none; position: fixed; inset: 0; background: rgba(8,8,10,.55); z-index: 70; backdrop-filter: blur(2px); align-items: center; justify-content: center; }
   body.pin-open .pin-scrim { display: flex; }
@@ -427,6 +437,7 @@
         <div class="sub">
           <a class="page active"><span class="pdot"></span>Dashboard</a>
           <a class="page"><span class="pdot"></span>Compliance Calendar<span class="tail red">2</span></a>
+          <a class="page"><span class="pdot"></span>Documents (Document Root)</a>
           <a class="page"><span class="pdot"></span>Notifications</a>
         </div>
       </details>
@@ -1329,6 +1340,16 @@
     </div>
   </div>
 
+  <div class="qp-attach">
+    <label class="attach-drop">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.5 12.5 21a4 4 0 0 1-6-6l8-8a3 3 0 0 1 4 4l-8 8a1.5 1.5 0 0 1-2-2l7-7"/></svg>
+      Attach document(s)
+      <span class="ah">→ document root · encrypted · audited</span>
+      <input type="file" multiple hidden onchange="showAttach(this)">
+    </label>
+    <div class="attach-list" id="attachList"></div>
+  </div>
+
   <div class="qp-foot">
     <div class="totwrap" id="qpTotals">
       <div class="tot"><span>Received (Dr)</span><b class="recv" id="totRecv">₹0</b></div>
@@ -1392,6 +1413,22 @@
 
   function openQuick(tab){ document.body.classList.add('qp-open'); selectVoucher(tab || 'payment'); }
   function closeQuick(){ document.body.classList.remove('qp-open'); }
+
+  function docType(name){
+    var e = (name.split('.').pop() || '').toLowerCase();
+    if (e === 'pdf') return 'PDF'; if (['jpg','jpeg','png','gif','webp'].indexOf(e) >= 0) return 'IMG';
+    if (['xls','xlsx','csv'].indexOf(e) >= 0) return 'SHEET'; if (['xml','json'].indexOf(e) >= 0) return e.toUpperCase();
+    return e ? e.toUpperCase() : 'FILE';
+  }
+  function showAttach(input){
+    var host = document.getElementById('attachList'); host.innerHTML = '';
+    Array.prototype.forEach.call(input.files, function(f){
+      var kb = Math.max(1, Math.round(f.size / 1024));
+      host.insertAdjacentHTML('beforeend',
+        '<div class="attach-file"><span class="ft">' + docType(f.name) + '</span>' + f.name +
+        ' <span style="color:var(--text-3)">· ' + kb + ' KB</span><span class="fx">scanned ✓</span></div>');
+    });
+  }
 
   function selectVoucher(type){
     curTab = type;
