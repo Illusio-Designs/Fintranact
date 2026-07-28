@@ -14,6 +14,7 @@ import { iamRouter } from './modules/iam/iam.routes.js';
 import { importRouter } from './modules/import/import.routes.js';
 import { ledgersRouter } from './modules/accounting/ledgers.routes.js';
 import { vouchersRouter } from './modules/accounting/vouchers.routes.js';
+import { periodsRouter } from './modules/accounting/periods.routes.js';
 import { salesRouter } from './modules/sales/sales.routes.js';
 import { purchaseRouter } from './modules/purchase/purchase.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
@@ -48,6 +49,7 @@ export function createApp(): Express {
   app.use('/api/v1', importRouter);
   app.use('/api/v1', ledgersRouter);
   app.use('/api/v1', vouchersRouter);
+  app.use('/api/v1', periodsRouter);
   app.use('/api/v1', salesRouter);
   app.use('/api/v1', purchaseRouter);
   app.use('/api/v1', reportsRouter);

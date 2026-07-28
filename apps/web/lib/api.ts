@@ -389,6 +389,27 @@ export async function getPayrollRun(month: string): Promise<PayrollRun> {
   return (await res.json()).data;
 }
 
+// ---- Period locks ----
+export interface PeriodLock { period: string; note: string | null; lockedAt: string; lockedBy: string | null }
+
+let mockLocks: PeriodLock[] = [{ period: '2026-04', note: 'FY opening — audited', lockedAt: '2026-05-08', lockedBy: 'Rajesh J.' }, { period: '2026-05', note: 'Filed GSTR-3B & 1', lockedAt: '2026-06-14', lockedBy: 'Rajesh J.' }];
+
+export async function listPeriodLocks(): Promise<PeriodLock[]> {
+  if (MOCK) return [...mockLocks];
+  const res = await fetch(`${API}/api/v1/periods`, { headers: authHeaders() });
+  return (await res.json()).data ?? [];
+}
+
+export async function lockPeriod(period: string, note: string): Promise<void> {
+  if (MOCK) { if (!mockLocks.some((l) => l.period === period)) mockLocks = [...mockLocks, { period, note, lockedAt: '2026-07-28', lockedBy: 'Rajesh J.' }]; return; }
+  await fetch(`${API}/api/v1/periods/lock`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ period, note }) });
+}
+
+export async function unlockPeriod(period: string): Promise<void> {
+  if (MOCK) { mockLocks = mockLocks.filter((l) => l.period !== period); return; }
+  await fetch(`${API}/api/v1/periods/unlock`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify({ period }) });
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();
