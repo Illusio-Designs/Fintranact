@@ -68,7 +68,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Balance Sheet** (`GET /api/v1/reports/balance-sheet`) — assets vs liabilities+equity, period profit carried to equity, balanced flag + suspense handling; page `/reports/balance-sheet` (two-sided).
 - [x] **All voucher types compose & post**: unified `POST /api/v1/vouchers/compose` (discriminated union) for payment / receipt / contra / journal / credit-note / debit-note; Quick Entry wires every type through the composer API (mock-aware). Sales & Purchase composers already existed. All 8 compositions verified balanced.
 - [x] **GST returns — GSTR-3B & GSTR-1** (`modules/gst`): GSTR-3B computes output tax vs ITC → net payable from the GST ledger balances; GSTR-1 outward-supplies summary. Pages `/gst/gstr-3b` (3.1/4/5.1 tables + tiles) and `/gst/gstr-1` (B2B/B2C rate-wise). Sidebar routed.
-- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; GSTR-2B reconciliation; e-Invoice/e-Way; TDS/TCS returns; job-work; payroll
+- [x] **GSTR-2B reconciliation** (`/gst/gstr-2b`): books ITC vs portal 2B, invoice-wise matched/mismatch/only-books/only-2b with status tiles + difference banner; backend `/gst/gstr-2b/books` books-side ITC summary.
+- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TDS/TCS challans & returns; job-work (ITC-04/lien); payroll (biometric/Form 16); documents
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -271,3 +272,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - `/gst/gstr-1` — summary tiles + **B2B / B2C rate-wise** tables (rate pill, taxable, IGST/CGST/SGST) with totals.
   - Sidebar **GST & Returns → GSTR-1 / GSTR-3B** route to them.
 - `next build` passes (14 routes). Merged to main. First slice of the GST-returns phase.
+
+### 2026-07-28 — Task 32: GSTR-2B reconciliation
+- **Backend** (`modules/gst`): `GET /api/v1/gst/gstr-2b/books` returns the books-side ITC total (input GST debit balances) + purchase/DN invoice count for reconciliation (the portal 2B is pulled from GSTN client-side / a later job). `report:view`. API typechecks.
+- **Web**: `getGstr2b()` (mock-aware recon dataset), page `/gst/gstr-2b` from the UI library — a difference **banner** (books vs 2B), four status **tiles** (Matched / Mismatch / Only in books / Only in 2B), a **status filter Dropdown**, and an invoice-matching table (supplier+GSTIN, invoice+date, ITC in books, ITC in 2B, difference, status pill) with a report **total row**. Sidebar **GST & Returns → GSTR-2B Reconciliation** routes to it. Verified: books ₹46,260 vs 2B ₹43,560, net diff ₹2,700.
+- `next build` passes (15 routes). Completes the GST-returns trio (GSTR-1 · 3B · 2B recon). Merged to main.

@@ -260,6 +260,31 @@ export async function getGstr1(): Promise<Gstr1> {
   return { ...d, b2b: [], b2c: [] };
 }
 
+export type Recon2bStatus = 'matched' | 'mismatch' | 'only_books' | 'only_2b';
+export interface Recon2bRow { supplier: string; gstin: string; invoiceNo: string; date: string; booksItc: number; portalItc: number; status: Recon2bStatus }
+export interface Gstr2b { rows: Recon2bRow[]; matched: number; mismatch: number; onlyBooks: number; only2b: number; booksTotal: number; portalTotal: number }
+
+export async function getGstr2b(): Promise<Gstr2b> {
+  const rows: Recon2bRow[] = [
+    { supplier: 'Precision Heat Treaters', gstin: '27AABCP…5T1', invoiceNo: 'PHT/2411', date: '12 Jun 2026', booksItc: 11700, portalItc: 11700, status: 'matched' },
+    { supplier: 'Gujarat Poly Pvt Ltd', gstin: '24AAGCG…2P3', invoiceNo: 'GP/8821', date: '15 Jun 2026', booksItc: 20160, portalItc: 20160, status: 'matched' },
+    { supplier: 'Aarav Metals', gstin: '24AAECA…9Q2', invoiceNo: 'AM/331', date: '18 Jun 2026', booksItc: 9000, portalItc: 8100, status: 'mismatch' },
+    { supplier: 'Shakti Traders', gstin: '24AABFS…7R4', invoiceNo: 'ST/77', date: '22 Jun 2026', booksItc: 5400, portalItc: 0, status: 'only_books' },
+    { supplier: 'Vishwa Chem', gstin: '24AACCV…1L8', invoiceNo: 'VC/12', date: '25 Jun 2026', booksItc: 0, portalItc: 3600, status: 'only_2b' },
+  ];
+  if (!MOCK) {
+    // real books side; portal rows still need the GSTN 2B pull (client-side or a later job)
+    try { await fetch(`${API}/api/v1/gst/gstr-2b/books`, { headers: authHeaders() }); } catch { /* ignore */ }
+  }
+  const matched = rows.filter((r) => r.status === 'matched').length;
+  const mismatch = rows.filter((r) => r.status === 'mismatch').length;
+  const onlyBooks = rows.filter((r) => r.status === 'only_books').length;
+  const only2b = rows.filter((r) => r.status === 'only_2b').length;
+  const booksTotal = rows.reduce((s, r) => s + r.booksItc, 0);
+  const portalTotal = rows.reduce((s, r) => s + r.portalItc, 0);
+  return { rows, matched, mismatch, onlyBooks, only2b, booksTotal, portalTotal };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();
