@@ -10,7 +10,7 @@ import {
   MinusSignIcon, PlusSignIcon,
 } from 'hugeicons-react';
 import { AppShell } from '../../lib/appshell';
-import { Dropdown, Calendar, DatePicker, RowMenu } from '../../lib/components';
+import { Dropdown, Calendar, DatePicker, RowMenu, PhoneInput } from '../../lib/components';
 
 /** @fintranact/ui — shared component library / design system reference. */
 
@@ -57,6 +57,8 @@ export default function UILibrary() {
   // form state
   const [pw, setPw] = useState('metallurgy');
   const [showPw, setShowPw] = useState(false);
+  const [dialCode, setDialCode] = useState('+91');
+  const [phone, setPhone] = useState('');
   const [qty, setQty] = useState(12);
   const [rng, setRng] = useState(65);
   const [rate, setRate] = useState(4);
@@ -143,10 +145,7 @@ export default function UILibrary() {
         <Card title="Email, phone & password" sub="Contact & credential fields.">
           <div className="field"><label>Email</label><div className="input-prefix"><span className="pfx" style={{ padding: '0 9px' }}><Mail01Icon size={16} color="currentColor" /></span><input type="email" placeholder="accounts@company.in" /></div></div>
           <div className="field"><label>Phone</label>
-            <div className="input-prefix">
-              <select defaultValue="+91"><option>+91</option><option>+1</option><option>+44</option><option>+971</option></select>
-              <input type="tel" placeholder="98250 12345" inputMode="tel" />
-            </div>
+            <PhoneInput code={dialCode} onCode={setDialCode} value={phone} onChange={setPhone} />
           </div>
           <div className="field"><label>Password</label>
             <div className="pw-wrap">

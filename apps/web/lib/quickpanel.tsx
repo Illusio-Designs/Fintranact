@@ -1,9 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createSalesInvoice, createPurchaseInvoice, composeVoucher } from './api';
-import { toast } from './toast';
+import { showSuccess, showError } from './success';
 import { Dropdown, type Opt } from './components';
+
+const TYPE_LABEL: Record<VType, string> = {
+  payment: 'Payment', receipt: 'Receipt', contra: 'Contra', journal: 'Journal',
+  sales: 'Sales Invoice', purchase: 'Purchase Bill', creditnote: 'Credit Note', debitnote: 'Debit Note',
+  bank: 'Bank Batch', job: 'Job Work', forfeiture: 'Lien / Forfeiture', payroll: 'Payroll Run',
+  ledger: 'Ledger', process: 'Process', rate: 'Rate',
+};
 
 /** Quick Entry aside panel — voucher-type-driven pass-entry with live GST / journal-balance / job-work gating.
  *  Ported from the HTML mockup into React (mock-mode; posting is simulated + PIN-gated). */
@@ -66,10 +73,17 @@ const Note = ({ children, tone }: { children: React.ReactNode; tone?: 'ok' | 'wa
 
 type BankLine = { date: string; dir: 'dr' | 'cr'; acc: string; narr: string; amt: number };
 
-export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+const VTYPES: VType[] = ['payment', 'receipt', 'contra', 'journal', 'sales', 'purchase', 'creditnote', 'debitnote', 'bank', 'job', 'forfeiture', 'payroll', 'ledger', 'process', 'rate'];
+
+export function QuickPanel({ open, onClose, initialType }: { open: boolean; onClose: () => void; initialType?: string }) {
   const [vType, setVType] = useState<VType>('payment');
   const [v, setV] = useState<Record<string, string>>({ jwGst: '18' });
   const set = (id: string, val: string) => setV((p) => ({ ...p, [id]: val }));
+
+  // When opened, jump to the page's own task (e.g. Sales page → Sales Invoice).
+  useEffect(() => {
+    if (open && initialType && VTYPES.includes(initialType as VType)) setVType(initialType as VType);
+  }, [open, initialType]);
 
   // bank multi-line
   const [bankLines, setBankLines] = useState<BankLine[]>([]);
@@ -77,12 +91,10 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
   // job work
   const [jobDir, setJobDir] = useState<'inward' | 'outward'>('inward');
   const [memo, setMemo] = useState<'debit' | 'cash'>('debit');
-  // pin + posted
+  // pin
   const [pin, setPin] = useState(false);
   const [pinVal, setPinVal] = useState('');
   const [pinErr, setPinErr] = useState(false);
-  const [posted, setPosted] = useState(false);
-  const [postedNo, setPostedNo] = useState<string | null>(null);
 
   const meta = VMETA[vType];
 
@@ -124,31 +136,37 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
     // Every voucher type posts through the composer API (mock returns a canned no.).
     const date = '2026-07-27';
     try {
-      let no: string | null = null;
+      let r: { voucherNo: string; total?: number } | null = null;
       if (vType === 'sales') {
-        no = (await createSalesInvoice({ partyLedgerId: 'l-mahalaxmi', placeOfSupply: (v.sPos as 'intra' | 'inter') || 'intra', date, items: [{ salesLedgerId: 'l-jobwork', taxable: pnum(v.sQty) * pnum(v.sRate), gstRate: pnum(v.sGst) }] })).voucherNo;
+        r = await createSalesInvoice({ partyLedgerId: 'l-mahalaxmi', placeOfSupply: (v.sPos as 'intra' | 'inter') || 'intra', date, items: [{ salesLedgerId: 'l-jobwork', taxable: pnum(v.sQty) * pnum(v.sRate), gstRate: pnum(v.sGst) }] });
       } else if (vType === 'purchase') {
-        no = (await createPurchaseInvoice({ partyLedgerId: 'l-gujpoly', placeOfSupply: (v.pPos as 'intra' | 'inter') || 'intra', date, items: [{ purchaseLedgerId: 'l-material', taxable: pnum(v.pQty) * pnum(v.pRate), gstRate: pnum(v.pGst) }] })).voucherNo;
+        r = await createPurchaseInvoice({ partyLedgerId: 'l-gujpoly', placeOfSupply: (v.pPos as 'intra' | 'inter') || 'intra', date, items: [{ purchaseLedgerId: 'l-material', taxable: pnum(v.pQty) * pnum(v.pRate), gstRate: pnum(v.pGst) }] });
       } else if (vType === 'payment') {
-        no = (await composeVoucher({ kind: 'payment', bankLedgerId: 'l-hdfc', partyLedgerId: 'l-gujpoly', amount: pnum(v.payAmt) || 100000, date })).voucherNo;
+        r = await composeVoucher({ kind: 'payment', bankLedgerId: 'l-hdfc', partyLedgerId: 'l-gujpoly', amount: pnum(v.payAmt) || 100000, date });
       } else if (vType === 'receipt') {
-        no = (await composeVoucher({ kind: 'receipt', bankLedgerId: 'l-hdfc', partyLedgerId: 'l-mahalaxmi', amount: pnum(v.rcpAmt) || 100000, date })).voucherNo;
+        r = await composeVoucher({ kind: 'receipt', bankLedgerId: 'l-hdfc', partyLedgerId: 'l-mahalaxmi', amount: pnum(v.rcpAmt) || 100000, date });
       } else if (vType === 'contra') {
-        no = (await composeVoucher({ kind: 'contra', fromLedgerId: 'l-hdfc', toLedgerId: 'l-cash', amount: pnum(v.ctrAmt) || 50000, date })).voucherNo;
+        r = await composeVoucher({ kind: 'contra', fromLedgerId: 'l-hdfc', toLedgerId: 'l-cash', amount: pnum(v.ctrAmt) || 50000, date });
       } else if (vType === 'journal') {
-        no = (await composeVoucher({ kind: 'journal', debitLedgerId: 'l-dep', creditLedgerId: 'l-accdep', amount: jDr, date })).voucherNo;
+        r = await composeVoucher({ kind: 'journal', debitLedgerId: 'l-dep', creditLedgerId: 'l-accdep', amount: jDr, date });
       } else if (vType === 'creditnote') {
-        no = (await composeVoucher({ kind: 'credit_note', partyLedgerId: 'l-balaji', salesLedgerId: 'l-jobwork', placeOfSupply: 'intra', taxable: pnum(v.cnTax), gstRate: pnum(v.cnGst), date })).voucherNo;
+        r = await composeVoucher({ kind: 'credit_note', partyLedgerId: 'l-balaji', salesLedgerId: 'l-jobwork', placeOfSupply: 'intra', taxable: pnum(v.cnTax), gstRate: pnum(v.cnGst), date });
       } else if (vType === 'debitnote') {
-        no = (await composeVoucher({ kind: 'debit_note', partyLedgerId: 'l-gujpoly', purchaseLedgerId: 'l-material', placeOfSupply: 'intra', taxable: pnum(v.dnTax), gstRate: pnum(v.dnGst), date })).voucherNo;
+        r = await composeVoucher({ kind: 'debit_note', partyLedgerId: 'l-gujpoly', purchaseLedgerId: 'l-material', placeOfSupply: 'intra', taxable: pnum(v.dnTax), gstRate: pnum(v.dnGst), date });
       }
-      setPostedNo(no);
-      const name = meta.master ? `${vType[0]!.toUpperCase()}${vType.slice(1)} saved` : `Voucher ${no ?? ''} posted`;
-      toast(meta.master ? name : `${name} — books balanced.`, 'ok');
       onClose();
-    } catch { setPostedNo(null); toast('Could not post — check the entry and try again.', 'err'); }
-    setPosted(true);
-    setTimeout(() => { setPosted(false); setPostedNo(null); }, 2200);
+      if (meta.master) {
+        showSuccess({ title: `${TYPE_LABEL[vType]} saved successfully`, rows: [['Type', TYPE_LABEL[vType]], ['Series', meta.s], ['Date', '27 Jul 2026']] });
+      } else {
+        const amt = typeof r?.total === 'number' ? inr0(r.total) : '—';
+        showSuccess({
+          title: 'Voucher posted successfully',
+          rows: [['Voucher no.', r?.voucherNo ?? '—'], ['Type', TYPE_LABEL[vType]], ['Date', '27 Jul 2026'], ['Amount', amt]],
+        });
+      }
+    } catch (e) {
+      showError('Could not post the voucher', [['Reason', (e as Error)?.message || 'Check the entry and try again'], ['Type', TYPE_LABEL[vType]]]);
+    }
   };
   const postQuick = () => { if (!canPost) return; if (meta.master) doPost(); else { setPin(true); setPinVal(''); setPinErr(false); } };
   const confirmPin = () => { if (pinVal.replace(/\D/g, '').length >= 4) { setPin(false); doPost(); } else setPinErr(true); };
@@ -477,9 +495,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
             </div>
           )}
           {vType !== 'bank' && <div style={{ flex: 1 }} />}
-          <button className="btn btn-primary" disabled={!canPost} onClick={postQuick} style={posted ? { background: 'var(--good)' } : undefined}>
-            {posted ? (postedNo ? `Posted ✓ ${postedNo}` : 'Posted ✓') : postLabel}
-          </button>
+          <button className="btn btn-primary" disabled={!canPost} onClick={postQuick}>{postLabel}</button>
         </div>
       </aside>
 

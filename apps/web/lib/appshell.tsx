@@ -6,6 +6,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { QuickPanel } from './quickpanel';
 import { NotificationDrawer } from './notifications';
 import { ToastHost } from './toast';
+import { SuccessHost } from './success';
 import { Dropdown } from './components';
 import { notifications as NOTIF_SEED, type Notif } from './mock';
 import {
@@ -72,6 +73,32 @@ function hrefFor(label: string): string {
   if (clean === 'TCS Collections') return '/tcs/collections';
   if (clean === 'Return 27EQ') return '/tcs/returns';
   return `/m/${slug(clean)}`;
+}
+
+/** Route → the Quick Entry voucher/task each page opens to. */
+function quickTypeFor(path: string): string {
+  const p = path || '';
+  // Sales & GST outward
+  if (/sales|gst\/e-invoice|gst\/e-way|gstr-1/.test(p)) return 'sales';
+  if (/purchase|gstr-2b/.test(p)) return 'purchase';
+  if (/credit-debit|credit-note|creditnote/.test(p)) return 'creditnote';
+  if (/debit-note|debitnote/.test(p)) return 'debitnote';
+  // Job work & process
+  if (/jobwork\/lien|forfeiture/.test(p)) return 'forfeiture';
+  if (/jobwork|inward|outward|job-card|itc04/.test(p)) return 'job';
+  // Masters
+  if (/masters\/process/.test(p)) return 'process';
+  if (/masters\/rate/.test(p)) return 'rate';
+  // Payroll & HR
+  if (/payroll|employees|salary|attendance|payslip|form16|statutory/.test(p)) return 'payroll';
+  // Accounting
+  if (/bank-cash|bank/.test(p)) return 'bank';
+  if (/ledger|chart-of-accounts|group/.test(p)) return 'ledger';
+  if (/receipt/.test(p)) return 'receipt';
+  if (/contra/.test(p)) return 'contra';
+  if (/voucher|day-book|journal/.test(p)) return 'journal';
+  // Default pass entry
+  return 'payment';
 }
 
 /** Distinct Hugeicons icon per nav group, rendered inside a large round badge. */
@@ -186,7 +213,7 @@ export function AppShell({
               const isOpen = openGroup === g.group;
               return (
                 <div className={`grp ${isOpen ? 'open' : ''}`} key={gi}>
-                  <button className="grp-head" onClick={() => toggleGroup(g.group)} aria-expanded={isOpen} title={g.group}>
+                  <button className="grp-head" onClick={() => toggleGroup(g.group)} aria-expanded={isOpen} aria-label={g.group}>
                     <GIcon group={g.group} />
                     <span className="grp-name">{g.group}</span>
                     {g.badge && <span className="count alert">{g.badge}</span>}
@@ -235,9 +262,10 @@ export function AppShell({
           <div className="content">{children}</div>
         </div>
       </div>
-      <QuickPanel open={quick} onClose={() => setQuick(false)} />
+      <QuickPanel open={quick} onClose={() => setQuick(false)} initialType={quickTypeFor(pathname)} />
       <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} items={notifs} setItems={setNotifs} />
       <ToastHost />
+      <SuccessHost />
     </>
   );
 }
