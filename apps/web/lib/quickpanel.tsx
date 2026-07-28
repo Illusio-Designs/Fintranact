@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { createSalesInvoice, createPurchaseInvoice, composeVoucher } from './api';
 import { toast } from './toast';
+import { Dropdown, type Opt } from './components';
 
 /** Quick Entry aside panel — voucher-type-driven pass-entry with live GST / journal-balance / job-work gating.
  *  Ported from the HTML mockup into React (mock-mode; posting is simulated + PIN-gated). */
@@ -154,6 +155,18 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
   const change = (v2: VType) => { setVType(v2); };
 
+  // Field dropdown — wraps the shared <Dropdown>, backed by the `v` state bag.
+  const Sel = ({ id, opts, ph = '— Select —', dv, onPick }: { id: string; opts: (string | Opt)[]; ph?: string; dv?: string; onPick?: (val: string) => void }) => (
+    <Dropdown
+      width="100%"
+      value={v[id] ?? dv ?? ''}
+      placeholder={ph}
+      onChange={(val) => { set(id, val); onPick?.(val); }}
+      options={opts.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))}
+    />
+  );
+  const PROC_RATE: Record<string, string> = { Carburising: '18', 'Hardening & Tempering': '22', Annealing: '14', Nitriding: '28' };
+
   return (
     <>
       <div className="qp-scrim" style={{ display: open ? 'block' : 'none' }} onClick={onClose} />
@@ -169,12 +182,12 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
 
         <div className="qp-vtype">
           <label>Voucher type</label>
-          <select className="ctl big" value={vType} onChange={(e) => change(e.target.value as VType)}>
-            <optgroup label="Accounting"><option value="payment">Payment</option><option value="receipt">Receipt</option><option value="contra">Contra</option><option value="journal">Journal</option></optgroup>
-            <optgroup label="Trade / GST"><option value="sales">Sales Invoice</option><option value="purchase">Purchase Bill</option><option value="creditnote">Credit Note</option><option value="debitnote">Debit Note</option></optgroup>
-            <optgroup label="Operations"><option value="bank">Bank — multi-line entry</option><option value="job">Job Work — Inward / Outward</option><option value="forfeiture">Lien / Material Forfeiture</option><option value="payroll">Payroll Run</option></optgroup>
-            <optgroup label="Masters"><option value="ledger">Ledger (party) master</option><option value="process">Process master</option><option value="rate">Rate master</option></optgroup>
-          </select>
+          <Dropdown width="100%" value={vType} onChange={(val) => change(val as VType)} options={[
+            { value: 'payment', label: 'Payment', hint: 'Accounting' }, { value: 'receipt', label: 'Receipt', hint: 'Accounting' }, { value: 'contra', label: 'Contra', hint: 'Accounting' }, { value: 'journal', label: 'Journal', hint: 'Accounting' },
+            { value: 'sales', label: 'Sales Invoice', hint: 'Trade / GST' }, { value: 'purchase', label: 'Purchase Bill', hint: 'Trade / GST' }, { value: 'creditnote', label: 'Credit Note', hint: 'Trade / GST' }, { value: 'debitnote', label: 'Debit Note', hint: 'Trade / GST' },
+            { value: 'bank', label: 'Bank — multi-line entry', hint: 'Operations' }, { value: 'job', label: 'Job Work — Inward / Outward', hint: 'Operations' }, { value: 'forfeiture', label: 'Lien / Material Forfeiture', hint: 'Operations' }, { value: 'payroll', label: 'Payroll Run', hint: 'Operations' },
+            { value: 'ledger', label: 'Ledger (party) master', hint: 'Masters' }, { value: 'process', label: 'Process master', hint: 'Masters' }, { value: 'rate', label: 'Rate master', hint: 'Masters' },
+          ]} />
           <div className="vt-meta"><span className="vt-badge">{meta.s}</span> <span>{vType === 'job' ? (jobDir === 'inward' ? 'Receive customer material — Cash / Debit memo & charge.' : 'Dispatch against pending inward quantity.') : meta.d}</span></div>
         </div>
 
@@ -183,10 +196,10 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'payment' && (
             <div className="qp-pane on">
               <div className="grid2"><div className="fld"><label>Voucher no.</label><input className="ctl" defaultValue="PMT/26-27/0209" /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
-              <div className="fld"><label>Paid from — Bank / Cash a/c</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>HDFC Bank — Current ••4021</option><option>ICICI Bank — Current ••7788</option><option>SBI — CC ••1120</option><option>Cash in Hand</option></select></div>
-              <div className="fld"><label>Paid to — party / ledger</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Gujarat Poly Pvt Ltd</option><option>Anand Fabrication (Job Worker)</option><option>MSEB — Electricity</option><option>Furnace Fuel &amp; Gas</option></select></div>
-              <div className="grid2"><div className="fld"><label>Payment mode</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>UPI</option><option>Cheque</option></select></div><div className="fld"><label>Instrument / UTR no.</label><input className="ctl" placeholder="Cheque / UTR ref" /></div></div>
-              <div className="grid2"><div className="fld"><label>Amount ₹</label><input className="ctl big" placeholder="0.00" /></div><div className="fld"><label>TDS section</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>None</option><option>194C — Contractor</option><option>194J — Professional</option><option>194I — Rent</option><option>194Q — Purchase of goods</option></select></div></div>
+              <div className="fld"><label>Paid from — Bank / Cash a/c</label><Sel id="payFrom" opts={['HDFC Bank — Current ••4021', 'ICICI Bank — Current ••7788', 'SBI — CC ••1120', 'Cash in Hand']} /></div>
+              <div className="fld"><label>Paid to — party / ledger</label><Sel id="payTo" opts={['Gujarat Poly Pvt Ltd', 'Anand Fabrication (Job Worker)', 'MSEB — Electricity', 'Furnace Fuel & Gas']} /></div>
+              <div className="grid2"><div className="fld"><label>Payment mode</label><Sel id="payMode" opts={['NEFT', 'RTGS', 'IMPS', 'UPI', 'Cheque']} /></div><div className="fld"><label>Instrument / UTR no.</label><input className="ctl" placeholder="Cheque / UTR ref" /></div></div>
+              <div className="grid2"><div className="fld"><label>Amount ₹</label><input className="ctl big" placeholder="0.00" value={v.payAmt || ''} onChange={(e) => set('payAmt', e.target.value)} /></div><div className="fld"><label>TDS section</label><Sel id="payTds" opts={['None', '194C — Contractor', '194J — Professional', '194I — Rent', '194Q — Purchase of goods']} /></div></div>
               <div className="fld"><label>Narration</label><input className="ctl" placeholder="e.g. Being payment against June supplies" /></div>
               <Note>Payments above ₹1L route through <b>maker-checker</b> approval before release. TDS, if any, is auto-deducted on the net.</Note>
             </div>
@@ -196,10 +209,10 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'receipt' && (
             <div className="qp-pane on">
               <div className="grid2"><div className="fld"><label>Voucher no.</label><input className="ctl" defaultValue="RCP/26-27/0341" /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
-              <div className="fld"><label>Received in — Bank / Cash a/c</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>HDFC Bank — Current ••4021</option><option>ICICI Bank — Current ••7788</option><option>Cash in Hand</option></select></div>
-              <div className="fld"><label>Received from — customer</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Mahalaxmi Traders</option><option>Shree Balaji Enterprises</option><option>Tata Motors Ltd</option></select></div>
-              <div className="grid2"><div className="fld"><label>Receipt mode</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>NEFT</option><option>RTGS</option><option>UPI</option><option>Cheque</option><option>Cash</option></select></div><div className="fld"><label>Amount ₹</label><input className="ctl big" placeholder="0.00" /></div></div>
-              <div className="fld"><label>Against reference (bill)</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>On account</option><option>SI/26-27/0482 — ₹2,48,600</option><option>Advance receipt</option></select></div>
+              <div className="fld"><label>Received in — Bank / Cash a/c</label><Sel id="rcpIn" opts={['HDFC Bank — Current ••4021', 'ICICI Bank — Current ••7788', 'Cash in Hand']} /></div>
+              <div className="fld"><label>Received from — customer</label><Sel id="rcpFrom" opts={['Mahalaxmi Traders', 'Shree Balaji Enterprises', 'Tata Motors Ltd']} /></div>
+              <div className="grid2"><div className="fld"><label>Receipt mode</label><Sel id="rcpMode" opts={['NEFT', 'RTGS', 'UPI', 'Cheque', 'Cash']} /></div><div className="fld"><label>Amount ₹</label><input className="ctl big" placeholder="0.00" value={v.rcpAmt || ''} onChange={(e) => set('rcpAmt', e.target.value)} /></div></div>
+              <div className="fld"><label>Against reference (bill)</label><Sel id="rcpRef" opts={['On account', 'SI/26-27/0482 — ₹2,48,600', 'Advance receipt']} /></div>
               <div className="fld"><label>Narration</label><input className="ctl" placeholder="e.g. Being amount received against invoice" /></div>
               <Note tone="ok">Auto-knocks off the selected outstanding bill and updates receivable ageing.</Note>
             </div>
@@ -209,9 +222,9 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'contra' && (
             <div className="qp-pane on">
               <div className="grid2"><div className="fld"><label>Voucher no.</label><input className="ctl" defaultValue="CTR/26-27/0067" /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
-              <div className="fld"><label>From account</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>HDFC Bank — Current ••4021</option><option>SBI — CC ••1120</option><option>Cash in Hand</option></select></div>
-              <div className="fld"><label>To account</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>Cash in Hand</option><option>ICICI Bank — Current ••7788</option><option>HDFC Bank — Current ••4021</option></select></div>
-              <div className="fld"><label>Amount ₹</label><input className="ctl big" placeholder="0.00" /></div>
+              <div className="fld"><label>From account</label><Sel id="ctrFrom" opts={['HDFC Bank — Current ••4021', 'SBI — CC ••1120', 'Cash in Hand']} /></div>
+              <div className="fld"><label>To account</label><Sel id="ctrTo" opts={['Cash in Hand', 'ICICI Bank — Current ••7788', 'HDFC Bank — Current ••4021']} /></div>
+              <div className="fld"><label>Amount ₹</label><input className="ctl big" placeholder="0.00" value={v.ctrAmt || ''} onChange={(e) => set('ctrAmt', e.target.value)} /></div>
               <div className="fld"><label>Narration</label><input className="ctl" placeholder="e.g. Cash deposited to HDFC" /></div>
               <Note>Contra moves money between your own bank / cash accounts — no party, no P&amp;L impact.</Note>
             </div>
@@ -222,9 +235,9 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
             <div className="qp-pane on">
               <div className="grid2"><div className="fld"><label>Voucher no.</label><input className="ctl" defaultValue="JV/26-27/0128" /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
               <div className="sec-label">Debit</div>
-              <div className="grid2"><div className="fld"><label>Debit ledger</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Depreciation</option><option>Furnace Fuel &amp; Gas</option><option>Bad Debts</option><option>Round Off</option></select></div><div className="fld"><label>Debit amount ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.jDr || ''} onChange={(e) => set('jDr', e.target.value)} /></div></div>
+              <div className="grid2"><div className="fld"><label>Debit ledger</label><Sel id="jDrLedger" opts={['Depreciation', 'Furnace Fuel & Gas', 'Bad Debts', 'Round Off']} /></div><div className="fld"><label>Debit amount ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.jDr || ''} onChange={(e) => set('jDr', e.target.value)} /></div></div>
               <div className="sec-label">Credit</div>
-              <div className="grid2"><div className="fld"><label>Credit ledger</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Accumulated Depreciation</option><option>Provision for Expenses</option><option>Sundry Debtors</option></select></div><div className="fld"><label>Credit amount ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.jCr || ''} onChange={(e) => set('jCr', e.target.value)} /></div></div>
+              <div className="grid2"><div className="fld"><label>Credit ledger</label><Sel id="jCrLedger" opts={['Accumulated Depreciation', 'Provision for Expenses', 'Sundry Debtors']} /></div><div className="fld"><label>Credit amount ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.jCr || ''} onChange={(e) => set('jCr', e.target.value)} /></div></div>
               <div className={`jbal ${jOk ? 'ok' : (jDr > 0 || jCr > 0) && jDiff !== 0 ? 'bad' : ''}`}>
                 <div className="jbal-row"><span>Debit <b>{inr2(jDr)}</b></span><span>Credit <b>{inr2(jCr)}</b></span><span>Diff <b>{inr2(Math.abs(jDiff))}</b></span></div>
                 <div className="jbal-status">{jOk ? '✓ Balanced — ready to post' : jDr === 0 && jCr === 0 ? 'Enter debit & credit' : jDiff > 0 ? `Credit short by ${inr2(jDiff)}` : `Debit short by ${inr2(-jDiff)}`}</div>
@@ -237,16 +250,16 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {/* SALES */}
           {vType === 'sales' && (
             <div className="qp-pane on">
-              <div className="fld"><label>Customer</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>Mahalaxmi Traders — 27AACFM…9K1</option><option>Shree Balaji Enterprises — 27AAB…2Z1</option></select></div>
+              <div className="fld"><label>Customer</label><Sel id="sCust" opts={['Mahalaxmi Traders — 27AACFM…9K1', 'Shree Balaji Enterprises — 27AAB…2Z1']} /></div>
               <div className="grid2">
-                <div className="fld"><label>Place of supply</label><select className="ctl" value={v.sPos || ''} onChange={(e) => set('sPos', e.target.value)}><option value="" disabled>— Select —</option><option value="intra">Gujarat — intra-state (CGST+SGST)</option><option value="inter">Maharashtra — inter-state (IGST)</option></select></div>
+                <div className="fld"><label>Place of supply</label><Sel id="sPos" opts={[{ value: 'intra', label: 'Gujarat — intra-state (CGST+SGST)' }, { value: 'inter', label: 'Maharashtra — inter-state (IGST)' }]} /></div>
                 <div className="fld"><label>Invoice date</label><input className="ctl" defaultValue="27 Jul 2026" /></div>
               </div>
-              <div className="fld"><label>Item / service</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Heat Treatment — Carburising (SAC 9988)</option><option>Annealing job (SAC 9988)</option></select></div>
+              <div className="fld"><label>Item / service</label><Sel id="sItem" opts={['Heat Treatment — Carburising (SAC 9988)', 'Annealing job (SAC 9988)']} /></div>
               <div className="grid3">
                 <div className="fld"><label>Qty</label><input className="ctl" inputMode="decimal" placeholder="0" value={v.sQty || ''} onChange={(e) => set('sQty', e.target.value)} /></div>
                 <div className="fld"><label>Rate ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.sRate || ''} onChange={(e) => set('sRate', e.target.value)} /></div>
-                <div className="fld"><label>GST rate</label><select className="ctl" value={v.sGst || ''} onChange={(e) => set('sGst', e.target.value)}><option value="" disabled>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
+                <div className="fld"><label>GST rate</label><Sel id="sGst" opts={[{ value: '5', label: '5%' }, { value: '12', label: '12%' }, { value: '18', label: '18%' }, { value: '28', label: '28%' }]} /></div>
               </div>
               <TaxBox taxable={pnum(v.sQty) * pnum(v.sRate)} gst={pnum(v.sGst)} pos={v.sPos} total="Invoice total" />
               <Note tone="ok">Eligible for e-Invoice — IRN &amp; signed QR will be fetched on save.</Note>
@@ -257,15 +270,15 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'purchase' && (
             <div className="qp-pane on">
               <div className="grid2"><div className="fld"><label>Supplier bill no.</label><input className="ctl" placeholder="Vendor invoice no." /></div><div className="fld"><label>Bill date</label><input className="ctl" defaultValue="24 Jul 2026" /></div></div>
-              <div className="fld"><label>Supplier</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>Gujarat Poly Pvt Ltd — 24AAGCG…2P3</option><option>Precision Heat Treaters — 27AAB…5T1</option></select></div>
+              <div className="fld"><label>Supplier</label><Sel id="pSupplier" opts={['Gujarat Poly Pvt Ltd — 24AAGCG…2P3', 'Precision Heat Treaters — 27AAB…5T1']} /></div>
               <div className="grid2">
-                <div className="fld"><label>Place of supply</label><select className="ctl" value={v.pPos || ''} onChange={(e) => set('pPos', e.target.value)}><option value="" disabled>— Select —</option><option value="intra">Gujarat — intra-state (CGST+SGST)</option><option value="inter">Maharashtra — inter-state (IGST)</option></select></div>
-                <div className="fld"><label>Item / service</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>HDPE Granules (HSN 3901)</option><option>Furnace LPG (HSN 2711)</option></select></div>
+                <div className="fld"><label>Place of supply</label><Sel id="pPos" opts={[{ value: 'intra', label: 'Gujarat — intra-state (CGST+SGST)' }, { value: 'inter', label: 'Maharashtra — inter-state (IGST)' }]} /></div>
+                <div className="fld"><label>Item / service</label><Sel id="pItem" opts={['HDPE Granules (HSN 3901)', 'Furnace LPG (HSN 2711)']} /></div>
               </div>
               <div className="grid3">
                 <div className="fld"><label>Qty</label><input className="ctl" inputMode="decimal" placeholder="0" value={v.pQty || ''} onChange={(e) => set('pQty', e.target.value)} /></div>
                 <div className="fld"><label>Rate ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.pRate || ''} onChange={(e) => set('pRate', e.target.value)} /></div>
-                <div className="fld"><label>GST rate</label><select className="ctl" value={v.pGst || ''} onChange={(e) => set('pGst', e.target.value)}><option value="" disabled>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
+                <div className="fld"><label>GST rate</label><Sel id="pGst" opts={[{ value: '5', label: '5%' }, { value: '12', label: '12%' }, { value: '18', label: '18%' }, { value: '28', label: '28%' }]} /></div>
               </div>
               <TaxBox taxable={pnum(v.pQty) * pnum(v.pRate)} gst={pnum(v.pGst)} pos={v.pPos} total="Bill total" />
               <Note>ITC flows to GSTR-2B reconciliation. 194Q vs supplier's 206C(1H) is auto-guarded to avoid double tax.</Note>
@@ -279,10 +292,10 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
             return (
               <div className="qp-pane on">
                 <div className="grid2"><div className="fld"><label>{vType === 'creditnote' ? 'Credit' : 'Debit'} note no.</label><input className="ctl" defaultValue={vType === 'creditnote' ? 'CN/26-27/0020' : 'DN/26-27/0012'} /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
-                <div className="fld"><label>{vType === 'creditnote' ? 'Against sales invoice' : 'Against purchase bill'}</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option>{vType === 'creditnote' ? <><option>SI/26-27/0461 — Shree Balaji ₹1,04,200</option><option>SI/26-27/0448 — Tata Motors ₹3,20,000</option></> : <><option>PB/26-27/0311 — Gujarat Poly ₹1,12,000</option><option>PB/26-27/0298 — Precision Heat ₹64,800</option></>}</select></div>
+                <div className="fld"><label>{vType === 'creditnote' ? 'Against sales invoice' : 'Against purchase bill'}</label><Sel id={`${p}Against`} opts={vType === 'creditnote' ? ['SI/26-27/0461 — Shree Balaji ₹1,04,200', 'SI/26-27/0448 — Tata Motors ₹3,20,000'] : ['PB/26-27/0311 — Gujarat Poly ₹1,12,000', 'PB/26-27/0298 — Precision Heat ₹64,800']} /></div>
                 <div className="grid2">
-                  <div className="fld"><label>Reason</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option>{vType === 'creditnote' ? <><option>Sales return</option><option>Rate difference</option><option>Post-sale discount</option></> : <><option>Purchase return</option><option>Damaged goods</option><option>Short supply</option></>}</select></div>
-                  <div className="fld"><label>GST rate</label><select className="ctl" value={v[`${p}Gst`] || ''} onChange={(e) => set(`${p}Gst`, e.target.value)}><option value="" disabled>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
+                  <div className="fld"><label>Reason</label><Sel id={`${p}Reason`} opts={vType === 'creditnote' ? ['Sales return', 'Rate difference', 'Post-sale discount'] : ['Purchase return', 'Damaged goods', 'Short supply']} /></div>
+                  <div className="fld"><label>GST rate</label><Sel id={`${p}Gst`} opts={[{ value: '5', label: '5%' }, { value: '12', label: '12%' }, { value: '18', label: '18%' }, { value: '28', label: '28%' }]} /></div>
                 </div>
                 <div className="fld"><label>Taxable amount ₹</label><input className="ctl big" inputMode="decimal" placeholder="0.00" value={v[`${p}Tax`] || ''} onChange={(e) => set(`${p}Tax`, e.target.value)} /></div>
                 {taxable > 0 && gst > 0 && <div className="calc-box"><KV k="Taxable value" v={taxable} /><KV k={`GST @ ${gst}%`} v={tax} /><KV k="Note total" v={taxable + tax} strong /></div>}
@@ -298,7 +311,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
               <div className="bank-strip">
                 <div className="row1">
                   <div className="bk-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="2" y="6" width="20" height="13" rx="2" /><path d="M2 10h20M6 15h4" /></svg></div>
-                  <select className="ctl big" defaultValue="HDFC Bank — Current A/c ••4021"><option>HDFC Bank — Current A/c ••4021</option><option>ICICI Bank — Current A/c ••7788</option><option>SBI — CC A/c ••1120</option><option>Cash in Hand</option></select>
+                  <Sel id="bankSel" dv="HDFC Bank — Current A/c ••4021" opts={['HDFC Bank — Current A/c ••4021', 'ICICI Bank — Current A/c ••7788', 'SBI — CC A/c ••1120', 'Cash in Hand']} />
                 </div>
                 <div className="bk-meta"><span>Book balance <b>₹41,86,220</b></span><span>Lines this session <b>{bankLines.length}</b></span><span>Series <b>BNK/26-27</b></span></div>
               </div>
@@ -330,7 +343,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
                   </div>
                 </div>
                 <div className="fld" style={{ margin: '0 0 9px' }}><label>Opposite account (particulars)</label>
-                  <select className="ctl" value={v.lnAcc || 'Mahalaxmi Traders'} onChange={(e) => set('lnAcc', e.target.value)}><option>Mahalaxmi Traders</option><option>Gujarat Poly Pvt Ltd</option><option>Anand Fabrication (Job Worker)</option><option>MSEB — Electricity</option><option>Salary Payable</option><option>GST Payable</option><option>TDS Payable — 194C</option></select>
+                  <Sel id="lnAcc" dv="Mahalaxmi Traders" opts={['Mahalaxmi Traders', 'Gujarat Poly Pvt Ltd', 'Anand Fabrication (Job Worker)', 'MSEB — Electricity', 'Salary Payable', 'GST Payable', 'TDS Payable — 194C']} />
                 </div>
                 <div className="crow amt">
                   <div className="fld" style={{ margin: 0 }}><label>Amount ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.lnAmt || ''} onChange={(e) => set('lnAmt', e.target.value)} /></div>
@@ -352,18 +365,18 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
               {jobDir === 'inward' ? (
                 <div style={{ marginTop: 12 }}>
                   <div className="grid2"><div className="fld"><label>Inward challan no.</label><input className="ctl" defaultValue="JW-IN/26-27/0052" /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
-                  <div className="fld"><label>Customer (material owner)</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>Mahalaxmi Traders — 27AACFM…9K1</option><option>Shree Balaji Enterprises — 27AAB…2Z1</option></select></div>
+                  <div className="fld"><label>Customer (material owner)</label><Sel id="jwCust" opts={['Mahalaxmi Traders — 27AACFM…9K1', 'Shree Balaji Enterprises — 27AAB…2Z1']} /></div>
                   <div className="fld"><label>Memo type</label>
                     <div className="toggle2"><button type="button" className={memo === 'debit' ? 'on' : ''} onClick={() => setMemo('debit')}>Debit (bill to ledger)</button><button type="button" className={memo === 'cash' ? 'on' : ''} onClick={() => setMemo('cash')}>Cash (collect on delivery)</button></div>
                   </div>
                   <div className="grid2">
-                    <div className="fld"><label>Process</label><select className="ctl" value={v.jwProc || ''} onChange={(e) => { const rate = e.target.selectedOptions[0]?.dataset.rate || ''; set('jwProc', e.target.value); if (rate) set('jwRate', rate); }}><option value="" disabled>— Select —</option><option data-rate="18">Carburising</option><option data-rate="22">Hardening &amp; Tempering</option><option data-rate="14">Annealing</option><option data-rate="28">Nitriding</option></select></div>
-                    <div className="fld"><label>Material / description</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Gears</option><option>Shafts</option><option>MS Rounds</option></select></div>
+                    <div className="fld"><label>Process</label><Sel id="jwProc" opts={['Carburising', 'Hardening & Tempering', 'Annealing', 'Nitriding']} onPick={(val) => { const r = PROC_RATE[val]; if (r) set('jwRate', r); }} /></div>
+                    <div className="fld"><label>Material / description</label><Sel id="jwMaterial" opts={['Gears', 'Shafts', 'MS Rounds']} /></div>
                   </div>
                   <div className="grid3">
                     <div className="fld"><label>Qty received (kg)</label><input className="ctl" inputMode="decimal" placeholder="0" value={v.jwQtyIn || ''} onChange={(e) => set('jwQtyIn', e.target.value)} /></div>
                     <div className="fld"><label>Rate ₹/kg</label><input className="ctl" inputMode="decimal" placeholder="auto" value={v.jwRate || ''} onChange={(e) => set('jwRate', e.target.value)} /></div>
-                    <div className="fld"><label>GST rate</label><select className="ctl" value={v.jwGst || '18'} onChange={(e) => set('jwGst', e.target.value)}><option value="18">18% (SAC 9988)</option><option value="12">12%</option><option value="5">5%</option></select></div>
+                    <div className="fld"><label>GST rate</label><Sel id="jwGst" dv="18" opts={[{ value: '18', label: '18% (SAC 9988)' }, { value: '12', label: '12%' }, { value: '5', label: '5%' }]} /></div>
                   </div>
                   {pnum(v.jwQtyIn) > 0 && pnum(v.jwRate) > 0 && (() => { const c = pnum(v.jwQtyIn) * pnum(v.jwRate); const g = pnum(v.jwGst); return (
                     <div className="calc-box"><KV k={`Process charge (${pnum(v.jwQtyIn)} × ₹${pnum(v.jwRate)})`} v={c} /><KV k={`GST @ ${g}%`} v={c * g / 100} /><KV k={memo === 'cash' ? 'Cash memo total' : 'Debit memo total'} v={c + c * g / 100} strong /></div>
@@ -374,7 +387,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
                 <div style={{ marginTop: 12 }}>
                   <div className="grid2"><div className="fld"><label>Outward challan no. (Rule 45)</label><input className="ctl" defaultValue="JW-OUT/26-27/0061" /></div><div className="fld"><label>Date</label><input className="ctl" defaultValue="27 Jul 2026" /></div></div>
                   <div className="fld"><label>Against inward challan</label>
-                    <select className="ctl big" value={v.jwInwardRef || ''} onChange={(e) => set('jwInwardRef', e.target.value)}><option value="" disabled>— Select —</option><option value="1000|400">JW-IN/0044 · Mahalaxmi · Gears · recd 1,000 · pending 400</option><option value="500|500">JW-IN/0051 · Shree Balaji · Shafts · recd 500 · pending 500</option><option value="250|60">JW-IN/0039 · Tata Motors · Pins · recd 250 · pending 60</option></select>
+                    <Sel id="jwInwardRef" opts={[{ value: '1000|400', label: 'JW-IN/0044 · Mahalaxmi · Gears · recd 1,000 · pending 400' }, { value: '500|500', label: 'JW-IN/0051 · Shree Balaji · Shafts · recd 500 · pending 500' }, { value: '250|60', label: 'JW-IN/0039 · Tata Motors · Pins · recd 250 · pending 60' }]} />
                     <div className="hint">Outward can dispatch at most the <b>pending quantity</b>. <span className="badge-auto">pending <b>{pending.toLocaleString('en-IN')}</b> kg</span></div>
                   </div>
                   <div className="grid2"><div className="fld"><label>Dispatch qty (kg)</label><input className="ctl" inputMode="decimal" placeholder="0" value={v.jwQtyOut || ''} onChange={(e) => set('jwQtyOut', e.target.value)} /></div><div className="fld"><label>Handling / burning loss (kg)</label><input className="ctl" inputMode="decimal" placeholder="0" value={v.jwLoss || ''} onChange={(e) => set('jwLoss', e.target.value)} /></div></div>
@@ -397,8 +410,8 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'forfeiture' && (
             <div className="qp-pane on">
               <Note tone="warn">Processor's lien (Contract Act §170). This handles a customer's property — notice, approval &amp; signing are required. Fully audited.</Note>
-              <div className="fld"><label>Overdue customer</label><select className="ctl big" value={v.frCust || '104200'} onChange={(e) => set('frCust', e.target.value)}><option value="104200">Shree Balaji Enterprises — overdue ₹1,04,200 (95 d)</option><option value="61000">Ganesh Auto Parts — overdue ₹61,000 (72 d)</option></select></div>
-              <div className="fld"><label>Material in custody</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>JW-IN/0051 · 500 kg shafts</option><option>JW-IN/0033 · 260 kg brackets</option></select></div>
+              <div className="fld"><label>Overdue customer</label><Sel id="frCust" dv="104200" opts={[{ value: '104200', label: 'Shree Balaji Enterprises — overdue ₹1,04,200 (95 d)' }, { value: '61000', label: 'Ganesh Auto Parts — overdue ₹61,000 (72 d)' }]} /></div>
+              <div className="fld"><label>Material in custody</label><Sel id="frMaterial" opts={['JW-IN/0051 · 500 kg shafts', 'JW-IN/0033 · 260 kg brackets']} /></div>
               <div className="grid2"><div className="fld"><label>Assessed realizable value ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.frValue || ''} onChange={(e) => set('frValue', e.target.value)} /></div><div className="fld"><label>Expected sale value ₹</label><input className="ctl" inputMode="decimal" placeholder="0.00" value={v.frSale || ''} onChange={(e) => set('frSale', e.target.value)} /></div></div>
               {frSale > 0 && (
                 <div className="calc-box">
@@ -417,7 +430,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><b style={{ fontSize: 14 }}>July 2026 payroll run</b><span className="pill neut" style={{ marginLeft: 'auto' }}>Not run</span></div>
                 <div className="bk-meta" style={{ marginTop: 10 }}><span>Employees <b>142</b></span><span>Gross <b>₹52.1L</b></span><span>Net <b>₹41.8L</b></span></div>
               </div>
-              <div className="grid2"><div className="fld"><label>Pay month</label><select className="ctl" defaultValue="July 2026"><option>July 2026</option><option>August 2026</option></select></div><div className="fld"><label>Pay date</label><input className="ctl" defaultValue="31 Jul 2026" /></div></div>
+              <div className="grid2"><div className="fld"><label>Pay month</label><Sel id="payMonth" dv="July 2026" opts={['July 2026', 'August 2026']} /></div><div className="fld"><label>Pay date</label><input className="ctl" defaultValue="31 Jul 2026" /></div></div>
               <div style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 12 }}>
                 <div className="kv"><span className="k">Basic + allowances</span><span className="v">₹52,10,000</span></div>
                 <div className="kv"><span className="k">PF (employee 12%)</span><span className="v">₹6,25,200</span></div>
@@ -433,7 +446,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'ledger' && (
             <div className="qp-pane on">
               <div className="fld"><label>Ledger name</label><input className="ctl big" placeholder="Party / ledger name" /></div>
-              <div className="grid2"><div className="fld"><label>Category</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Customer</option><option>Supplier</option><option>Job-Worker</option><option>Expense</option><option>Bank</option></select></div><div className="fld"><label>Under group</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Sundry Debtors</option><option>Sundry Creditors</option><option>Bank Accounts</option></select></div></div>
+              <div className="grid2"><div className="fld"><label>Category</label><Sel id="ldgCat" opts={['Customer', 'Supplier', 'Job-Worker', 'Expense', 'Bank']} /></div><div className="fld"><label>Under group</label><Sel id="ldgGroup" opts={['Sundry Debtors', 'Sundry Creditors', 'Bank Accounts']} /></div></div>
               <div className="grid2"><div className="fld"><label>GSTIN</label><input className="ctl" placeholder="24AABCS…1Z8" /></div><div className="fld"><label>PAN</label><input className="ctl" placeholder="AABCS1429P" /></div></div>
               <Note>Ledgers carry categories, multi-address (state-wise GSTIN) and a blacklist flag — approval-gated to remove.</Note>
             </div>
@@ -441,14 +454,14 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           {vType === 'process' && (
             <div className="qp-pane on">
               <div className="grid2"><div className="fld"><label>Process code</label><input className="ctl" placeholder="e.g. CARB" /></div><div className="fld"><label>Process name</label><input className="ctl" placeholder="e.g. Carburising" /></div></div>
-              <div className="grid2"><div className="fld"><label>SAC</label><input className="ctl" defaultValue="9988" /></div><div className="fld"><label>Charge basis (UoM)</label><select className="ctl" defaultValue=""><option value="" disabled>— Select —</option><option>Per kg</option><option>Per piece</option><option>Per lot</option></select></div></div>
+              <div className="grid2"><div className="fld"><label>SAC</label><input className="ctl" defaultValue="9988" /></div><div className="fld"><label>Charge basis (UoM)</label><Sel id="procUom" opts={['Per kg', 'Per piece', 'Per lot']} /></div></div>
               <Note>Processes drive inward, job cards and Rate Master lookup. This is a job-work house — no manufacturing BOM.</Note>
             </div>
           )}
           {vType === 'rate' && (
             <div className="qp-pane on">
-              <div className="fld"><label>Process</label><select className="ctl big" defaultValue=""><option value="" disabled>— Select —</option><option>Carburising</option><option>Hardening &amp; Tempering</option><option>Annealing</option></select></div>
-              <div className="fld"><label>Customer (blank = standard rate)</label><select className="ctl" defaultValue=""><option value="">All customers — standard rate</option><option>Mahalaxmi Traders</option><option>Tata Motors Ltd</option></select></div>
+              <div className="fld"><label>Process</label><Sel id="rateProc" opts={['Carburising', 'Hardening & Tempering', 'Annealing']} /></div>
+              <div className="fld"><label>Customer (blank = standard rate)</label><Sel id="rateCust" dv="All customers — standard rate" opts={['All customers — standard rate', 'Mahalaxmi Traders', 'Tata Motors Ltd']} /></div>
               <div className="grid2"><div className="fld"><label>Rate ₹/kg</label><input className="ctl" placeholder="0.00" /></div><div className="fld"><label>Effective from</label><input className="ctl" defaultValue="01 Apr 2026" /></div></div>
               <Note>Customer-specific contract rates override the standard rate on job cards.</Note>
             </div>

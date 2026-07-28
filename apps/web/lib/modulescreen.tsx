@@ -121,10 +121,10 @@ export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: 
           <h3>{title}</h3>
           <div className="sortby" style={{ marginLeft: 'auto' }}>
             Show
-            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}><option value={10}>10</option><option value={25}>25</option><option value={50}>50</option></select>
+            <Dropdown width={70} value={String(pageSize)} onChange={(v) => setPageSize(Number(v))} options={[{ value: '10', label: '10' }, { value: '25', label: '25' }, { value: '50', label: '50' }]} />
             <span style={{ color: 'var(--line)' }}>|</span>
             Sort by
-            <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}><option value="ref">Reference</option><option value="party">Party</option><option value="date">Date</option><option value="status">Status</option><option value="amount">Amount</option></select>
+            <Dropdown width={130} value={sortKey} onChange={(v) => setSortKey(v as SortKey)} options={[{ value: 'ref', label: 'Reference' }, { value: 'party', label: 'Party' }, { value: 'date', label: 'Date' }, { value: 'status', label: 'Status' }, { value: 'amount', label: 'Amount' }]} />
             <button className="mini" onClick={() => setAsc((v) => !v)}>{asc ? 'Asc ▲' : 'Desc ▼'}</button>
           </div>
         </div>

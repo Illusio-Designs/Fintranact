@@ -359,3 +359,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - **Financial year** selector,
   - **Role** selector (wired to `setRole`; switching updates dashboard KPIs + rail footer).
 - Added compact pill styling for `.topsel-dd .dd-trigger` and preserved the responsive hide (FY <1120px, role/branch <860px) in `globals.css`. Verified: role menu has 7 options, selecting "Owner / Director" switches the view; branch menu opens with both units. `next build` passes. Merged to main.
+
+### 2026-07-28 — Task 44: Center the toast + convert every native <select> to the UI Dropdown
+- **Toast centered**: `.toast-stack` moved from bottom-right to **top-center** (fixed, translateX(-50%), ~22% from top, slide-in). Verified centered (centerX = viewport/2). Success toast on post: "Voucher SI/26-27/0484 posted — books balanced."
+- **All native `<select>` → shared `<Dropdown>`** (the "same thing everywhere" pass):
+  - **QuickPanel**: all **38** native selects replaced via a local `Sel` helper wrapping `<Dropdown>` (voucher-type selector flattened with group hints; place-of-supply / GST-rate / process kept driving live compute; job-work Process auto-fills the rate via `onPick`). Live GST verified unchanged (₹25,000 → CGST/SGST ₹2,250 → ₹29,500).
+  - **ModuleScreen**: Show (page size) + Sort-by selects → `<Dropdown>`.
+  - Header FY/role/branch already converted (Task 43).
+- Only the `/ui` **showcase** keeps a native `<select>` on purpose (it documents the native control alongside the custom Dropdown). `next build` passes. Merged to main.
