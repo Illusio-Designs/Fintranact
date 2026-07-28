@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { createSalesInvoice, createPurchaseInvoice } from './api';
 
 /** Quick Entry aside panel — voucher-type-driven pass-entry with live GST / journal-balance / job-work gating.
  *  Ported from the HTML mockup into React (mock-mode; posting is simulated + PIN-gated). */
@@ -79,6 +80,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const [pinVal, setPinVal] = useState('');
   const [pinErr, setPinErr] = useState(false);
   const [posted, setPosted] = useState(false);
+  const [postedNo, setPostedNo] = useState<string | null>(null);
 
   const meta = VMETA[vType];
 
@@ -116,7 +118,22 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
   const postLabel = vType === 'bank' ? `Post ${bankLines.length} line${bankLines.length === 1 ? '' : 's'}`
     : vType === 'job' ? (jobDir === 'inward' ? 'Sign & save inward' : 'Sign & save outward') : meta.post;
 
-  const doPost = () => { setPosted(true); setTimeout(() => setPosted(false), 1600); };
+  const doPost = async () => {
+    // Sales/Purchase call the real composer API (mock returns a canned voucher no.).
+    try {
+      if (vType === 'sales') {
+        const r = await createSalesInvoice({ partyLedgerId: 'l-mahalaxmi', placeOfSupply: (v.sPos as 'intra' | 'inter') || 'intra', date: '2026-07-27', items: [{ salesLedgerId: 'l-jobwork', taxable: pnum(v.sQty) * pnum(v.sRate), gstRate: pnum(v.sGst) }] });
+        setPostedNo(r.voucherNo);
+      } else if (vType === 'purchase') {
+        const r = await createPurchaseInvoice({ partyLedgerId: 'l-gujpoly', placeOfSupply: (v.pPos as 'intra' | 'inter') || 'intra', date: '2026-07-24', items: [{ purchaseLedgerId: 'l-material', taxable: pnum(v.pQty) * pnum(v.pRate), gstRate: pnum(v.pGst) }] });
+        setPostedNo(r.voucherNo);
+      } else {
+        setPostedNo(null);
+      }
+    } catch { setPostedNo(null); }
+    setPosted(true);
+    setTimeout(() => { setPosted(false); setPostedNo(null); }, 2200);
+  };
   const postQuick = () => { if (!canPost) return; if (meta.master) doPost(); else { setPin(true); setPinVal(''); setPinErr(false); } };
   const confirmPin = () => { if (pinVal.replace(/\D/g, '').length >= 4) { setPin(false); doPost(); } else setPinErr(true); };
 
@@ -433,7 +450,7 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
           )}
           {vType !== 'bank' && <div style={{ flex: 1 }} />}
           <button className="btn btn-primary" disabled={!canPost} onClick={postQuick} style={posted ? { background: 'var(--good)' } : undefined}>
-            {posted ? 'Posted ✓' : postLabel}
+            {posted ? (postedNo ? `Posted ✓ ${postedNo}` : 'Posted ✓') : postLabel}
           </button>
         </div>
       </aside>

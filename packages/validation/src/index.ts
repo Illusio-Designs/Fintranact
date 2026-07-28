@@ -179,3 +179,29 @@ export const salesInvoiceSchema = z.object({
   items: z.array(salesItemSchema).min(1, 'Add at least one line'),
 });
 export type SalesInvoiceInput = z.infer<typeof salesInvoiceSchema>;
+
+// ---- Purchase bill (auto-composes the multi-line GST voucher) — PRD §5.6 ----
+export const purchaseItemSchema = z.object({
+  /** the expense / purchase account to debit (e.g. Raw Material, Furnace Fuel). */
+  purchaseLedgerId: z.string().min(1, 'Expense/purchase account is required'),
+  taxable: z.coerce.number().positive('Taxable amount must be > 0'),
+  gstRate: z.coerce.number().min(0).max(28),
+  description: z.string().optional(),
+});
+
+/**
+ * A purchase bill is entered as supplier + one or more expense lines + place of
+ * supply; the server derives the balanced voucher (Dr expense a/c; Dr input
+ * CGST/SGST or IGST; Cr supplier). Optional TDS on the taxable value reduces the
+ * supplier credit and books a TDS-payable liability.
+ */
+export const purchaseInvoiceSchema = z.object({
+  partyLedgerId: z.string().min(1, 'Supplier is required'),
+  placeOfSupply: z.enum(['intra', 'inter']),
+  date: z.string().min(1),
+  narration: z.string().optional(),
+  items: z.array(purchaseItemSchema).min(1, 'Add at least one line'),
+  /** optional TDS deducted on the taxable value (e.g. 194Q @ 0.1%). */
+  tdsRate: z.coerce.number().min(0).max(30).optional(),
+});
+export type PurchaseInvoiceInput = z.infer<typeof purchaseInvoiceSchema>;
