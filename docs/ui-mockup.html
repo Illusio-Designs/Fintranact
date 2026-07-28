@@ -294,6 +294,17 @@
   .kv { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
   .kv:last-child { border-bottom: 0; } .kv .k { color: var(--text-2); } .kv .v { font-variant-numeric: tabular-nums; font-weight: 650; }
   .qp-note { display:flex; gap:9px; background: var(--red-tint); color: var(--red-ink); border-radius: 9px; padding: 10px 12px; font-size: 12px; font-weight: 500; margin-top: 12px; }
+  .calc-box { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 4px; }
+  .calc-box:empty { display: none; }
+  .jbal { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 2px 0 12px; background: var(--paper); }
+  .jbal-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .jbal-row b { color: var(--text); font-weight: 700; }
+  .jbal-status { margin-top: 7px; font-size: 12px; font-weight: 700; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+  .jbal.ok { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); background: var(--good-tint); }
+  .jbal.ok .jbal-status { color: var(--good); }
+  .jbal.bad .jbal-status { color: var(--red-ink); }
+  .btn[disabled] { opacity: .42; cursor: not-allowed; }
+  .btn-primary[disabled]:hover { background: var(--red); }
   .toggle2 { display:inline-flex; background: var(--paper); border:1px solid var(--line); border-radius: 8px; padding: 2px; margin-bottom: 12px; }
   .toggle2 button { border:0; background:transparent; color:var(--text-2); font:inherit; font-size:12.5px; font-weight:700; padding:7px 16px; border-radius:6px; cursor:pointer; }
   .toggle2 button.on { background: var(--red); color:#fff; }
@@ -817,12 +828,16 @@
       <div class="sec-label">Debit</div>
       <div class="grid2">
         <div class="fld"><label>Debit ledger</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Depreciation</option><option>Furnace Fuel &amp; Gas</option><option>Bad Debts</option><option>Round Off</option><option>TDS Receivable</option></select></div>
-        <div class="fld"><label>Debit amount ₹</label><input class="ctl" placeholder="0.00"></div>
+        <div class="fld"><label>Debit amount ₹</label><input class="ctl" id="jDr" inputmode="decimal" oninput="calcJournal()" placeholder="0.00"></div>
       </div>
       <div class="sec-label">Credit</div>
       <div class="grid2">
         <div class="fld"><label>Credit ledger</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Accumulated Depreciation</option><option>Provision for Expenses</option><option>Sundry Debtors</option><option>Party Ledger</option></select></div>
-        <div class="fld"><label>Credit amount ₹</label><input class="ctl" placeholder="0.00"></div>
+        <div class="fld"><label>Credit amount ₹</label><input class="ctl" id="jCr" inputmode="decimal" oninput="calcJournal()" placeholder="0.00"></div>
+      </div>
+      <div class="jbal" id="jBal">
+        <div class="jbal-row"><span>Debit <b id="jDrT">₹0.00</b></span><span>Credit <b id="jCrT">₹0.00</b></span><span>Diff <b id="jDiff">₹0.00</b></span></div>
+        <div class="jbal-status" id="jStatus">Enter debit &amp; credit</div>
       </div>
       <div class="fld"><label>Narration (reason)</label><input class="ctl" placeholder="e.g. Being provision for June expenses"></div>
       <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Adjustment entry — no cash/bank movement. Debit total must equal credit total to post.</div>
@@ -836,16 +851,21 @@
       </div>
       <div class="fld"><label>Supplier</label>
         <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Gujarat Poly Pvt Ltd — 24AAGCG…2P3</option><option>Precision Heat Treaters — 27AAB…5T1</option><option>MSEB — Electricity</option></select>
-        <div class="hint">Supplier state <b>Gujarat</b> → inter-state <b>IGST</b>. <span class="badge-auto">auto</span></div>
       </div>
-      <div class="fld"><label>Item / service</label>
-        <select class="ctl"><option value="" disabled selected>— Select —</option><option>HDPE Granules (HSN 3901)</option><option>Furnace LPG (HSN 2711)</option><option>MS Rounds (HSN 7214)</option></select>
+      <div class="grid2">
+        <div class="fld"><label>Place of supply</label>
+          <select class="ctl" id="pPos" onchange="calcPurchase()"><option value="" disabled selected>— Select —</option><option value="inter">Gujarat — inter-state (IGST)</option><option value="intra">Maharashtra — intra-state (CGST+SGST)</option><option value="inter">Karnataka — inter-state (IGST)</option></select>
+        </div>
+        <div class="fld"><label>Item / service</label>
+          <select class="ctl"><option value="" disabled selected>— Select —</option><option>HDPE Granules (HSN 3901)</option><option>Furnace LPG (HSN 2711)</option><option>MS Rounds (HSN 7214)</option></select>
+        </div>
       </div>
       <div class="grid3">
-        <div class="fld"><label>Qty</label><input class="ctl" placeholder="0"></div>
-        <div class="fld"><label>Rate ₹</label><input class="ctl" placeholder="0.00"></div>
-        <div class="fld"><label>GST rate</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>18%</option><option>12%</option><option>5%</option><option>28%</option></select></div>
+        <div class="fld"><label>Qty</label><input class="ctl" id="pQty" inputmode="decimal" oninput="calcPurchase()" placeholder="0"></div>
+        <div class="fld"><label>Rate ₹</label><input class="ctl" id="pRate" inputmode="decimal" oninput="calcPurchase()" placeholder="0.00"></div>
+        <div class="fld"><label>GST rate</label><select class="ctl" id="pGst" onchange="calcPurchase()"><option value="" disabled selected>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
       </div>
+      <div class="calc-box" id="pBox"></div>
       <div class="grid2">
         <div class="fld"><label>ITC eligibility</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Eligible</option><option>Ineligible</option><option>Blocked u/s 17(5)</option></select></div>
         <div class="fld"><label>TDS section</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>None</option><option>194Q — Purchase of goods</option><option>194C — Contractor</option><option>194J — Professional</option></select></div>
@@ -868,9 +888,10 @@
       </div>
       <div class="grid2">
         <div class="fld"><label>Reason</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Sales return</option><option>Rate difference</option><option>Post-sale discount</option><option>Order cancellation</option></select></div>
-        <div class="fld"><label>GST rate</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>18%</option><option>12%</option><option>5%</option><option>28%</option></select></div>
+        <div class="fld"><label>GST rate</label><select class="ctl" id="cnGst" onchange="calcNote('cn')"><option value="" disabled selected>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
       </div>
-      <div class="fld"><label>Taxable amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+      <div class="fld"><label>Taxable amount ₹</label><input class="ctl big" id="cnTax" inputmode="decimal" oninput="calcNote('cn')" placeholder="0.00"></div>
+      <div class="calc-box" id="cnBox"></div>
       <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being goods returned by customer"></div>
       <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Reduces output GST liability and reflects in GSTR-1 (credit/debit notes). Above ₹1L → approval.</div>
     </div>
@@ -889,9 +910,10 @@
       </div>
       <div class="grid2">
         <div class="fld"><label>Reason</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>Purchase return</option><option>Rate difference</option><option>Damaged goods</option><option>Short supply</option></select></div>
-        <div class="fld"><label>GST rate</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>18%</option><option>12%</option><option>5%</option><option>28%</option></select></div>
+        <div class="fld"><label>GST rate</label><select class="ctl" id="dnGst" onchange="calcNote('dn')"><option value="" disabled selected>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
       </div>
-      <div class="fld"><label>Taxable amount ₹</label><input class="ctl big" placeholder="0.00"></div>
+      <div class="fld"><label>Taxable amount ₹</label><input class="ctl big" id="dnTax" inputmode="decimal" oninput="calcNote('dn')" placeholder="0.00"></div>
+      <div class="calc-box" id="dnBox"></div>
       <div class="fld"><label>Narration</label><input class="ctl" placeholder="e.g. Being defective material returned to supplier"></div>
       <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Reverses input ITC on the returned value and adjusts the supplier ledger.</div>
     </div>
@@ -956,26 +978,22 @@
     <div class="qp-pane" id="qp-sales">
       <div class="fld"><label>Customer</label>
         <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Mahalaxmi Traders — 27AACFM…9K1</option><option>Shree Balaji Enterprises — 27AAB…2Z1</option><option>Gujarat Poly Pvt Ltd — 24AAGCG…2P3</option></select>
-        <div class="hint">Place of supply <b>Maharashtra</b> → intra-state <b>CGST + SGST</b>. <span class="badge-auto">auto</span></div>
       </div>
       <div class="grid2">
+        <div class="fld"><label>Place of supply</label>
+          <select class="ctl" id="sPos" onchange="calcSales()"><option value="" disabled selected>— Select —</option><option value="intra">Maharashtra — intra-state (CGST+SGST)</option><option value="inter">Gujarat — inter-state (IGST)</option><option value="inter">Karnataka — inter-state (IGST)</option></select>
+        </div>
         <div class="fld"><label>Invoice date</label><input class="ctl" value="27 Jul 2026"></div>
-        <div class="fld"><label>Series</label><input class="ctl" value="SI/26-27/0483"></div>
       </div>
       <div class="fld"><label>Item / service</label>
         <select class="ctl"><option value="" disabled selected>— Select —</option><option>Heat Treatment — Carburising (SAC 9988)</option><option>Annealing job (SAC 9988)</option><option>MS Fasteners (HSN 7318)</option></select>
       </div>
       <div class="grid3">
-        <div class="fld"><label>Qty</label><input class="ctl" placeholder="0"></div>
-        <div class="fld"><label>Rate ₹</label><input class="ctl" placeholder="0.00"></div>
-        <div class="fld"><label>Taxable ₹</label><input class="ctl" placeholder="0.00" readonly></div>
+        <div class="fld"><label>Qty</label><input class="ctl" id="sQty" inputmode="decimal" oninput="calcSales()" placeholder="0"></div>
+        <div class="fld"><label>Rate ₹</label><input class="ctl" id="sRate" inputmode="decimal" oninput="calcSales()" placeholder="0.00"></div>
+        <div class="fld"><label>GST rate</label><select class="ctl" id="sGst" onchange="calcSales()"><option value="" disabled selected>— Select —</option><option value="5">5%</option><option value="12">12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
       </div>
-      <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:4px">
-        <div class="kv"><span class="k">Taxable value</span><span class="v">₹0.00</span></div>
-        <div class="kv"><span class="k">CGST @ 9%</span><span class="v">₹0.00</span></div>
-        <div class="kv"><span class="k">SGST @ 9%</span><span class="v">₹0.00</span></div>
-        <div class="kv"><span class="k" style="font-weight:700;color:var(--text)">Invoice total</span><span class="v" style="font-size:15px">₹0.00</span></div>
-      </div>
+      <div class="calc-box" id="sBox"></div>
       <div class="qp-note" style="background:var(--good-tint);color:var(--good)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Eligible for e-Invoice — IRN &amp; signed QR will be fetched on save.</div>
     </div>
 
@@ -1074,6 +1092,8 @@
     document.getElementById('vtSeries').textContent = m.s;
     document.getElementById('vtDesc').textContent = m.d;
     if (type === 'bank') renderBank(); else updateFooter();
+    recalcFor(type);
+    updatePostState();
     var body = document.querySelector('.qp-body'); if (body) body.scrollTop = 0;
   }
 
@@ -1138,14 +1158,72 @@
       totals.style.visibility = 'hidden';
       label.textContent = (VMETA[curTab] || {}).post || 'Post';
     }
+    updatePostState();
   }
 
   function postQuick(){
     var btn = document.getElementById('qpPost');
+    if (btn.disabled) return;
     var old = document.getElementById('qpPostLabel').textContent;
     document.getElementById('qpPostLabel').textContent = 'Posted ✓';
     btn.style.background = 'var(--good)';
-    setTimeout(function(){ document.getElementById('qpPostLabel').textContent = old; btn.style.background = ''; }, 1400);
+    setTimeout(function(){ document.getElementById('qpPostLabel').textContent = old; btn.style.background = ''; updatePostState(); }, 1400);
+  }
+
+  /* ---- live computation + post validation ---- */
+  function qi(id){ return document.getElementById(id); }
+  function pnum(v){ var n = parseFloat(String(v || '').replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; }
+  function inr2(n){ return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function kvRow(k, v, strong){
+    return '<div class="kv"><span class="k"' + (strong ? ' style="font-weight:700;color:var(--text)"' : '') + '>' + k + '</span>'
+         + '<span class="v"' + (strong ? ' style="font-size:15px"' : '') + '>' + inr2(v) + '</span></div>';
+  }
+  function taxBox(boxId, taxable, gst, pos, totalLabel){
+    var tax = taxable * gst / 100, html = kvRow('Taxable value', taxable);
+    if (pos === 'inter'){ html += kvRow('IGST @ ' + gst + '%', tax); }
+    else { html += kvRow('CGST @ ' + (gst / 2) + '%', tax / 2) + kvRow('SGST @ ' + (gst / 2) + '%', tax / 2); }
+    html += kvRow(totalLabel, taxable + tax, true);
+    qi(boxId).innerHTML = html;
+  }
+  function calcSales(){
+    taxBox('sBox', pnum(qi('sQty').value) * pnum(qi('sRate').value), pnum(qi('sGst').value), qi('sPos').value, 'Invoice total');
+    updatePostState();
+  }
+  function calcPurchase(){
+    taxBox('pBox', pnum(qi('pQty').value) * pnum(qi('pRate').value), pnum(qi('pGst').value), qi('pPos').value, 'Bill total');
+    updatePostState();
+  }
+  function calcNote(pfx){
+    var taxable = pnum(qi(pfx + 'Tax').value), gst = pnum(qi(pfx + 'Gst').value), tax = taxable * gst / 100;
+    qi(pfx + 'Box').innerHTML = kvRow('Taxable value', taxable) + kvRow('GST @ ' + gst + '%', tax) + kvRow('Note total', taxable + tax, true);
+    updatePostState();
+  }
+  function calcJournal(){
+    var dr = pnum(qi('jDr').value), cr = pnum(qi('jCr').value), diff = dr - cr, box = qi('jBal');
+    qi('jDrT').textContent = inr2(dr); qi('jCrT').textContent = inr2(cr); qi('jDiff').textContent = inr2(Math.abs(diff));
+    var ok = dr > 0 && diff === 0;
+    box.className = 'jbal ' + (ok ? 'ok' : ((dr > 0 || cr > 0) && diff !== 0 ? 'bad' : ''));
+    qi('jStatus').textContent = ok ? '✓ Balanced — ready to post'
+      : (dr === 0 && cr === 0 ? 'Enter debit & credit'
+      : (diff > 0 ? 'Credit short by ' + inr2(diff) : 'Debit short by ' + inr2(-diff)));
+    updatePostState();
+  }
+  function recalcFor(type){
+    if (type === 'sales') calcSales();
+    else if (type === 'purchase') calcPurchase();
+    else if (type === 'creditnote') calcNote('cn');
+    else if (type === 'debitnote') calcNote('dn');
+    else if (type === 'journal') calcJournal();
+  }
+  function updatePostState(){
+    var btn = qi('qpPost'); if (!btn) return; var ok = true;
+    if (curTab === 'journal'){ var dr = pnum(qi('jDr').value), cr = pnum(qi('jCr').value); ok = dr > 0 && dr === cr; }
+    else if (curTab === 'bank'){ ok = bankLines.length > 0; }
+    else if (curTab === 'sales'){ ok = pnum(qi('sQty').value) > 0 && pnum(qi('sRate').value) > 0 && pnum(qi('sGst').value) > 0 && !!qi('sPos').value; }
+    else if (curTab === 'purchase'){ ok = pnum(qi('pQty').value) > 0 && pnum(qi('pRate').value) > 0 && pnum(qi('pGst').value) > 0 && !!qi('pPos').value; }
+    else if (curTab === 'creditnote'){ ok = pnum(qi('cnTax').value) > 0 && pnum(qi('cnGst').value) > 0; }
+    else if (curTab === 'debitnote'){ ok = pnum(qi('dnTax').value) > 0 && pnum(qi('dnGst').value) > 0; }
+    btn.disabled = !ok;
   }
 
   /* ===== Notifications drawer ===== */
