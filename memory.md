@@ -346,3 +346,9 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - **Overview**: `/compliance` (all statutory due dates ranked by urgency), `/admin/audit` (hash-chained audit log viewer).
 - **Smoke-tested all 30 routes → HTTP 200.** `next build` passes. Merged to main in 3 batches (TCS+eInv/eWay · lien+masters+docs · ageing+compliance+audit).
 - **Status:** every PRD module now has a working screen (bespoke where distinctive, generic `ModuleScreen` list for the rest). The app is navigable end-to-end in mock mode; the remaining backend work is live-API wiring + Phase-0 runtime (MySQL/argon2/migrate/seed) and the Windows device bridge.
+
+### 2026-07-28 — Task 42: Working toasts + notifications drawer (from the UI library)
+- **Toast system** (`lib/toast.tsx`): module-level `toast(text, kind)` + `<ToastHost>` (portal, fixed stack, slide-in, ok/err/info accents; CSS in globals.css). Mounted once in `AppShell`.
+- **Voucher post feedback**: Quick Entry `doPost` now fires a success toast — e.g. **"Voucher PMT/26-27/0210 posted — books balanced."** (or "… saved" for masters, error toast on failure) and closes the panel. Verified end-to-end.
+- **Notifications bell works**: `lib/notifications.tsx` `<NotificationDrawer>` (uses the existing `.ntpanel/.nt-*` design-system CSS) — right-side drawer with All/Tasks/Alerts tabs + counts, day grouping, per-item icon/title/body/action-chips/unread dot, **click-to-read** and **mark-all-read**. Notifications seeded in `mock.ts`. The topbar bell opens it and shows a **live unread badge** (hides at 0). Verified: opens with 9 items; badge clears after mark-all-read.
+- `next build` passes. Merged to main.
