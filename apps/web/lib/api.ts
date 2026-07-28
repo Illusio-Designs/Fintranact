@@ -157,10 +157,29 @@ export async function getGstr2b(): Promise<Gstr2b> {
   return { rows, matched: by('matched'), mismatch: by('mismatch'), onlyBooks: by('only_books'), only2b: by('only_2b'), booksTotal: rows.reduce((s, r) => s + (r.booksItc || 0), 0), portalTotal: rows.reduce((s, r) => s + (r.portalItc || 0), 0) };
 }
 
-export interface EInvoiceRow { invoiceNo: string; party: string; date: string; value: number; irn: string | null; ack: string | null; status: 'generated' | 'pending' | 'cancelled' }
+export interface EInvoiceRow { voucherId?: string; invoiceNo: string; party: string; date: string; value: number; irn: string | null; ack: string | null; status: 'generated' | 'pending' | 'cancelled' }
 export interface EWayRow { ewbNo: string | null; invoiceNo: string; party: string; from: string; to: string; distance: number; value: number; validTill: string | null; status: 'active' | 'pending' | 'expired' }
 export async function getEInvoices(): Promise<EInvoiceRow[]> { return getJson('/gst/e-invoice', []); }
 export async function getEWayBills(): Promise<EWayRow[]> { return getJson('/gst/e-way', []); }
+
+// ---- Integrations: e-Invoice IRN, e-Way Bill, WhatsApp ----
+export interface EInvoiceResult { invoiceNo: string; party: string; date: string; value: number; irn: string; ack: string; ackDate: string; signedQr: string; status: 'generated' }
+export async function generateEInvoice(voucherId: string): Promise<EInvoiceResult> {
+  return sendJson('POST', '/gst/e-invoice/generate', { voucherId });
+}
+export interface EwayGenInput { voucherId?: string; invoiceNo: string; party: string; from: string; to: string; distance: number; value: number; vehicleNo?: string; transportMode?: string }
+export async function generateEway(input: EwayGenInput): Promise<EWayRow> {
+  return sendJson('POST', '/gst/e-way/generate', input);
+}
+export interface WhatsAppSendInput { to: string; toName?: string; kind?: string; body: string; docUrl?: string }
+export async function sendWhatsApp(input: WhatsAppSendInput): Promise<{ id: string; to: string; status: string; provider: string; providerMsgId: string | null }> {
+  return sendJson('POST', '/whatsapp/send', input);
+}
+export interface WhatsAppMsg { id: string; toPhone: string; toName: string | null; kind: string; body: string; status: string; provider: string; createdAt: string }
+export async function listWhatsApp(): Promise<WhatsAppMsg[]> { return getJson('/whatsapp/messages', []); }
+export async function getIntegrationsStatus(): Promise<{ einvoice: string; eway: string; whatsapp: string }> {
+  return getJson('/integrations/status', { einvoice: 'sandbox', eway: 'sandbox', whatsapp: 'sandbox' });
+}
 
 // ---- TDS ----
 export interface TdsChallan { section: string; description: string; deductees: number; amount: number; challanNo: string | null; bsr: string | null; paidOn: string | null; dueOn: string; status: 'paid' | 'due' }

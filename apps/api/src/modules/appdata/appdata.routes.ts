@@ -40,10 +40,19 @@ appDataRouter.get('/tcs', ...read, asyncHandler(async (req, res) => {
   ok(res, { rows: rowsOut, totalSale: rowsOut.reduce((s, x) => s + x.sale, 0), totalTcs, totalCollected, totalDue: totalTcs - totalCollected });
 }));
 
-/** GET /gst/e-invoice */
+/** GET /gst/e-invoice — every sales invoice with its IRN status (generated | pending). */
 appDataRouter.get('/gst/e-invoice', ...read, asyncHandler(async (req, res) => {
-  const r = await rows('SELECT invoice_no AS invoiceNo, party, date, value, irn, ack, status FROM e_invoices WHERE company_id = :companyId ORDER BY date DESC', req.session!.companyId);
-  ok(res, r.map((x) => ({ ...x, value: n(x.value) })));
+  const r = await rows(
+    `SELECT v.id AS voucherId, v.voucher_no AS invoiceNo, DATE(v.date) AS date,
+            (SELECT l.name FROM voucher_lines vl JOIN ledgers l ON l.id = vl.ledger_id
+              WHERE vl.voucher_id = v.id ORDER BY vl.dr_amount DESC LIMIT 1) AS party,
+            (SELECT COALESCE(SUM(vl.dr_amount),0) FROM voucher_lines vl WHERE vl.voucher_id = v.id) AS value,
+            ei.irn, ei.ack,
+            CASE WHEN ei.irn IS NOT NULL THEN 'generated' ELSE 'pending' END AS status
+       FROM vouchers v LEFT JOIN e_invoices ei ON ei.voucher_id = v.id
+      WHERE v.company_id = :companyId AND v.type = 'sales'
+      ORDER BY v.created_at DESC`, req.session!.companyId);
+  ok(res, r.map((x) => ({ voucherId: x.voucherId, invoiceNo: x.invoiceNo, party: x.party ?? '—', date: x.date, value: n(x.value), irn: x.irn ?? null, ack: x.ack ?? null, status: x.status })));
 }));
 
 /** GET /gst/e-way */
