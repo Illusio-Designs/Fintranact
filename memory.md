@@ -240,3 +240,9 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - `/reports/profit-loss` — KPI tiles (Revenue / Gross / Net) + a two-column statement (Income + Direct → Gross Profit | Indirect → Net Profit) with margins. Mock verified: 2,19,80,000 − 72,80,000 = 1,47,00,000 gross; − 77,00,000 = 70,00,000 net.
   - Sidebar **Day Book** and **Profit & Loss** route to the new pages (compulsory-UI rule).
 - `next build` passes (11 routes). Merged to main.
+
+### 2026-07-28 — Task 27: Report balance-mismatch handling + shared UI-library report primitives
+- **Mismatch is never shown silently.** Added shared report primitives to the UI library (`lib/components.tsx`): `money()` formatter, `reconcile(debit, credit)` (balanced?/difference/short-side/grand), and `<ReportBanner>` (info when there's no data, success when Dr=Cr, **error with the exact difference** when they don't tally).
+- **Trial Balance** now: shows the info banner for an empty period (no longer falsely "balanced" at 0=0); on a mismatch shows the red banner **and appends a red "Difference in balances (suspense)" row** on the short side so both columns foot to an equal grand total (standard Tally-style treatment). Verified by forcing a ₹40,000 mismatch → suspense row + equal totals, then reverted the mock.
+- **Day Book** uses `<ReportBanner>` (per-day Dr=Cr / empty-day) and the shared `money` formatter; **P&L** uses `money` too. All three reports now use the same library primitives instead of ad-hoc `inr()` — "use the UI library properly."
+- `next build` passes (11 routes); validation/api/web typecheck green. Merged to main.

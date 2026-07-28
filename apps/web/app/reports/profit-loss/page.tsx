@@ -3,10 +3,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Download01Icon, PrinterIcon } from 'hugeicons-react';
 import { AppShell } from '../../../lib/appshell';
-import { Dropdown } from '../../../lib/components';
+import { Dropdown, money } from '../../../lib/components';
 import { getPnl, type Pnl, type PnlRow } from '../../../lib/api';
 
-const inr = (n: number) => '₹' + n.toLocaleString('en-IN');
+const inr = money;
 const pct = (part: number, whole: number) => (whole ? `${((part / whole) * 100).toFixed(1)}%` : '—');
 
 function Section({ title, rows, total, tone }: { title: string; rows: PnlRow[]; total: number; tone?: 'income' | 'exp' }) {

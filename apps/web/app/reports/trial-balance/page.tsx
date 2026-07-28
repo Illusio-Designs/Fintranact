@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Download01Icon, PrinterIcon, CheckmarkCircle02Icon, Alert01Icon } from 'hugeicons-react';
+import { Download01Icon, PrinterIcon } from 'hugeicons-react';
 import { AppShell } from '../../../lib/appshell';
-import { Dropdown } from '../../../lib/components';
+import { Dropdown, ReportBanner, reconcile, money } from '../../../lib/components';
 import { getTrialBalance, type TrialBalance } from '../../../lib/api';
 
-const inr = (n: number) => (n ? '₹' + n.toLocaleString('en-IN') : '—');
 const catPill: Record<string, string> = { bank: 'ok', cash: 'ok', customer: 'neut', supplier: 'warn', tax: 'warn', liability: 'warn', income: 'ok', expense: 'crit', asset: 'neut', equity: 'neut' };
 
 export default function TrialBalancePage() {
@@ -17,6 +16,12 @@ export default function TrialBalancePage() {
   useEffect(() => { getTrialBalance().then(setTb).catch(() => {}); }, [fy]);
 
   const rows = useMemo(() => (tb?.rows ?? []).filter((r) => !q || r.name.toLowerCase().includes(q.toLowerCase())), [tb, q]);
+  const empty = !!tb && tb.rows.length === 0;
+  const rec = tb ? reconcile(tb.totalDebit, tb.totalCredit) : null;
+  // A trial balance must foot: pad the short side with a suspense difference so both columns are equal.
+  const grand = rec ? rec.grand : 0;
+  const diffDebit = rec && rec.shortSide === 'debit' ? rec.diff : 0;
+  const diffCredit = rec && rec.shortSide === 'credit' ? rec.diff : 0;
 
   return (
     <AppShell crumb="Reports / Trial Balance">
@@ -44,10 +49,7 @@ export default function TrialBalancePage() {
         </div>
       </div>
 
-      {tb && (tb.balanced
-        ? <div className="alert ok"><CheckmarkCircle02Icon size={16} color="currentColor" /> <span>Trial balance is <b>balanced</b> — total debit equals total credit ({inr(tb.totalDebit)}).</span></div>
-        : <div className="alert err"><Alert01Icon size={16} color="currentColor" /> <span>Out of balance by <b>{inr(Math.abs(tb.totalDebit - tb.totalCredit))}</b> — check unposted or draft vouchers.</span></div>
-      )}
+      {tb && <ReportBanner debit={tb.totalDebit} credit={tb.totalCredit} empty={empty} />}
 
       <div className="card">
         <div className="card-head"><h3>Ledger balances</h3><span className="csub" style={{ marginLeft: 'auto' }}>{rows.length} ledgers</span></div>
@@ -59,19 +61,28 @@ export default function TrialBalancePage() {
                 <tr key={r.ledgerId}>
                   <td className="party">{r.name}</td>
                   <td>{r.category ? <span className={`pill ${catPill[r.category] ?? 'neut'}`}>{r.category}</span> : '—'}</td>
-                  <td className="amt">{inr(r.debit)}</td>
-                  <td className="amt">{inr(r.credit)}</td>
+                  <td className="amt">{money(r.debit)}</td>
+                  <td className="amt">{money(r.credit)}</td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={4}><div className="empty">No ledgers match your filter.</div></td></tr>}
+              {rec && !rec.balanced && !empty && (
+                <tr style={{ background: 'var(--red-tint)' }}>
+                  <td className="party" style={{ color: 'var(--red-ink)' }}>Difference in balances (suspense)</td>
+                  <td><span className="pill crit">unreconciled</span></td>
+                  <td className="amt" style={{ color: 'var(--red-ink)' }}>{money(diffDebit)}</td>
+                  <td className="amt" style={{ color: 'var(--red-ink)' }}>{money(diffCredit)}</td>
+                </tr>
+              )}
+              {empty && <tr><td colSpan={4}><div className="empty">No ledger postings in this period yet.</div></td></tr>}
+              {!empty && rows.length === 0 && <tr><td colSpan={4}><div className="empty">No ledgers match your filter.</div></td></tr>}
             </tbody>
-            {tb && (
+            {tb && !empty && (
               <tfoot>
                 <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
                   <td style={{ paddingLeft: 18, fontWeight: 700 }}>Total</td>
                   <td />
-                  <td className="amt" style={{ fontSize: 14 }}>{inr(tb.totalDebit)}</td>
-                  <td className="amt" style={{ fontSize: 14 }}>{inr(tb.totalCredit)}</td>
+                  <td className="amt" style={{ fontSize: 14 }}>{money(grand)}</td>
+                  <td className="amt" style={{ fontSize: 14 }}>{money(grand)}</td>
                 </tr>
               </tfoot>
             )}
