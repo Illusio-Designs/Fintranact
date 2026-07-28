@@ -14,6 +14,7 @@ import { iamRouter } from './modules/iam/iam.routes.js';
 import { importRouter } from './modules/import/import.routes.js';
 import { ledgersRouter } from './modules/accounting/ledgers.routes.js';
 import { vouchersRouter } from './modules/accounting/vouchers.routes.js';
+import { salesRouter } from './modules/sales/sales.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -40,6 +41,7 @@ export function createApp(): Express {
   app.use('/api/v1', importRouter);
   app.use('/api/v1', ledgersRouter);
   app.use('/api/v1', vouchersRouter);
+  app.use('/api/v1', salesRouter);
   // Future modules mount here: compliance, jobwork, payroll, documents…
 
   app.use(errorHandler);

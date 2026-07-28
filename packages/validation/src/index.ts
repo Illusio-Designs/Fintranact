@@ -48,6 +48,8 @@ export const ledgerCategory = z.enum([
   'jobworker',
   'transporter',
   'expense',
+  'income',
+  'tax',
   'bank',
   'cash',
   'statutory',
@@ -154,3 +156,26 @@ export const voucherCreateSchema = z
     { message: 'Debits must equal credits', path: ['lines'] },
   );
 export type VoucherCreateInput = z.infer<typeof voucherCreateSchema>;
+
+// ---- Sales invoice (auto-composes the multi-line GST voucher) — PRD §5.6 ----
+export const salesItemSchema = z.object({
+  /** the income / service account to credit (e.g. Job Work Charges). */
+  salesLedgerId: z.string().min(1, 'Service/income account is required'),
+  taxable: z.coerce.number().positive('Taxable amount must be > 0'),
+  gstRate: z.coerce.number().min(0).max(28),
+  description: z.string().optional(),
+});
+
+/**
+ * A sales invoice is entered as party + one or more service lines + place of
+ * supply; the server derives the balanced voucher (Dr party; Cr service a/c;
+ * Cr output CGST/SGST or IGST).
+ */
+export const salesInvoiceSchema = z.object({
+  partyLedgerId: z.string().min(1, 'Customer is required'),
+  placeOfSupply: z.enum(['intra', 'inter']),
+  date: z.string().min(1),
+  narration: z.string().optional(),
+  items: z.array(salesItemSchema).min(1, 'Add at least one line'),
+});
+export type SalesInvoiceInput = z.infer<typeof salesInvoiceSchema>;

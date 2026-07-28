@@ -33,6 +33,19 @@ curl -H "Authorization: Bearer $TOKEN" -F file=@ledgers.xlsx -F financialYear=20
 ```
 Or use the web UI at **`/import`** (upload → per-row grid → commit).
 
+## Vouchers & sales invoice
+- `POST /api/v1/vouchers` — post a balanced voucher `{ type, date, lines:[{ledgerId,drCr,amount}] }` (debits must equal credits)
+- `GET  /api/v1/vouchers` / `GET /api/v1/vouchers/:id` — list / header+lines
+- `POST /api/v1/invoices/sales` — high-level sales invoice; the server **auto-composes** the multi-line GST voucher:
+  ```
+  { partyLedgerId, placeOfSupply: "intra"|"inter", date,
+    items: [{ salesLedgerId, taxable, gstRate }] }
+  →  Dr Party (total)
+     Cr Service/income account (taxable)
+     Cr Output CGST + SGST (intra)  OR  Cr Output IGST (inter)
+  ```
+- `GET/POST /api/v1/ledgers`, `POST /api/v1/ledgers/:id/blacklist`
+
 ## Structure
 ```
 src/

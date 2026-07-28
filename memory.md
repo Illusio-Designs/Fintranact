@@ -52,7 +52,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] Ledger CRUD API: create (category + multi-address + blacklist), list, get, blacklist toggle — `modules/accounting/ledgers.*`
 - [x] **Double-entry voucher engine**: `POST /vouchers` creates & posts a balanced voucher (schema enforces debits==credits), FY-aware **numbering series** with row-locked allocation, header + lines, audited; list + get with lines — `modules/accounting/vouchers.*`
 - [x] DB `005_accounting.sql`: ledger_addresses, financial_years, numbering_series, vouchers, voucher_lines + seed FY 2026-27 & series
-- [ ] Web screens for ledger create + voucher pass-entry (currently API only); period locks; day book/trial-balance report; masters (Process/Rate) CRUD
+- [x] **Sales invoice composer** (`modules/sales`): high-level `{party, placeOfSupply, items[{salesLedgerId,taxable,gstRate}]}` → auto-builds the balanced multi-line voucher (Dr party; Cr service a/c; Cr Output CGST+SGST intra / IGST inter). System GST/income ledgers seeded (`006_system_ledgers.sql`, `system_key`). Math verified to balance (intra/inter/multi-item).
+- [ ] Purchase invoice composer (mirror: Dr expense + Input GST, Cr supplier; + TDS); web screens for ledger create + voucher/sales pass-entry; period locks; day book/trial-balance; Process/Rate masters CRUD
 
 ## Later phases (see PRD §16)
 - Phase 1 (cont.) Masters · Documents
@@ -132,3 +133,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - `pnpm install --ignore-scripts` (skips native argon2/electron builds); built types+validation; **`typecheck` passes on all 6 workspaces**.
 - Fixed real type errors surfaced: mysql2 named-param bags typed too widely (`unknown` → concrete), import insert data cast to the zod row types, and the @types/node 22 generic-`Buffer` vs exceljs boundary. Committed `pnpm-lock.yaml`.
 - Remaining verification is runtime-only (MySQL + `argon2` native build), noted in Phase 0 checklist.
+
+### 2026-07-28 — Task 13: Sales invoice engine (multi-line GST composition)
+- Answered "how a sales voucher posts party + service + GST": added `modules/sales` composer that turns a high-level invoice into the balanced double-entry (Dr party; Cr income a/c; Cr Output CGST/SGST or IGST by place of supply).
+- `salesInvoiceSchema` (+ `income`/`tax` ledger categories) in validation; `006_system_ledgers.sql` seeds Output/Input CGST/SGST/IGST + Job Work Charges + Round Off with a `system_key` the composer resolves.
+- Endpoint `POST /api/v1/invoices/sales`. Composition verified to balance for intra/inter/multi-item. Typecheck green across workspaces. API README updated.
