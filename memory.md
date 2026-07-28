@@ -63,7 +63,9 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Sales invoice composer** (`modules/sales`): high-level `{party, placeOfSupply, items[{salesLedgerId,taxable,gstRate}]}` → auto-builds the balanced multi-line voucher (Dr party; Cr service a/c; Cr Output CGST+SGST intra / IGST inter). System GST/income ledgers seeded (`006_system_ledgers.sql`, `system_key`). Math verified to balance (intra/inter/multi-item).
 - [x] **Purchase invoice composer** (`modules/purchase`): high-level `{party, placeOfSupply, items[{purchaseLedgerId,taxable,gstRate}], tdsRate?}` → balanced voucher (Dr expense + Input CGST/SGST/IGST; Cr TDS Payable when deducted; Cr supplier = total−TDS). Migration `007_purchase_ledgers.sql` seeds `tds_payable` + `expense_purchase`. Math verified to balance (intra/inter/with-194Q/multi-item). Route `POST /api/v1/invoices/purchase`.
 - [x] **Trial Balance report**: backend `GET /api/v1/reports/trial-balance` aggregates `voucher_lines` per ledger → net debit/credit closing + totals + balanced flag (`modules/reports`); web `/reports/trial-balance` page built from the UI library (FY dropdown, search, balanced banner, category pills, totals row), sidebar Reports→Trial Balance routes to it.
-- [ ] Remaining: web screens for ledger create + voucher pass-entry against live API; period locks; Day Book / P&L / Balance Sheet reports; Process/Rate masters CRUD
+- [x] **Day Book** (`GET /api/v1/reports/day-book?date=`) — vouchers on a date with particulars + debit/credit totals; page `/reports/day-book` (DatePicker + type filter).
+- [x] **Profit & Loss** (`GET /api/v1/reports/pnl`) — income − direct (cost of sales) = gross profit; − indirect = net profit; page `/reports/profit-loss` (KPI tiles + two-column statement).
+- [ ] Remaining: web screens for ledger create + voucher pass-entry against live API; period locks; Balance Sheet report; Process/Rate masters CRUD
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -230,3 +232,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Backend** (`apps/api/src/modules/reports/*`): `GET /api/v1/reports/trial-balance` (perm `report:view`) aggregates `voucher_lines` joined to `ledgers` — per ledger `SUM(dr_amount)`/`SUM(cr_amount)`, nets to a debit or credit closing, returns rows + `totalDebit`/`totalCredit` + `balanced`. Router mounted in `app.ts`. API typechecks.
 - **Web**: `getTrialBalance()` added to `lib/api.ts` (mock-aware; balanced mock dataset). New page `apps/web/app/reports/trial-balance/page.tsx` built entirely from the UI library — page-head + Print/Export, `Dropdown` FY filter + search toolbar, a **balanced/out-of-balance alert**, and a table (ledger, group category pill, Debit, Credit) with a bold Total row. Sidebar **Reports → Trial Balance** now routes to `/reports/trial-balance` (per compulsory-UI rule, a dedicated library-built screen). Verified: mock TB balances at ₹3,62,40,520 = ₹3,62,40,520.
 - `next build` passes (9 routes). Merged to main.
+
+### 2026-07-28 — Task 26: Day Book + Profit & Loss reports (backend + UI-library pages)
+- **Backend** (`modules/reports`): added `GET /api/v1/reports/day-book?date=YYYY-MM-DD` (vouchers posted on a date → per-voucher debit/credit + concatenated particulars + day totals) and `GET /api/v1/reports/pnl` (income ledgers as credit balances, expenses as debit balances split into direct cost-of-sales vs indirect → gross & net profit). Both `report:view`. API typechecks.
+- **Web** (mock-aware `getDayBook`/`getPnl` in `lib/api.ts`), two new pages built entirely from the UI library:
+  - `/reports/day-book` — `DatePicker` (calendar) + type `Dropdown`, table (voucher+narration, type pill, particulars, Dr/Cr) with a day-total footer (totals agree).
+  - `/reports/profit-loss` — KPI tiles (Revenue / Gross / Net) + a two-column statement (Income + Direct → Gross Profit | Indirect → Net Profit) with margins. Mock verified: 2,19,80,000 − 72,80,000 = 1,47,00,000 gross; − 77,00,000 = 70,00,000 net.
+  - Sidebar **Day Book** and **Profit & Loss** route to the new pages (compulsory-UI rule).
+- `next build` passes (11 routes). Merged to main.
