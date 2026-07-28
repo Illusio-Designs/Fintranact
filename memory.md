@@ -42,7 +42,11 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] Ledger + opening-balance tables (`003_ledgers_import.sql`) as an import target
 - [x] Excel import module: parse `.xlsx` (exceljs), **validate (dry run)** vs zod, **commit** valid rows in a transaction, import-batch + per-row audit, downloadable template
 - [x] Endpoints: `GET /import/ledgers/template`, `POST /import/ledgers/validate`, `POST /import/ledgers/commit` (multipart, `data:import` permission)
-- [ ] Extend to Items/Employees/Rate-Master + historical vouchers; background job for large files; web import UI
+- [x] Generalised import to an **entity registry**: `ledgers`, `items`, `employees` (each with columns/schema/insert/template); entity-generic routes `/import/:entity/{template,validate,commit}` + `/import/entities`
+- [x] **Web import screen** (`apps/web/app/import`): entity picker, download template, validate → per-row grid (valid/error), commit
+- [x] Field encryption helper (`common/crypto.ts`, AES-256-GCM) — employee **PAN stored encrypted** (`pan_enc`)
+- [x] DB `004_items_employees.sql`: items, item_opening_stock, employees
+- [ ] Extend to Rate-Master + historical vouchers; background job for large files; import-history view
 
 ## Later phases (see PRD §16)
 - Phase 1 Accounting core · Masters · Documents
@@ -105,3 +109,10 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - `apps/api/modules/import`: `import.service` (parse xlsx via exceljs, validate, commit-in-tx, template gen) + `import.routes` (template/validate/commit, multipart via multer, `data:import` guard); mounted in `app.ts`. Deps added: exceljs, multer, @types/multer.
 - Endpoints + curl usage documented in `apps/api/README.md`.
 - Note: introduces a minimal `ledgers` table early (Phase-1 target) so older data has somewhere to land.
+
+### 2026-07-28 — Task 10: Generalise import (items + employees) + web UI
+- Refactored `import.service` into an **entity registry** (ledgers/items/employees); routes are now `/import/:entity/...` + `/import/entities`.
+- Added `itemImportRowSchema` + `employeeImportRowSchema` (validation pkg); DB `004_items_employees.sql`.
+- Employee **PAN encrypted at rest** via new `common/crypto.ts` (AES-256-GCM, key from FIELD_ENCRYPTION_KEY); added `config.fieldKey`.
+- Built the **web import page** `/import` (entity picker → template → validate grid → commit).
+- API README updated; still TODO: rate-master/vouchers import, big-file background job, import-history screen. (Deps still need `pnpm install` for a live run.)

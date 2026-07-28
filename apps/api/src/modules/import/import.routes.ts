@@ -6,7 +6,6 @@ import { requireAuth } from '../../common/middleware/auth.js';
 import { requirePermission } from '../../common/middleware/rbac.js';
 import * as imp from './import.service.js';
 
-// Accept a single .xlsx up to 10 MB, held in memory (streamed to storage later).
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -14,48 +13,59 @@ const upload = multer({
 
 export const importRouter: Router = Router();
 
-/** GET /api/v1/import/ledgers/template — download the Excel template. */
+const guard = [requireAuth, requirePermission('data:import')] as const;
+
+/** GET /api/v1/import/entities — list importable entities + their columns. */
 importRouter.get(
-  '/import/ledgers/template',
-  requireAuth,
-  requirePermission('data:import'),
-  asyncHandler(async (_req, res) => {
-    const buf = await imp.ledgerTemplate();
+  '/import/entities',
+  ...guard,
+  asyncHandler(async (_req, res) => ok(res, imp.entityList())),
+);
+
+/** GET /api/v1/import/:entity/template — download the Excel template. */
+importRouter.get(
+  '/import/:entity/template',
+  ...guard,
+  asyncHandler(async (req, res) => {
+    const entity = req.params.entity!;
+    if (!imp.entityDef(entity)) throw Errors.notFound(`Unknown import entity: ${entity}`);
+    const buf = await imp.template(entity);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="fintranact-ledgers-template.xlsx"');
+    res.setHeader('Content-Disposition', `attachment; filename="fintranact-${entity}-template.xlsx"`);
     res.send(buf);
   }),
 );
 
-/** POST /api/v1/import/ledgers/validate — dry run: parse + validate, no writes. */
+/** POST /api/v1/import/:entity/validate — dry run: parse + validate, no writes. */
 importRouter.post(
-  '/import/ledgers/validate',
-  requireAuth,
-  requirePermission('data:import'),
+  '/import/:entity/validate',
+  ...guard,
   upload.single('file'),
   asyncHandler(async (req, res) => {
+    const entity = req.params.entity!;
+    if (!imp.entityDef(entity)) throw Errors.notFound(`Unknown import entity: ${entity}`);
     if (!req.file) throw Errors.validation('Upload an .xlsx file in the "file" field');
     const rows = await imp.parseWorkbook(req.file.buffer);
-    const summary = imp.validateLedgers(rows);
-    ok(res, summary);
+    ok(res, imp.validate(entity, rows));
   }),
 );
 
-/** POST /api/v1/import/ledgers/commit — import valid rows into the ledger. */
+/** POST /api/v1/import/:entity/commit — import valid rows (transactional, audited). */
 importRouter.post(
-  '/import/ledgers/commit',
-  requireAuth,
-  requirePermission('data:import'),
+  '/import/:entity/commit',
+  ...guard,
   upload.single('file'),
   asyncHandler(async (req, res) => {
+    const entity = req.params.entity!;
+    if (!imp.entityDef(entity)) throw Errors.notFound(`Unknown import entity: ${entity}`);
     if (!req.file) throw Errors.validation('Upload an .xlsx file in the "file" field');
     const financialYear = String(req.body.financialYear ?? '').trim();
     if (!/^\d{4}-\d{2}$/.test(financialYear)) {
       throw Errors.validation('financialYear is required, e.g. 2025-26', 'financialYear');
     }
     const rows = await imp.parseWorkbook(req.file.buffer);
-    const summary = imp.validateLedgers(rows);
-    const result = await imp.commitLedgers(summary, {
+    const summary = imp.validate(entity, rows);
+    const result = await imp.commit(entity, summary, {
       companyId: req.session!.companyId,
       userId: req.session!.userId,
       financialYear,

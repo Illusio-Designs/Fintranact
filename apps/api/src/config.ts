@@ -20,6 +20,8 @@ export const config = {
     secret: req('JWT_SECRET', 'dev-insecure-secret-change-me'),
     expiresIn: Number(process.env.JWT_EXPIRES_IN ?? 900),
   },
+  /** Passphrase for app-level field encryption (PAN/Aadhaar/bank/salary). */
+  fieldKey: process.env.FIELD_ENCRYPTION_KEY ?? 'dev-insecure-field-key-change-me',
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
 } as const;
 

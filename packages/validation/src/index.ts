@@ -88,3 +88,29 @@ export const ledgerImportRowSchema = z
     path: ['openingDr'],
   });
 export type LedgerImportRow = z.infer<typeof ledgerImportRowSchema>;
+
+/** Item / material master row (job-work model: consumables + customer material). */
+export const itemImportRowSchema = z.object({
+  name: z.preprocess(emptyToUndef, z.string().min(1, 'Name is required')),
+  kind: z.preprocess(
+    (v) => (typeof v === 'string' ? v.trim().toLowerCase() : v),
+    z.enum(['consumable', 'customer-material', 'finished']).default('consumable'),
+  ),
+  uom: z.preprocess(emptyToUndef, z.string().default('kg')),
+  hsn: z.preprocess(emptyToUndef, z.string().optional()),
+  openingQty: z.preprocess((v) => (v == null || v === '' ? 0 : v), z.coerce.number().nonnegative()),
+  rate: z.preprocess((v) => (v == null || v === '' ? 0 : v), z.coerce.number().nonnegative()),
+});
+export type ItemImportRow = z.infer<typeof itemImportRowSchema>;
+
+/** Employee master row for payroll onboarding. */
+export const employeeImportRowSchema = z.object({
+  empCode: z.preprocess(emptyToUndef, z.string().min(1, 'Emp Code is required')),
+  name: z.preprocess(emptyToUndef, z.string().min(1, 'Name is required')),
+  email: z.preprocess(emptyToUndef, z.string().email().optional()),
+  pan: z.preprocess(emptyToUndef, panSchema.optional()),
+  designation: z.preprocess(emptyToUndef, z.string().optional()),
+  doj: z.preprocess(emptyToUndef, z.string().optional()), // dd-mm-yyyy or ISO; normalised on commit
+  basic: z.preprocess((v) => (v == null || v === '' ? 0 : v), z.coerce.number().nonnegative()),
+});
+export type EmployeeImportRow = z.infer<typeof employeeImportRowSchema>;
