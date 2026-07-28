@@ -78,19 +78,19 @@
   .nav::-webkit-scrollbar { width: 8px; }
   .nav::-webkit-scrollbar-thumb { background: #2c2c33; border-radius: 8px; }
 
-  details.grp { border: 0; margin: 2px 0; }
-  details.grp > summary {
+  .grp { border: 0; margin: 2px 0; position: relative; }
+  .grp .grp-head {
     list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px;
     padding: 9px 10px; border-radius: 8px; color: #E4E3E6; font-weight: 650; font-size: 13px;
     user-select: none;
   }
-  details.grp > summary::-webkit-details-marker { display: none; }
-  details.grp > summary:hover { background: #1B1B20; }
-  details.grp > summary .g-ic { width: 17px; height: 17px; opacity: .9; flex: none; color: #C9C7CB; }
-  details.grp > summary .chev { margin-left: auto; width: 14px; height: 14px; transition: transform .18s ease; color: #6E6C72; }
-  details.grp[open] > summary .chev { transform: rotate(90deg); }
-  details.grp > summary .count { font-size: 10.5px; background: #26262C; color: #B8B6BA; border-radius: 999px; padding: 1px 7px; font-weight: 700; }
-  details.grp > summary .count.alert { background: var(--red); color: #fff; }
+  .grp .grp-head::-webkit-details-marker { display: none; }
+  .grp .grp-head:hover { background: #1B1B20; }
+  .grp .grp-head .g-ic { width: 17px; height: 17px; opacity: .9; flex: none; color: #C9C7CB; }
+  .grp .grp-head .chev { margin-left: auto; width: 14px; height: 14px; transition: transform .18s ease; color: #6E6C72; }
+  .grp.open .grp-head .chev { transform: rotate(90deg); }
+  .grp .grp-head .count { font-size: 10.5px; background: #26262C; color: #B8B6BA; border-radius: 999px; padding: 1px 7px; font-weight: 700; }
+  .grp .grp-head .count.alert { background: var(--red); color: #fff; }
 
   .sub { padding: 2px 0 6px 0; margin-left: 22px; border-left: 1px solid #26262C; }
   .page {
@@ -418,17 +418,17 @@
   }
 
 /* ===== Huge round nav icons ===== */
-.grp > summary { gap: 12px; padding: 8px 10px; }
-.grp > summary .g-round {
+.grp .grp-head { gap: 12px; padding: 8px 10px; }
+.grp .grp-head .g-round {
   width: 38px; height: 38px; border-radius: 50%;
   display: grid; place-items: center; flex: none;
   background: #1B1B20; color: #C9C7CB;
   transition: background .15s ease, color .15s ease;
 }
-.grp > summary .g-round svg { width: 22px; height: 22px; }
-.grp[open] > summary .g-round,
-.grp > summary:hover .g-round { background: rgba(200,16,46,.20); color: #fff; }
-.grp > summary { font-size: 13.5px; font-weight: 700; }
+.grp .grp-head .g-round svg { width: 22px; height: 22px; }
+.grp.open .grp-head .g-round,
+.grp .grp-head:hover .g-round { background: rgba(200,16,46,.20); color: #fff; }
+.grp .grp-head { font-size: 13.5px; font-weight: 700; }
 
 /* ===================== UI library — extra components ===================== */
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -657,3 +657,55 @@ table tfoot td.amt {
   box-shadow: inset 0 -3px 0 -1px var(--text-3);
 }
 table tfoot tr:first-child td { border-top-width: 2px; }
+
+/* ===================== Collapsible sidebar + accordion + flyout ===================== */
+/* the group header is now a <button> — reset native chrome */
+.grp .grp-head { width: 100%; background: transparent; border: 0; font: inherit; text-align: left; }
+.grp .grp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* accordion: sub-pages collapse unless the group is open */
+.grp .sub { display: none; }
+.grp.open .sub { display: block; }
+
+/* collapse toggle button */
+.collapse-btn { display: flex; align-items: center; gap: 10px; width: calc(100% - 20px); margin: 4px 10px; padding: 8px 10px; background: transparent; border: 1px solid var(--rail-line); border-radius: 8px; color: #A6A4A9; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+.collapse-btn:hover { background: #1B1B20; color: #EDECEE; }
+
+/* ---- collapsed rail ---- */
+.app.rail-collapsed { grid-template-columns: 76px 1fr; }
+.rail-collapsed .brand-tag,
+.rail-collapsed .grp-name,
+.rail-collapsed .grp .grp-head .chev,
+.rail-collapsed .grp .grp-head .count,
+.rail-collapsed .grp .sub,
+.rail-collapsed .rail-foot .who,
+.rail-collapsed .cb-label { display: none; }
+.rail-collapsed .brand { padding: 14px 8px 10px; }
+.rail-collapsed .logo-panel { padding: 6px; }
+.rail-collapsed .nav { padding: 6px 8px 14px; }
+.rail-collapsed .grp .grp-head { justify-content: center; padding: 8px 0; }
+.rail-collapsed .collapse-btn { justify-content: center; width: 52px; margin: 4px auto; padding: 8px; }
+.rail-collapsed .rail-foot { justify-content: center; }
+/* a small alert dot on a collapsed group that has a badge */
+.rail-collapsed .grp .grp-head { position: relative; }
+.rail-collapsed .grp .grp-head:has(.count.alert)::after { content: ""; position: absolute; top: 6px; right: 14px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); border: 2px solid var(--rail-bg, #141418); }
+
+/* ---- flyout (collapsed hover menu) + tooltip ---- */
+.flyout { display: none; }
+.rail-collapsed .grp:hover > .flyout {
+  display: block; position: absolute; left: calc(100% + 8px); top: 0; z-index: 70;
+  min-width: 210px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0,0,0,.4); padding: 8px; color: var(--text);
+}
+.flyout .fly-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); padding: 6px 10px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.flyout .fly-pages .page { color: var(--text-2); margin: 1px 2px; }
+.flyout .fly-pages .page:hover { background: var(--paper); color: var(--text); }
+.flyout .fly-pages .page.active { background: var(--red-tint); color: var(--red-ink); }
+.flyout .fly-pages .page.active .pdot { background: var(--red); }
+.flyout .fly-pages .page .pdot { background: var(--line); }
+/* bridge the gap so hover doesn't drop between rail and flyout */
+.rail-collapsed .grp:hover > .flyout::before { content: ""; position: absolute; left: -10px; top: 0; width: 10px; height: 100%; }
+
+/* let the collapsed-rail flyout escape the nav's scroll clipping */
+.rail-collapsed .nav { overflow: visible; }
+.rail-collapsed .rail { overflow: visible; }
