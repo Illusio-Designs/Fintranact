@@ -160,3 +160,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - Replaced the RAVI logo with an **"AJI DEAM · Heat Treatment · Rajkot" wordmark** in the web app and mockup (removed `ravi-logo.gif`); the embedded data-URI logo is gone (mockup shrank ~1.2MB→136KB). A real Aji Deam logo can be dropped in later.
 - Flipped mockup place-of-supply so **Gujarat = intra-state** (home), Maharashtra = inter-state.
 - Regenerated `docs/samples/Form16_sample.pdf` for Aji Deam. Web build passes; artifact republished.
+
+### 2026-07-28 — Task 17: Port the HTML mockup look into the web dashboard
+- Extracted the mockup's stylesheet → `apps/web/app/globals.css` (loaded in layout); rebuilt `/dashboard` as a faithful React port: dark **sidebar** (AJI DEAM wordmark + collapsible module nav with pages), **topbar** (company switcher · GSTIN · Rajkot, FY + role selects, search, theme toggle, notifications bell, Quick Entry), **KPI tiles** (incl. dark GST accent), **cash-flow chart**, **compliance calendar**, **P&L**, recent vouchers, approvals, and supervisor/payroll cards.
+- Role selector swaps KPIs + which cards show; theme toggle (light/dark) and mobile nav drawer wired. Extended `lib/mock.ts` (accountant/compliance/auditor roles + approvals + pending inward/outward).
+- **`next build` passes**; verified with a headless screenshot — matches the mockup. Merged to main.

@@ -48,7 +48,54 @@ export const ROLES: Record<string, { name: string; greeting: string; kpis: Kpi[]
       { label: 'Payroll · Jul', value: 'Not run', sub: 'due 31 Jul', tone: 'down' },
     ],
   },
+  accountant: {
+    name: 'Accountant',
+    greeting: '12 vouchers pending · bank reco 2 unmatched · GSTR-2B mismatch on 7 invoices.',
+    kpis: [
+      { label: 'Vouchers today', value: '48', sub: 'entered by you', tone: '' },
+      { label: 'Pending approval', value: '5', sub: 'awaiting controller', tone: '' },
+      { label: 'Bank unmatched', value: '2', sub: 'needs reconciling', tone: 'down' },
+      { label: '2B mismatches', value: '7', sub: 'ITC ₹1.12L at risk', tone: 'down' },
+    ],
+  },
+  compliance: {
+    name: 'Compliance Officer',
+    greeting: 'GSTR-3B due in 4 days · TDS challan pending · 7 GSTR-2B mismatches to resolve.',
+    kpis: [
+      { label: 'GST liability · Jun', value: '₹9.18 L', sub: 'file by 31 Jul', tone: 'down' },
+      { label: 'TDS payable', value: '₹1.84 L', sub: 'deposit by 07 Aug', tone: 'down' },
+      { label: 'Returns due', value: '3', sub: 'this month', tone: '' },
+      { label: '2B mismatches', value: '7', sub: 'ITC ₹1.12L', tone: 'down' },
+    ],
+  },
+  auditor: {
+    name: 'Auditor (read-only)',
+    greeting: 'Read-only · 486 vouchers this month · 24 signed approvals · 2 blacklist changes.',
+    kpis: [
+      { label: 'Vouchers · month', value: '486', sub: 'posted', tone: '' },
+      { label: 'Signed approvals', value: '24', sub: 'PIN-signed', tone: 'up' },
+      { label: 'Blacklist changes', value: '2', sub: 'audited', tone: '' },
+      { label: 'Period locks', value: '1', sub: 'Jun locked', tone: '' },
+    ],
+  },
 };
+
+export const approvals = [
+  { who: 'SP', title: 'Vendor payment batch', sub: 'Raised by Suresh P. · maker-checker · 8 bills', amt: '₹9.74L' },
+  { who: 'PK', title: 'Payroll run · July', sub: '142 employees · net ₹41.8L · PF/ESI/TDS ok', amt: '₹41.8L' },
+  { who: 'PR', title: 'Credit note · ₹1.2L', sub: 'Raised by Priya R. · above ₹1L threshold', amt: '₹1.18L' },
+];
+
+export const pendingInward = [
+  { t: 'Tata Motors · Gears', m: 'Carburising · recd 27 Jul', qty: '1,000 kg', tag: 'start', tone: 'crit' },
+  { t: 'Mahalaxmi · Shafts', m: 'Hardening · recd 26 Jul', qty: '500 kg', tag: 'queued', tone: 'warn' },
+  { t: 'Ganesh Auto · Pins', m: 'Annealing', qty: '250 kg', tag: 'queued', tone: 'neut' },
+];
+export const pendingOutward = [
+  { t: 'JW-IN/0044 · Gears', m: 'Carburising done', qty: '400 kg', tag: 'ready', tone: 'ok' },
+  { t: 'JW-IN/0039 · Pins', m: 'Annealing done', qty: '60 kg', tag: 'ready', tone: 'ok' },
+  { t: 'JW-IN/0051 · Shafts', m: 'overdue · 1-yr rule', qty: '500 kg', tag: 'overdue', tone: 'crit' },
+];
 
 export const recentVouchers = [
   { no: 'SI/26-27/0482', party: 'Mahalaxmi Traders', type: 'Sales · IRN ✓', status: 'Posted', amount: '₹2,48,600' },
