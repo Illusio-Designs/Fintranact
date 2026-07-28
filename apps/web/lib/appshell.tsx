@@ -28,7 +28,7 @@ const NAV: { group: string; open?: boolean; badge?: string; pages: string[] }[] 
   { group: 'TDS', pages: ['TDS Deductions', 'Payable / Receivable', 'Challans ITNS 281#1', 'Returns 24Q 26Q 27Q'] },
   { group: 'TCS', pages: ['TCS Collections', 'Challans', 'Return 27EQ'] },
   { group: 'Job Work & Process', pages: ['Inward Cash Debit memo', 'Outward Challans', 'Pending Inward Outward#10', 'Job Cards', 'Lien Forfeiture#1', 'ITC-04'] },
-  { group: 'Payroll & HR', pages: ['Employees', 'Salary Structures', 'Attendance & Leave', 'Payroll Run#1', 'Payslips', 'Statutory PF ESI PT'] },
+  { group: 'Payroll & HR', pages: ['Employees', 'Salary Structures', 'Attendance & Leave', 'Payroll Run#1', 'Payslips', 'Form 16', 'Statutory PF ESI PT'] },
   { group: 'Masters', pages: ['Process Master', 'Rate Master', 'Item Material Master', 'Ledger Categories', 'Financial Year'] },
   { group: 'Reports', pages: ['Trial Balance', 'Profit & Loss', 'Balance Sheet', 'Ageing'] },
   { group: 'Admin · Ravi Metal Ops', pages: ['Companies & Branches', 'Users & Roles', 'Permissions', 'Audit Trail', 'System & Tax Config'] },
@@ -55,6 +55,7 @@ function hrefFor(label: string): string {
   if (clean === 'Pending Inward Outward') return '/jobwork/pending';
   if (clean === 'ITC-04') return '/jobwork/itc04';
   if (clean === 'Payroll Run') return '/payroll/run';
+  if (clean === 'Form 16') return '/payroll/form16';
   if (clean === 'Financial Year') return '/admin/periods';
   return `/m/${slug(clean)}`;
 }

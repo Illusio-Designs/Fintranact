@@ -49,6 +49,39 @@ export function computePayslip(name: string, designation: string | null, basic: 
   return { name, designation, basic, hra, allowances, gross, pf, esi, pt, tds, deductions, net: round2(gross - deductions) };
 }
 
+export interface Form16Row {
+  name: string;
+  pan: string;
+  grossAnnual: number;
+  stdDeduction: number;
+  ptDeduction: number;
+  ded80C: number;
+  taxableIncome: number;
+  tax: number;
+  tds: number;
+}
+
+/** Annual Form 16 (Part B) computation for one employee from the monthly basic. */
+export function computeForm16(name: string, pan: string, basic: number): Form16Row {
+  const m = computePayslip(name, null, basic);
+  const grossAnnual = round2(m.gross * 12);
+  const stdDeduction = 50000;
+  const ptDeduction = round2(m.pt * 12);
+  const ded80C = Math.min(round2(m.pf * 12), 150000);
+  const taxableIncome = Math.max(0, round2(grossAnnual - stdDeduction - ptDeduction - ded80C));
+  const tax = round2(annualTax(taxableIncome));
+  return { name, pan, grossAnnual, stdDeduction, ptDeduction, ded80C, taxableIncome, tax, tds: tax };
+}
+
+/** Form 16 list for the year — one row per employee. */
+export async function listForm16(companyId: string): Promise<Form16Row[]> {
+  const [emps] = await pool.query<RowDataPacket[]>(
+    'SELECT name, basic_salary FROM employees WHERE company_id = ? ORDER BY name',
+    [companyId],
+  );
+  return emps.map((e) => computeForm16(e.name as string, 'XXXXXXXXXX', Number(e.basic_salary)));
+}
+
 /** Payroll run for a month — reads employees, computes statutory deductions, aggregates. */
 export async function computeRun(companyId: string, month: string): Promise<PayrollRun> {
   const [emps] = await pool.query<RowDataPacket[]>(

@@ -73,7 +73,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **Job work — pending inward/outward + ITC-04** (`modules/jobwork`, migration `008_jobwork.sql`): inward/outward challan tables; `/jobwork/pending` computes pending = received − dispatched − loss (status open/partial/closed); `/jobwork/itc04` Rule-45 movement summary. Pages `/jobwork/pending` and `/jobwork/itc04`.
 - [x] **Payroll run + statutory** (`modules/payroll`): computes gross (basic+40% HRA+10% allowance), PF (12% of ≤₹15k), ESI (0.75% if gross ≤₹21k), Gujarat PT, TDS 192 (annual slabs /12) per employee → net + PF/ESI/PT/TDS deposit summary. Page `/payroll/run`.
 - [x] **Period locks** (`modules/accounting/periods`, migration `009_period_locks.sql`): lock/unlock a month; **`createVoucher` calls `assertPeriodOpen`** so posting into a locked month is rejected server-side; page `/admin/periods` (Masters→Financial Year). Unlock is `voucher:approve`-gated + audited.
-- [ ] Remaining: real ledger-create + master forms against live API; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); lien/forfeiture posting; Form 16 gen page; documents module
+- [x] **Form 16** (`GET /api/v1/payroll/form16`): annual Part-B computation per employee (gross×12 − std 50k − PT − 80C(PF) → taxable → old-regime tax +4% cess = TDS 192); page `/payroll/form16` (employee list + Part-B detail + sample PDF served from `public/`).
+- [ ] Remaining: real ledger-create + master forms against live API; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); lien/forfeiture posting; documents module
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -328,3 +329,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - Ran an interactive audit of every dropdown: custom `Dropdown` (open/select/close), searchable `Dropdown` (type-to-filter), `DatePicker` calendar (open/pick/close) — all pass. **Found one bug:** the table **row-action 3-dot menu was clipped** by the table's `overflow-x:auto` scroll wrapper.
 - **Fix:** new shared `<RowMenu>` component (`lib/components.tsx`) renders its popover in a **fixed-position React portal** (`createPortal` to `document.body`), positioned from the trigger's `getBoundingClientRect`, so it can never be clipped; closes on outside-click, scroll, resize, or item select. Replaced the inline row menus in `ModuleScreen` and the `/ui` data table with `<RowMenu>`.
 - Verified after fix: row menu `position=fixed`, parent=BODY, `clip=ok`, closes on select. All other dropdowns unaffected. `next build` passes. Merged to main.
+
+### 2026-07-28 — Task 40: Form 16 (annual salary TDS certificate)
+- **Backend** (`modules/payroll`): `computeForm16` / `listForm16` + `GET /api/v1/payroll/form16` — annualises each payslip (gross×12), applies **std deduction ₹50k, PT u/s 16(iii), 80C = PF (cap ₹1.5L)** → taxable income → old-regime `annualTax` (+4% cess) = TDS u/s 192. `report:view`. API typechecks; verified (basic 60k → taxable ₹10,06,000, TDS ₹1,18,872).
+- **Web** (mock-aware `getForm16`), page `/payroll/form16` from the UI library — tiles (employees / total TDS / certificates), an **employee list** (name, PAN, gross, TDS, per-row PDF link) with a total row, and a **Part-B computation** panel for the selected employee (gross → deductions → taxable → tax → TDS). The **sample Form 16 PDF** is copied to `apps/web/public/Form16_sample.pdf` and linked from the header + each row. Added **Form 16** to the Payroll & HR sidebar group and routed it.
+- `next build` passes (22 routes). Merged to main. Payroll block now: run + statutory + Form 16.
