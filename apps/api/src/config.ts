@@ -23,6 +23,29 @@ export const config = {
   /** Passphrase for app-level field encryption (PAN/Aadhaar/bank/salary). */
   fieldKey: process.env.FIELD_ENCRYPTION_KEY ?? 'dev-insecure-field-key-change-me',
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
+  /**
+   * External integrations. Each defaults to 'sandbox' (deterministic, no network)
+   * so the app works out of the box; set mode=live + credentials to hit the real
+   * IRP (e-invoice), NIC (e-way) and Meta Cloud API (WhatsApp).
+   */
+  integrations: {
+    einvoice: {
+      mode: process.env.EINVOICE_MODE ?? 'sandbox', // 'sandbox' | 'live'
+      apiUrl: process.env.EINVOICE_API_URL ?? '',    // GSP/IRP endpoint
+      apiKey: process.env.EINVOICE_API_KEY ?? '',
+    },
+    eway: {
+      mode: process.env.EWAY_MODE ?? 'sandbox',
+      apiUrl: process.env.EWAY_API_URL ?? '',
+      apiKey: process.env.EWAY_API_KEY ?? '',
+    },
+    whatsapp: {
+      mode: process.env.WHATSAPP_MODE ?? 'sandbox',
+      apiUrl: process.env.WHATSAPP_API_URL ?? 'https://graph.facebook.com/v20.0',
+      token: process.env.WHATSAPP_TOKEN ?? '',
+      phoneId: process.env.WHATSAPP_PHONE_ID ?? '',
+    },
+  },
 } as const;
 
 export const isProd = config.env === 'production';
