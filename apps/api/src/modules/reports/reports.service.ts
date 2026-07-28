@@ -152,3 +152,69 @@ export async function getPnl(companyId: string): Promise<Pnl> {
   const netProfit = round2(grossProfit - totalIndirect);
   return { income, directExpense, indirectExpense, totalIncome, totalDirect, totalIndirect, grossProfit, netProfit };
 }
+
+export interface BsRow { name: string; amount: number }
+export interface BalanceSheet {
+  assets: BsRow[];
+  liabilities: BsRow[];
+  equity: BsRow[]; // includes "Profit for the period"
+  totalAssets: number;
+  totalLiabilities: number;
+  totalEquity: number;
+  totalLiabEquity: number;
+  netProfit: number;
+  balanced: boolean;
+}
+
+const ASSET_CATS = new Set(['bank', 'cash', 'customer', 'debtor', 'asset', 'fixed_asset', 'current_asset', 'advance']);
+const LIAB_CATS = new Set(['supplier', 'creditor', 'liability', 'loan', 'current_liability', 'duty', 'provision']);
+const EQUITY_CATS = new Set(['equity', 'capital', 'reserve']);
+const PNL_CATS = new Set(['income', 'expense', 'direct_expense', 'indirect_expense', 'purchase', 'material', 'cogs']);
+
+/**
+ * Balance sheet — assets (debit-nature) vs liabilities + equity (credit-nature).
+ * P&L ledgers are excluded; their net (profit for the period) is carried to equity,
+ * so total assets = total liabilities + equity when the books balance.
+ */
+export async function getBalanceSheet(companyId: string): Promise<BalanceSheet> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT l.name, l.category,
+            COALESCE(SUM(vl.dr_amount), 0) AS dr,
+            COALESCE(SUM(vl.cr_amount), 0) AS cr
+       FROM ledgers l
+       JOIN voucher_lines vl ON vl.ledger_id = l.id AND vl.company_id = l.company_id
+      WHERE l.company_id = :companyId
+      GROUP BY l.id, l.name, l.category
+     HAVING dr <> 0 OR cr <> 0
+      ORDER BY l.name`,
+    { companyId },
+  );
+
+  const assets: BsRow[] = [];
+  const liabilities: BsRow[] = [];
+  const equity: BsRow[] = [];
+  for (const r of rows) {
+    const cat = (r.category as string) ?? '';
+    if (PNL_CATS.has(cat)) continue; // handled via net profit
+    const debitBal = round2(Number(r.dr) - Number(r.cr));
+    const creditBal = round2(Number(r.cr) - Number(r.dr));
+    if (ASSET_CATS.has(cat)) assets.push({ name: r.name as string, amount: debitBal });
+    else if (LIAB_CATS.has(cat)) liabilities.push({ name: r.name as string, amount: creditBal });
+    else if (EQUITY_CATS.has(cat)) equity.push({ name: r.name as string, amount: creditBal });
+    // 'tax' and anything else: classify by the sign of the balance
+    else if (debitBal > 0) assets.push({ name: r.name as string, amount: debitBal });
+    else liabilities.push({ name: r.name as string, amount: creditBal });
+  }
+
+  const { netProfit } = await getPnl(companyId);
+  if (netProfit !== 0) equity.push({ name: 'Profit for the period', amount: netProfit });
+
+  const totalAssets = round2(assets.reduce((s, r) => s + r.amount, 0));
+  const totalLiabilities = round2(liabilities.reduce((s, r) => s + r.amount, 0));
+  const totalEquity = round2(equity.reduce((s, r) => s + r.amount, 0));
+  const totalLiabEquity = round2(totalLiabilities + totalEquity);
+  return {
+    assets, liabilities, equity, totalAssets, totalLiabilities, totalEquity, totalLiabEquity, netProfit,
+    balanced: Math.round(totalAssets * 100) === Math.round(totalLiabEquity * 100),
+  };
+}

@@ -171,6 +171,37 @@ export async function getPnl(): Promise<Pnl> {
   return (await res.json()).data ?? { income: [], directExpense: [], indirectExpense: [], totalIncome: 0, totalDirect: 0, totalIndirect: 0, grossProfit: 0, netProfit: 0 };
 }
 
+export interface BsRow { name: string; amount: number }
+export interface BalanceSheet { assets: BsRow[]; liabilities: BsRow[]; equity: BsRow[]; totalAssets: number; totalLiabilities: number; totalEquity: number; totalLiabEquity: number; netProfit: number; balanced: boolean }
+
+export async function getBalanceSheet(): Promise<BalanceSheet> {
+  if (MOCK) {
+    const assets: BsRow[] = [
+      { name: 'Plant & Machinery', amount: 8600000 },
+      { name: 'Sundry Debtors', amount: 14200000 },
+      { name: 'HDFC Bank — Current', amount: 4186220 },
+      { name: 'Cash in Hand', amount: 184300 },
+    ];
+    const liabilities: BsRow[] = [
+      { name: 'Sundry Creditors', amount: 3860000 },
+      { name: 'Output CGST', amount: 459000 },
+      { name: 'Output SGST', amount: 459000 },
+      { name: 'TDS Payable', amount: 184300 },
+    ];
+    const equity: BsRow[] = [
+      { name: 'Capital Account', amount: 15208220 },
+      { name: 'Profit for the period', amount: 7000000 },
+    ];
+    const totalAssets = assets.reduce((s, r) => s + r.amount, 0);
+    const totalLiabilities = liabilities.reduce((s, r) => s + r.amount, 0);
+    const totalEquity = equity.reduce((s, r) => s + r.amount, 0);
+    const totalLiabEquity = totalLiabilities + totalEquity;
+    return { assets, liabilities, equity, totalAssets, totalLiabilities, totalEquity, totalLiabEquity, netProfit: 7000000, balanced: totalAssets === totalLiabEquity };
+  }
+  const res = await fetch(`${API}/api/v1/reports/balance-sheet`, { headers: authHeaders() });
+  return (await res.json()).data ?? { assets: [], liabilities: [], equity: [], totalAssets: 0, totalLiabilities: 0, totalEquity: 0, totalLiabEquity: 0, netProfit: 0, balanced: true };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();
