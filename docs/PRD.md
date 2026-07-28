@@ -27,7 +27,7 @@
 13. [Scalability and Performance Considerations](#13-scalability-and-performance-considerations)
 14. [Risk Analysis](#14-risk-analysis)
 15. [MVP Scope](#15-mvp-scope)
-16. [Phased Development Plan (Frontend + Backend + Windows App) + Required Skills](#16-phased-development-plan-frontend--backend--windows-app)
+16. [Phased Development Plan (Frontend + Backend + Windows App) — with Team Skills & Claude Skills](#16-phased-development-plan-frontend--backend--windows-app)
 17. [Acceptance Criteria](#17-acceptance-criteria)
 18. [Open Questions](#18-open-questions)
 19. [Appendix A — Stated Assumptions](#appendix-a--stated-assumptions)
@@ -892,8 +892,8 @@ Establish the spine all features plug into, on all three surfaces at once.
 | **Advanced compliance** | GSTR-9/9C; multi-state PT automation; DSC-signed statutory docs; fixed-asset depreciation. |
 | **Platform** | Public API + webhooks; CA/consultant multi-client console; WhatsApp/SMS; multi-currency. |
 
-### 16.1 Required Skills & Team Composition
-Skills needed to deliver the phases above (a small team can hold multiple hats; roles map to the tri-surface build):
+### 16.1 Required Team Skills & Composition (people)
+Human skills needed to deliver the phases above (a small team can hold multiple hats; roles map to the tri-surface build). The **Claude Skills** that this team uses to build faster are in **§16.2**.
 
 | Area | Key skills / tools | Used most in |
 |---|---|---|
@@ -910,6 +910,38 @@ Skills needed to deliver the phases above (a small team can hold multiple hats; 
 | **Product & UX** | Product management, UX/UI design, technical writing, onboarding/migration playbooks | All phases |
 
 **Suggested core team:** 1 Tech Lead/Architect, 2 Backend, 2 Frontend (web + shared UI), 1 **Desktop/Electron** engineer, 1 DevOps, 1 QA, 1 Security (shared/part-time), 1 **CA/domain SME** (advisory), 1 PM, 1 UX — scaling per phase.
+
+### 16.2 Claude Skills (Claude Code) used in build & operations
+Development is **Claude-Code-driven**: reusable **Claude Skills** encode repeatable tasks so code and documents are generated consistently. Two kinds are used.
+
+**A. Built-in / marketplace skills (used as-is):**
+| Skill | Use in Fintranact |
+|---|---|
+| **`pdf`** | Generate & read PDFs — **Form 16**, tax **invoices** (with IRN/QR), **payslips**, **ITNS-281 challans**, GSTR working, P&L/Balance-Sheet reports, **lien notices**; OCR/extract uploaded bills into the document root. |
+| **`xlsx`** | Bulk **import/export** templates (ledgers, items, opening balances, employees), GSTR-1/2B and salary-register spreadsheets, report exports. |
+| **`docx`** | Statutory letters & documents — **lien/forfeiture notice**, salary/appointment letters, Form-16 as Word where needed. |
+| **`pptx`** | Stakeholder/investor decks, sprint demos, UAT walkthroughs. |
+| **`web-artifacts-builder`, `artifact-design`, `dataviz`, `theme-factory`** | Build & iterate the **UI prototypes and dashboards** (the black/red/white mockups, role dashboards, P&L card) before/along with implementation. |
+| **`session-start-hook`** | Configure the repo so **Claude Code (web)** sessions can run tests/linters — set up in **Phase 0**. |
+| **`init`** | Generate the repo's `CLAUDE.md` codebase guide. |
+| **`skill-creator`** | Author & maintain the **custom Fintranact skills** below. |
+| **`review` / `security-review` / `simplify`** | Per-PR **code review**, **security review**, and cleanup in every phase. |
+| **`run`** | Launch/screenshot the web & desktop app to verify a change actually works. |
+| **`claude-api`** | Reference for building the **AI-assist** features (Phase 6 — OCR capture, reconciliation & compliance copilot) on Claude. |
+
+**B. Custom project skills — authored via `skill-creator` and committed to the repo (`.claude/skills/`):**
+| Custom skill | What it encodes (so every generation is compliant & consistent) |
+|---|---|
+| **`fintranact-gst`** | Place-of-supply CGST/SGST/IGST split, RCM, HSN/SAC, e-invoice/e-way rules + test scenarios. |
+| **`fintranact-tds-tcs`** | Section/threshold/rate logic (194C/J/I/Q, 206C(1H)), challan & 24Q/26Q/27EQ formats. |
+| **`fintranact-voucher`** | Voucher-type field maps & **double-entry posting rules** (the pass-entry model). |
+| **`fintranact-jobwork`** | Inward (Cash/Debit memo) → **outward against pending qty**, ITC-04, **lien/forfeiture** recovery. |
+| **`fintranact-payroll-form16`** | Payroll computation (PF/ESI/PT/TDS, old/new regime) and **Form 16 Part A/B** generation. |
+| **`fintranact-pdf-templates`** | Branded, consistent PDF templates — invoice, payslip, challan, Form 16, notice. |
+| **`fintranact-tally-migrate`** | Parse/transform **Tally/Excel** data into the Fintranact schema for onboarding. |
+| **`fintranact-test-scenarios`** | Generate the Indian tax/payroll **test-suite** (edge cases, thresholds, regimes). |
+
+These custom skills are versioned with the code, invoked by engineers via Claude Code during each phase, and updated by the CA/domain SME when statutory rules change — keeping generated code, documents, and tests aligned with current law.
 
 ---
 
