@@ -168,3 +168,16 @@ export const mockValidation = {
     ] },
   ],
 };
+
+export type Notif = { id: number; kind: 'crit' | 'warn' | 'ok' | 'info'; cat: 'task' | 'alert'; day: string; time: string; title: string; body: string; chips: string[]; read: boolean };
+export const notifications: Notif[] = [
+  { id: 1, kind: 'crit', cat: 'task', day: 'Today', time: '2m', title: 'Vendor payment batch awaiting your approval', body: 'Raised by Suresh P. · 8 bills · ₹9,74,250', chips: ['Approve', 'Maker-checker'], read: false },
+  { id: 2, kind: 'crit', cat: 'alert', day: 'Today', time: '40m', title: 'GSTR-3B (June) due in 4 days', body: 'Net payable ₹6.42L · GSTIN 24…1Z5', chips: ['File by 31 Jul'], read: false },
+  { id: 3, kind: 'warn', cat: 'task', day: 'Today', time: '1h', title: 'TDS challan pending deposit', body: '194C + 194J · ₹1,84,300 · ITNS 281', chips: ['Deposit by 07 Aug'], read: false },
+  { id: 4, kind: 'crit', cat: 'alert', day: 'Today', time: '3h', title: 'GSTR-2B mismatch — 7 invoices', body: 'ITC ₹1.12L in books not in 2B · needs review', chips: ['Reconcile'], read: false },
+  { id: 5, kind: 'warn', cat: 'task', day: 'Today', time: '4h', title: 'Payroll run (July) submitted for approval', body: '142 employees · net ₹41.8L · PF/ESI/TDS ok', chips: ['Approve & post'], read: false },
+  { id: 6, kind: 'ok', cat: 'alert', day: 'Today', time: '5h', title: 'e-Invoice generated — SI/26-27/0482', body: 'IRN & signed QR received · Mahalaxmi Traders', chips: ['View IRN'], read: false },
+  { id: 7, kind: 'warn', cat: 'alert', day: 'Yesterday', time: '26 Jul', title: 'Job work ageing — 20 kg pending return', body: 'Anand Fabrication · JW-OUT/0044 · 20 kg of 1000', chips: ['ITC-04'], read: true },
+  { id: 8, kind: 'ok', cat: 'task', day: 'Yesterday', time: '26 Jul', title: 'Bulk run finished — 214 invoices e-signed', body: 'e-Invoice + e-Way batch · 0 failures', chips: ['Download log'], read: true },
+  { id: 9, kind: 'info', cat: 'alert', day: 'Yesterday', time: '25 Jul', title: 'New sign-in · Priya R. (Accountant)', body: 'Rajkot · Chrome on Windows · within policy', chips: ['Security'], read: true },
+];

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { createSalesInvoice, createPurchaseInvoice, composeVoucher } from './api';
+import { toast } from './toast';
 
 /** Quick Entry aside panel — voucher-type-driven pass-entry with live GST / journal-balance / job-work gating.
  *  Ported from the HTML mockup into React (mock-mode; posting is simulated + PIN-gated). */
@@ -141,7 +142,10 @@ export function QuickPanel({ open, onClose }: { open: boolean; onClose: () => vo
         no = (await composeVoucher({ kind: 'debit_note', partyLedgerId: 'l-gujpoly', purchaseLedgerId: 'l-material', placeOfSupply: 'intra', taxable: pnum(v.dnTax), gstRate: pnum(v.dnGst), date })).voucherNo;
       }
       setPostedNo(no);
-    } catch { setPostedNo(null); }
+      const name = meta.master ? `${vType[0]!.toUpperCase()}${vType.slice(1)} saved` : `Voucher ${no ?? ''} posted`;
+      toast(meta.master ? name : `${name} — books balanced.`, 'ok');
+      onClose();
+    } catch { setPostedNo(null); toast('Could not post — check the entry and try again.', 'err'); }
     setPosted(true);
     setTimeout(() => { setPosted(false); setPostedNo(null); }, 2200);
   };

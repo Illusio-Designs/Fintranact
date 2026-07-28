@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { QuickPanel } from './quickpanel';
+import { NotificationDrawer } from './notifications';
+import { ToastHost } from './toast';
+import { notifications as NOTIF_SEED, type Notif } from './mock';
 import {
   DashboardCircleIcon,
   Book02Icon,
@@ -119,6 +122,9 @@ export function AppShell({
   const pathname = usePathname();
   const roleName = role ? ROLES[role]?.name : 'Finance Controller';
   const [quick, setQuick] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<Notif[]>(NOTIF_SEED);
+  const unread = notifs.filter((n) => !n.read).length;
 
   // Which group holds the active route — used as the default-open group.
   const activeGroup = NAV.find((g) => g.pages.some((p) => hrefFor(p) === pathname))?.group ?? NAV[0]!.group;
@@ -217,7 +223,7 @@ export function AppShell({
             <div className="spacer" />
             <div className="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg> Search… <kbd>⌘K</kbd></div>
             <button className="icon-btn" onClick={toggleTheme} title="Toggle theme"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg></button>
-            <button className="icon-btn" title="Notifications"><span className="dot-alert num">6</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" /><path d="M10 21a2 2 0 0 0 4 0" /></svg></button>
+            <button className="icon-btn" title="Notifications" onClick={() => setNotifOpen(true)}>{unread > 0 && <span className="dot-alert num">{unread}</span>}<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" /><path d="M10 21a2 2 0 0 0 4 0" /></svg></button>
             <button className="btn btn-primary" onClick={() => setQuick(true)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><path d="M13 2L4 13h6l-1 9 9-11h-6z" /></svg> Quick Entry</button>
           </div>
 
@@ -225,6 +231,8 @@ export function AppShell({
         </div>
       </div>
       <QuickPanel open={quick} onClose={() => setQuick(false)} />
+      <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} items={notifs} setItems={setNotifs} />
+      <ToastHost />
     </>
   );
 }
