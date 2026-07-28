@@ -4,56 +4,35 @@ import { useEffect, useMemo, useState } from 'react';
 import { PencilEdit01Icon, Download01Icon, PrinterIcon, Delete02Icon, Add01Icon, Search01Icon, FilterIcon, Copy01Icon } from 'hugeicons-react';
 import { AppShell } from './appshell';
 import { Dropdown, DatePicker, fmtDate, RowMenu } from './components';
-import { MOCK, listVouchers } from './api';
+import { listVouchers } from './api';
 
 /** Generic module list screen assembled entirely from the shared UI library. */
 
 type Rec = { id: string; ref: string; party: string; date: string; status: 'Posted' | 'Pending' | 'Draft'; amount: number };
-const PARTIES = ['Mahalaxmi Traders', 'Gujarat Poly Pvt Ltd', 'Shakti Forgings', 'Rajkot Steel Co', 'Aarav Metals', 'Shree Balaji Enterprises', 'Tata Motors Ltd', 'Anand Fabrication'];
-const STATUSES: Rec['status'][] = ['Posted', 'Pending', 'Draft', 'Posted', 'Posted', 'Pending', 'Draft', 'Posted'];
 const statusPill: Record<Rec['status'], string> = { Posted: 'ok', Pending: 'warn', Draft: 'neut' };
 const inr = (n: number) => '₹' + n.toLocaleString('en-IN');
 
-function rowsFor(prefix: string): Rec[] {
-  return Array.from({ length: 8 }, (_, i) => ({
-    id: String(i + 1),
-    ref: `${prefix}/26-27/${String(480 - i * 7).padStart(4, '0')}`,
-    party: PARTIES[i % PARTIES.length]!,
-    date: `${String(27 - i).padStart(2, '0')} Jul 2026`,
-    status: STATUSES[i % STATUSES.length]!,
-    amount: 512000 - i * 43120,
-  }));
-}
-const prefixFor = (slug: string) => {
-  if (slug.includes('sales')) return 'SI';
-  if (slug.includes('purchase')) return 'PB';
-  if (slug.includes('voucher')) return 'VCH';
-  if (slug.includes('job')) return 'JW';
-  if (slug.includes('payroll')) return 'PAY';
-  if (slug.includes('tds')) return 'TDS';
-  return 'DOC';
-};
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 type SortKey = 'ref' | 'party' | 'date' | 'status' | 'amount';
 
 export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: string; readyNote?: string }) {
-  const mockBase = useMemo(() => rowsFor(prefixFor(slug)), [slug]);
-  const [live, setLive] = useState<Rec[] | null>(null);
+  const [live, setLive] = useState<Rec[]>([]);
   useEffect(() => {
-    if (MOCK) return;
-    if (!/(voucher|sales|purchase|invoice|bill|note|day-book|ledger)/.test(slug)) return;
+    // Voucher-backed list screens read live from the books; others start empty.
+    if (!/(voucher|sales|purchase|invoice|bill|note|day-book|ledger)/.test(slug)) { setLive([]); return; }
     listVouchers()
       .then((vs) => setLive(vs.map((v, i) => ({
         id: v.id || String(i + 1),
         ref: v.voucherNo,
         party: v.party || '—',
         date: v.date || '—',
-        status: (v.status === 'Posted' ? 'Posted' : v.status === 'Pending' ? 'Pending' : 'Draft') as Rec['status'],
+        status: (v.status ? cap(String(v.status)) : 'Posted') as Rec['status'],
         amount: typeof v.amount === 'number' ? v.amount : Number(String(v.amount ?? '').replace(/[^0-9.]/g, '')) || 0,
       }))))
-      .catch(() => {});
+      .catch(() => setLive([]));
   }, [slug]);
-  const base = live ?? mockBase;
+  const base = live;
   const [status, setStatus] = useState('all');
   const [party, setParty] = useState('all');
   const [from, setFrom] = useState<Date | undefined>();
@@ -104,7 +83,7 @@ export function ModuleScreen({ title, slug, readyNote }: { title: string; slug: 
           <Dropdown width={150} value={status} onChange={setStatus} options={[{ value: 'all', label: 'All statuses' }, { value: 'posted', label: 'Posted' }, { value: 'pending', label: 'Pending' }, { value: 'draft', label: 'Draft' }]} icon={<FilterIcon size={15} color="var(--text-3)" />} />
         </div>
         <div className="tb-field"><span>Party</span>
-          <Dropdown width={200} value={party} onChange={setParty} searchable options={[{ value: 'all', label: 'All parties' }, ...PARTIES.map((p) => ({ value: p, label: p }))]} />
+          <Dropdown width={200} value={party} onChange={setParty} searchable options={[{ value: 'all', label: 'All parties' }, ...Array.from(new Set(base.map((r) => r.party).filter((p) => p && p !== '—'))).map((p) => ({ value: p, label: p }))]} />
         </div>
         <div className="tb-field"><span>From</span><DatePicker width={150} value={from} onChange={setFrom} /></div>
         <div className="tb-field"><span>To</span><DatePicker width={150} value={to} onChange={setTo} /></div>

@@ -1,24 +1,29 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DashboardSquare01Icon, Add01Icon, Tick02Icon } from 'hugeicons-react';
 import { AppShell } from '../../lib/appshell';
-import { WIDGETS, ROLES } from '../../lib/mock';
+import { getWidgets, getRoleList, type Widget } from '../../lib/api';
 
 const GROUPS = ['All', 'Finance', 'Compliance', 'Job Work', 'Payroll', 'Audit'] as const;
 
 export default function WidgetsPage() {
   const [q, setQ] = useState('');
   const [group, setGroup] = useState<(typeof GROUPS)[number]>('All');
-  const [added, setAdded] = useState<Set<string>>(
-    () => new Set(WIDGETS.filter((w) => w.defaultOn).map((w) => w.key)),
-  );
+  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [roleNames, setRoleNames] = useState<Record<string, string>>({});
+  const [added, setAdded] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    getWidgets().then((w) => { setWidgets(w); setAdded(new Set(w.filter((x) => x.defaultOn).map((x) => x.key))); }).catch(() => {});
+    getRoleList().then((rs) => setRoleNames(Object.fromEntries(rs.map((r) => [r.key, r.name])))).catch(() => {});
+  }, []);
 
   const list = useMemo(
     () =>
-      WIDGETS.filter((w) => (group === 'All' || w.group === group))
+      widgets.filter((w) => (group === 'All' || w.group === group))
         .filter((w) => (q ? (w.name + w.desc).toLowerCase().includes(q.toLowerCase()) : true)),
-    [q, group],
+    [q, group, widgets],
   );
 
   function toggle(key: string) {
@@ -35,7 +40,7 @@ export default function WidgetsPage() {
         <div>
           <div className="eyebrow">Dashboard · widget library</div>
           <h1 className="display">Widgets</h1>
-          <p>{WIDGETS.length} widgets · <b>{added.size}</b> on your dashboard. Add or remove to customise your role-based dashboard.</p>
+          <p>{widgets.length} widgets · <b>{added.size}</b> on your dashboard. Add or remove to customise your role-based dashboard.</p>
         </div>
       </div>
 
@@ -73,7 +78,7 @@ export default function WidgetsPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
                 {w.roles.slice(0, 3).map((r) => (
-                  <span key={r} className="tag">{ROLES[r]?.name ?? r}</span>
+                  <span key={r} className="tag">{roleNames[r] ?? r}</span>
                 ))}
                 {w.roles.length > 3 && <span className="tag">+{w.roles.length - 3}</span>}
                 <button
