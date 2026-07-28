@@ -489,6 +489,55 @@ export async function getDocuments(): Promise<DocRow[]> {
   ];
 }
 
+// ---- Ageing ----
+export interface AgeingRow { party: string; total: number; b0: number; b30: number; b60: number; b90: number }
+export interface Ageing { rows: AgeingRow[]; totals: { total: number; b0: number; b30: number; b60: number; b90: number } }
+export async function getAgeing(kind: 'receivable' | 'payable'): Promise<Ageing> {
+  const rec: AgeingRow[] = [
+    { party: 'Tata Motors Ltd', total: 3200000, b0: 3200000, b30: 0, b60: 0, b90: 0 },
+    { party: 'Mahalaxmi Traders', total: 2486000, b0: 1486000, b30: 1000000, b60: 0, b90: 0 },
+    { party: 'Rajkot Steel Co', total: 1042000, b0: 0, b30: 642000, b60: 400000, b90: 0 },
+    { party: 'Shree Balaji Enterprises', total: 1042000, b0: 0, b30: 0, b60: 0, b90: 1042000 },
+    { party: 'Ganesh Auto Parts', total: 610000, b0: 0, b30: 0, b60: 0, b90: 610000 },
+  ];
+  const pay: AgeingRow[] = [
+    { party: 'Gujarat Poly Pvt Ltd', total: 1120000, b0: 1120000, b30: 0, b60: 0, b90: 0 },
+    { party: 'Precision Heat Treaters', total: 648000, b0: 448000, b30: 200000, b60: 0, b90: 0 },
+    { party: 'MSEB — Electricity', total: 380000, b0: 0, b30: 380000, b60: 0, b90: 0 },
+    { party: 'Furnace Fuel & Gas', total: 264000, b0: 0, b30: 0, b60: 264000, b90: 0 },
+  ];
+  const rows = kind === 'receivable' ? rec : pay;
+  const totals = rows.reduce((a, r) => ({ total: a.total + r.total, b0: a.b0 + r.b0, b30: a.b30 + r.b30, b60: a.b60 + r.b60, b90: a.b90 + r.b90 }), { total: 0, b0: 0, b30: 0, b60: 0, b90: 0 });
+  return { rows, totals };
+}
+
+// ---- Compliance calendar ----
+export interface ComplianceItem { form: string; period: string; due: string; days: number; amount: number | null; kind: 'gst' | 'tds' | 'tcs' | 'pf' | 'roc'; status: 'due' | 'filed' | 'overdue' }
+export async function getCompliance(): Promise<ComplianceItem[]> {
+  return [
+    { form: 'GSTR-3B', period: 'June 2026', due: '20 Jul 2026', days: -7, amount: 642000, kind: 'gst', status: 'filed' },
+    { form: 'GSTR-1', period: 'July 2026', due: '11 Aug 2026', days: 14, amount: null, kind: 'gst', status: 'due' },
+    { form: 'TDS Challan 281', period: 'July 2026', due: '07 Aug 2026', days: 10, amount: 184300, kind: 'tds', status: 'due' },
+    { form: 'PF ECR + ESI', period: 'July 2026', due: '15 Aug 2026', days: 18, amount: 780000, kind: 'pf', status: 'due' },
+    { form: 'GSTR-3B', period: 'July 2026', due: '20 Aug 2026', days: 23, amount: null, kind: 'gst', status: 'due' },
+    { form: '26Q / 27EQ', period: 'Q1 FY26-27', due: '31 Jul 2026', days: 3, amount: null, kind: 'tds', status: 'due' },
+    { form: 'PT (Gujarat)', period: 'July 2026', due: '15 Aug 2026', days: 18, amount: 1400, kind: 'tds', status: 'due' },
+  ];
+}
+
+// ---- Audit trail ----
+export interface AuditRow { time: string; actor: string; action: string; entity: string; entityId: string; ip: string }
+export async function getAuditTrail(): Promise<AuditRow[]> {
+  return [
+    { time: '28 Jul 2026 18:42', actor: 'Rajesh J.', action: 'voucher.post', entity: 'Sales Invoice', entityId: 'SI/26-27/0484', ip: '10.0.4.21' },
+    { time: '28 Jul 2026 18:31', actor: 'Priya R.', action: 'payment.approve', entity: 'Payment', entityId: 'PMT/26-27/0209', ip: '10.0.4.32' },
+    { time: '28 Jul 2026 17:58', actor: 'Rajesh J.', action: 'period.lock', entity: 'Period', entityId: '2026-05', ip: '10.0.4.21' },
+    { time: '28 Jul 2026 16:10', actor: 'Suresh P.', action: 'jobwork.inward', entity: 'JW Inward', entityId: 'JW-IN/0058', ip: '10.0.4.44' },
+    { time: '28 Jul 2026 15:02', actor: 'System', action: 'einvoice.irn', entity: 'e-Invoice', entityId: 'SI/26-27/0483', ip: '—' },
+    { time: '28 Jul 2026 12:20', actor: 'Rajesh J.', action: 'ledger.blacklist', entity: 'Ledger', entityId: 'Ganesh Auto Parts', ip: '10.0.4.21' },
+  ];
+}
+
 export async function getEWayBills(): Promise<EWayRow[]> {
   return [
     { ewbNo: '3910 4421 8890', invoiceNo: 'SI/26-27/0483', party: 'Rajkot Steel Co', from: 'Rajkot', to: 'Ahmedabad', distance: 216, value: 504200, validTill: '29 Jul 2026', status: 'active' },

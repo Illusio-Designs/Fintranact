@@ -43,10 +43,12 @@ function hrefFor(label: string): string {
   if (clean === 'Widgets') return '/widgets';
   if (clean === 'UI Library') return '/ui';
   if (clean === 'Documents') return '/documents';
+  if (clean === 'Compliance Calendar') return '/compliance';
   if (clean === 'Trial Balance') return '/reports/trial-balance';
   if (clean === 'Day Book') return '/reports/day-book';
   if (clean === 'Profit & Loss') return '/reports/profit-loss';
   if (clean === 'Balance Sheet') return '/reports/balance-sheet';
+  if (clean === 'Ageing') return '/reports/ageing';
   if (clean === 'GSTR-1') return '/gst/gstr-1';
   if (clean === 'GSTR-3B') return '/gst/gstr-3b';
   if (clean === 'GSTR-2B Reconciliation') return '/gst/gstr-2b';
@@ -62,6 +64,7 @@ function hrefFor(label: string): string {
   if (clean === 'Process Master') return '/masters/process';
   if (clean === 'Rate Master') return '/masters/rate';
   if (clean === 'Financial Year') return '/admin/periods';
+  if (clean === 'Audit Trail') return '/admin/audit';
   if (clean === 'TCS Collections') return '/tcs/collections';
   if (clean === 'Return 27EQ') return '/tcs/returns';
   return `/m/${slug(clean)}`;
