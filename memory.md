@@ -246,3 +246,7 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Trial Balance** now: shows the info banner for an empty period (no longer falsely "balanced" at 0=0); on a mismatch shows the red banner **and appends a red "Difference in balances (suspense)" row** on the short side so both columns foot to an equal grand total (standard Tally-style treatment). Verified by forcing a ₹40,000 mismatch → suspense row + equal totals, then reverted the mock.
 - **Day Book** uses `<ReportBanner>` (per-day Dr=Cr / empty-day) and the shared `money` formatter; **P&L** uses `money` too. All three reports now use the same library primitives instead of ad-hoc `inr()` — "use the UI library properly."
 - `next build` passes (11 routes); validation/api/web typecheck green. Merged to main.
+
+### 2026-07-28 — Task 28: Proper report grand-total (tfoot) styling
+- Added a dedicated **report total-row** style to the UI library (`globals.css`, scoped to `table tfoot td` — only the Trial Balance & Day Book report tables use a real `<tfoot>`): tinted band, 2px top rule, uppercase bold "TOTAL", tabular-nums amounts with an accounting-style **double-rule** (inset box-shadow) under the grand total. Removed the ad-hoc inline styles from the Trial Balance and Day Book total rows so they use the shared class.
+- `next build` passes; verified the total line renders as a proper statement footer. Merged to main.

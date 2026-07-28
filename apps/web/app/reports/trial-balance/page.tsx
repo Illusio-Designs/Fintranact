@@ -78,11 +78,11 @@ export default function TrialBalancePage() {
             </tbody>
             {tb && !empty && (
               <tfoot>
-                <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
-                  <td style={{ paddingLeft: 18, fontWeight: 700 }}>Total</td>
+                <tr>
+                  <td>Total</td>
                   <td />
-                  <td className="amt" style={{ fontSize: 14 }}>{money(grand)}</td>
-                  <td className="amt" style={{ fontSize: 14 }}>{money(grand)}</td>
+                  <td className="amt">{money(grand)}</td>
+                  <td className="amt">{money(grand)}</td>
                 </tr>
               </tfoot>
             )}
