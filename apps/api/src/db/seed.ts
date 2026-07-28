@@ -10,8 +10,8 @@ import { logger } from '../common/logger.js';
 
 const COMPANY_ID = '11111111-1111-1111-1111-111111111111';
 const ADMIN_ROLE_ID = 'a0000000-0000-0000-0000-000000000001';
-const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@ajideam.local';
-const PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe!123';
+const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@raviMetal.com';
+const PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Ravi@1234';
 
 async function run(): Promise<void> {
   const hash = await argon2.hash(PASSWORD, { type: argon2.argon2id });
