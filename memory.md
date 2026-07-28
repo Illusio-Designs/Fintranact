@@ -65,6 +65,7 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 ## Web app — dashboard/widgets/icons
 - [x] Huge **round nav icons** via the **Hugeicons** dependency (`hugeicons-react`) — distinct icon per module group in a 38px round badge
 - [x] **Widgets page live** (`/widgets`): catalog of all 20 dashboard widgets (WIDGETS in mock.ts) with search, group filter (Finance/Compliance/Job Work/Payroll/Audit), size chips, role tags, and Add/Added toggle (mock "on your dashboard" count). Linked from Overview nav.
+- [x] **UI Library page** (`/ui`, in the sidebar) — the shared `@fintranact/ui` design-system reference: tokens/colours, typography, buttons, form controls, pills/tags/badges, round Hugeicons, and composite components (KPI tiles, cards + KV rows, data table).
 - [ ] Wire "Add" to actually persist per-role dashboard layout; make more module pages real (Ledgers/Vouchers list+form on live API)
 
 ## Later phases (see PRD §16)
