@@ -6,6 +6,9 @@ import {
   employeeImportRowSchema,
   itemImportRowSchema,
   ledgerImportRowSchema,
+  type EmployeeImportRow,
+  type ItemImportRow,
+  type LedgerImportRow,
 } from '@fintranact/validation';
 import { withTransaction } from '../../common/db.js';
 import { encryptField } from '../../common/crypto.js';
@@ -81,7 +84,8 @@ const ENTITIES: Record<string, EntityDef> = {
       openingCr: col(r, 'Opening Cr'),
     }),
     schema: ledgerImportRowSchema,
-    insert: async (conn, ctx, d) => {
+    insert: async (conn, ctx, data) => {
+      const d = data as LedgerImportRow;
       const id = randomUUID();
       await conn.query(
         `INSERT INTO ledgers (id, company_id, name, category, pan, gstin, state, blacklisted, created_by)
@@ -118,7 +122,8 @@ const ENTITIES: Record<string, EntityDef> = {
       rate: col(r, 'Rate'),
     }),
     schema: itemImportRowSchema,
-    insert: async (conn, ctx, d) => {
+    insert: async (conn, ctx, data) => {
+      const d = data as ItemImportRow;
       const id = randomUUID();
       await conn.query(
         `INSERT INTO items (id, company_id, name, kind, uom, hsn, created_by)
@@ -155,7 +160,8 @@ const ENTITIES: Record<string, EntityDef> = {
       basic: col(r, 'Basic'),
     }),
     schema: employeeImportRowSchema,
-    insert: async (conn, ctx, d) => {
+    insert: async (conn, ctx, data) => {
+      const d = data as EmployeeImportRow;
       const id = randomUUID();
       await conn.query(
         `INSERT INTO employees (id, company_id, emp_code, name, email, pan_enc, designation, date_of_joining, basic_salary, created_by)
@@ -188,7 +194,8 @@ export function entityList(): { key: string; label: string; columns: string[] }[
 /** Read the first worksheet of an .xlsx buffer into header-keyed row objects. */
 export async function parseWorkbook(buffer: Buffer): Promise<Record<string, unknown>[]> {
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(buffer);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- @types/node 22 Buffer generic vs exceljs
+  await wb.xlsx.load(buffer as any);
   const ws = wb.worksheets[0];
   if (!ws) return [];
 
@@ -317,5 +324,6 @@ export async function template(entity: string): Promise<Buffer> {
   ws.columns = def.columns.map((h) => ({ header: h, key: h, width: 22 }));
   ws.getRow(1).font = { bold: true };
   for (const r of def.templateRows) ws.addRow(r);
-  return Buffer.from(await wb.xlsx.writeBuffer());
+  // exceljs already returns a Node Buffer; avoid Buffer.from's generic overload
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }

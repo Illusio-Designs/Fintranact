@@ -114,3 +114,43 @@ export const employeeImportRowSchema = z.object({
   basic: z.preprocess((v) => (v == null || v === '' ? 0 : v), z.coerce.number().nonnegative()),
 });
 export type EmployeeImportRow = z.infer<typeof employeeImportRowSchema>;
+
+// ---- Vouchers (double-entry) — PRD §5.3 ----
+export const voucherType = z.enum([
+  'payment',
+  'receipt',
+  'contra',
+  'journal',
+  'sales',
+  'purchase',
+  'credit_note',
+  'debit_note',
+]);
+export type VoucherType = z.infer<typeof voucherType>;
+
+export const voucherLineSchema = z.object({
+  ledgerId: z.string().min(1, 'Ledger is required'),
+  drCr: z.enum(['dr', 'cr']),
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
+  narration: z.string().optional(),
+});
+
+/** A voucher must balance: total debits === total credits, and be non-zero. */
+export const voucherCreateSchema = z
+  .object({
+    type: voucherType,
+    date: z.string().min(1), // ISO or dd-mm-yyyy; normalised server-side
+    branchId: z.string().optional(),
+    narration: z.string().optional(),
+    lines: z.array(voucherLineSchema).min(2, 'A voucher needs at least two lines'),
+  })
+  .refine(
+    (v) => {
+      const dr = v.lines.filter((l) => l.drCr === 'dr').reduce((s, l) => s + l.amount, 0);
+      const cr = v.lines.filter((l) => l.drCr === 'cr').reduce((s, l) => s + l.amount, 0);
+      // compare in paise to avoid float drift
+      return dr > 0 && Math.round(dr * 100) === Math.round(cr * 100);
+    },
+    { message: 'Debits must equal credits', path: ['lines'] },
+  );
+export type VoucherCreateInput = z.infer<typeof voucherCreateSchema>;

@@ -34,8 +34,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] Desktop `apps/desktop` Electron skeleton (loads web UI, preload bridge, NSIS/auto-update config)
 - [x] `packages/ui` shared UI skeleton (design tokens + Button)
 - [ ] `session-start-hook` + `CLAUDE.md` (via `init`)
-- [ ] **Verify:** `pnpm install` → `typecheck`/`build` on all workspaces (not yet run in this env — needs install)
-- [ ] Wire login end-to-end against a running MySQL (migrate + seed + login) — **Phase 0 exit**
+- [x] **Verify (compile):** `pnpm install` + `typecheck` **PASS on all 6 workspaces** (types, validation, api, ui, web, desktop). Lockfile committed.
+- [ ] **Verify (runtime):** needs MySQL + native `argon2` build (installed with `--ignore-scripts`); then migrate + seed + login end-to-end — **Phase 0 exit**
 - [ ] Follow-ups: tenancy middleware (X-Company-Id validation), refresh-token rotation, MFA, signing-PIN endpoints
 
 ## Phase 1 — started early: Excel data import (older-data migration)
@@ -48,8 +48,14 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] DB `004_items_employees.sql`: items, item_opening_stock, employees
 - [ ] Extend to Rate-Master + historical vouchers; background job for large files; import-history view
 
+## Phase 1 — Accounting core (in progress)
+- [x] Ledger CRUD API: create (category + multi-address + blacklist), list, get, blacklist toggle — `modules/accounting/ledgers.*`
+- [x] **Double-entry voucher engine**: `POST /vouchers` creates & posts a balanced voucher (schema enforces debits==credits), FY-aware **numbering series** with row-locked allocation, header + lines, audited; list + get with lines — `modules/accounting/vouchers.*`
+- [x] DB `005_accounting.sql`: ledger_addresses, financial_years, numbering_series, vouchers, voucher_lines + seed FY 2026-27 & series
+- [ ] Web screens for ledger create + voucher pass-entry (currently API only); period locks; day book/trial-balance report; masters (Process/Rate) CRUD
+
 ## Later phases (see PRD §16)
-- Phase 1 Accounting core · Masters · Documents
+- Phase 1 (cont.) Masters · Documents
 - Phase 2 GST · Invoicing · e-Invoice/e-Way
 - Phase 3 TDS/TCS · Job Work · Lien · Inventory
 - Phase 4 Payroll · Biometric · Form 16
@@ -115,4 +121,14 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - Added `itemImportRowSchema` + `employeeImportRowSchema` (validation pkg); DB `004_items_employees.sql`.
 - Employee **PAN encrypted at rest** via new `common/crypto.ts` (AES-256-GCM, key from FIELD_ENCRYPTION_KEY); added `config.fieldKey`.
 - Built the **web import page** `/import` (entity picker → template → validate grid → commit).
-- API README updated; still TODO: rate-master/vouchers import, big-file background job, import-history screen. (Deps still need `pnpm install` for a live run.)
+- API README updated; still TODO: rate-master/vouchers import, big-file background job, import-history screen.
+
+### 2026-07-28 — Task 11: Phase 1 accounting core (ledgers + voucher engine)
+- Ledger CRUD (`modules/accounting/ledgers.*`): create with multi-address + blacklist, list/get, blacklist toggle; endpoints `/ledgers`, `/ledgers/:id`, `/ledgers/:id/blacklist`.
+- Voucher engine (`modules/accounting/vouchers.*`): `voucherCreateSchema` enforces balanced double-entry; service allocates numbers from `numbering_series` (row-locked), writes header+lines, audits `voucher.post`; `/vouchers` list/get/create.
+- DB `005_accounting.sql` + seed FY & series. Mounted routers in `app.ts`.
+
+### 2026-07-28 — Task 12: Install + typecheck (green)
+- `pnpm install --ignore-scripts` (skips native argon2/electron builds); built types+validation; **`typecheck` passes on all 6 workspaces**.
+- Fixed real type errors surfaced: mysql2 named-param bags typed too widely (`unknown` → concrete), import insert data cast to the zod row types, and the @types/node 22 generic-`Buffer` vs exceljs boundary. Committed `pnpm-lock.yaml`.
+- Remaining verification is runtime-only (MySQL + `argon2` native build), noted in Phase 0 checklist.

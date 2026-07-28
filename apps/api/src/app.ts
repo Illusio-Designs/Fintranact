@@ -12,6 +12,8 @@ import { asyncHandler, ok } from './common/http.js';
 import { ping } from './common/db.js';
 import { iamRouter } from './modules/iam/iam.routes.js';
 import { importRouter } from './modules/import/import.routes.js';
+import { ledgersRouter } from './modules/accounting/ledgers.routes.js';
+import { vouchersRouter } from './modules/accounting/vouchers.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -36,7 +38,9 @@ export function createApp(): Express {
   // API v1
   app.use('/api/v1', iamRouter);
   app.use('/api/v1', importRouter);
-  // Future modules mount here: accounting, compliance, jobwork, payroll, documents…
+  app.use('/api/v1', ledgersRouter);
+  app.use('/api/v1', vouchersRouter);
+  // Future modules mount here: compliance, jobwork, payroll, documents…
 
   app.use(errorHandler);
   return app;
