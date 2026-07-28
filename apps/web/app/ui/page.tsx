@@ -76,6 +76,7 @@ export default function UILibrary() {
   // table state
   const [sortKey, setSortKey] = useState<SortKey>('vno');
   const [asc, setAsc] = useState(true);
+  const [pageSize, setPageSize] = useState(10);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [rowMenu, setRowMenu] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
@@ -305,6 +306,11 @@ export default function UILibrary() {
         <div className="card-head">
           <h3>Data table</h3>
           <div className="sortby" style={{ marginLeft: 'auto' }}>
+            Show
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+              <option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option>
+            </select>
+            <span style={{ color: 'var(--line)' }}>|</span>
             Sort by
             <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)}>
               <option value="vno">Voucher no.</option><option value="party">Party</option><option value="type">Type</option><option value="status">Status</option><option value="amount">Amount</option>
@@ -368,7 +374,7 @@ export default function UILibrary() {
           </table>
         </div>
         <div className="tfoot">
-          <span>Showing 1–{rows.length} of 128 vouchers</span>
+          <span>Showing 1–{rows.length} of 128 vouchers · {pageSize} per page</span>
           <div className="pager">
             <button>‹</button>
             {[1, 2, 3, 4].map((n) => <button key={n} className={n === 1 ? 'on' : ''}>{n}</button>)}
