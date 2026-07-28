@@ -32,12 +32,12 @@ export default function LoginPage() {
   return (
     <main style={{ minHeight: '100vh', background: C.paper, display: 'grid', placeItems: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       <div style={{ width: 360, padding: 24 }}>
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.02em' }}>AJI <span style={{ color: C.red }}>DEAM</span></div>
-          <div style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.muted }}>Heat Treatment · Rajkot</div>
+        <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '14px 16px', display: 'inline-flex', marginBottom: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ravi-logo.gif" alt="RAVI Metal Treatment" style={{ height: 52, width: 'auto', display: 'block' }} />
         </div>
         <h2 style={{ marginBottom: 2 }}>Sign in</h2>
-        <p style={{ color: C.muted, marginTop: 0, fontSize: 13 }}>Fintranact · Aji Deam {MOCK && '· demo'}</p>
+        <p style={{ color: C.muted, marginTop: 0, fontSize: 13 }}>Fintranact · Aji Deam Unit 3, Rajkot {MOCK && '· demo'}</p>
         <form onSubmit={onSubmit}>
           <label style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>Email
             <input style={input} value={email} onChange={(e) => setEmail(e.target.value)} type="email" />

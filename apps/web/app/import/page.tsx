@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { C, Shell } from '../../lib/ui';
+import { C } from '../../lib/ui';
+import { AppShell } from '../../lib/appshell';
 import { commitImport, listImportEntities, MOCK, validateImport } from '../../lib/api';
 import { mockValidation } from '../../lib/mock';
 
@@ -53,7 +54,7 @@ export default function ImportPage() {
   const ctl: React.CSSProperties = { padding: '9px 11px', border: `1px solid ${C.line}`, borderRadius: 8, fontSize: 14 };
 
   return (
-    <Shell active="Import">
+    <AppShell crumb="Documents / Import">
       <main style={{ maxWidth: 920, margin: '0 auto', padding: 24 }}>
         <h2 style={{ marginBottom: 2 }}>Import older data from Excel</h2>
         <p style={{ color: C.muted, marginTop: 0, fontSize: 13 }}>
@@ -107,6 +108,6 @@ export default function ImportPage() {
           </div>
         )}
       </main>
-    </Shell>
+    </AppShell>
   );
 }

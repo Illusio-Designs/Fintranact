@@ -1,6 +1,6 @@
 # Fintranact
 
-Secure, role-based **Indian accounting, GST/TDS/TCS, job-work & payroll** platform — built first for **Aji Deam**, a job-work / heat-treatment processing house.
+Secure, role-based **Indian accounting, GST/TDS/TCS, job-work & payroll** platform — built first for **RAVI Metal Treatment**, a job-work / heat-treatment processing house.
 
 - 📄 Product spec: [`docs/PRD.md`](docs/PRD.md)
 - 🎨 UI prototype: [`docs/ui-mockup.html`](docs/ui-mockup.html) (open in a browser)
