@@ -1,8 +1,36 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { CheckmarkCircle02Icon, Alert01Icon, InformationCircleIcon } from 'hugeicons-react';
 
-/** Shared design-system components: custom Dropdown + Calendar / DatePicker. */
+/** Shared design-system components: custom Dropdown + Calendar / DatePicker + report primitives. */
+
+/** Money formatter used across every report (whole rupees, Indian grouping). */
+export const money = (n: number): string => (n ? '₹' + Math.round(n).toLocaleString('en-IN') : '—');
+
+/** Reconcile a debit/credit pair: is it balanced, and by how much is it short and on which side. */
+export function reconcile(debit: number, credit: number): { balanced: boolean; diff: number; shortSide: 'debit' | 'credit' | null; grand: number } {
+  const d = Math.round(debit * 100), c = Math.round(credit * 100);
+  const balanced = d === c;
+  const diff = Math.abs(debit - credit);
+  const shortSide = balanced ? null : d > c ? 'credit' : 'debit';
+  return { balanced, diff, shortSide, grand: Math.max(debit, credit) };
+}
+
+/**
+ * Standard balance banner for reports. Shows an info state when there is no data,
+ * a success state when debit === credit, and an error state (with the difference)
+ * when the two sides don't tally — so a mismatch is never shown silently.
+ */
+export function ReportBanner({ debit, credit, empty, label = 'total debit equals total credit' }: { debit: number; credit: number; empty?: boolean; label?: string }) {
+  if (empty) {
+    return <div className="alert info"><InformationCircleIcon size={16} color="currentColor" /> <span>No postings in this period yet — nothing to report.</span></div>;
+  }
+  const { balanced, diff } = reconcile(debit, credit);
+  return balanced
+    ? <div className="alert ok"><CheckmarkCircle02Icon size={16} color="currentColor" /> <span>Balanced — {label} ({money(debit)}).</span></div>
+    : <div className="alert err"><Alert01Icon size={16} color="currentColor" /> <span><b>Out of balance by {money(diff)}.</b> A difference (suspense) line is shown below so the columns foot — investigate unposted, draft or mis-posted vouchers before filing.</span></div>;
+}
 
 const Caret = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path d="M6 9l6 6 6-6" /></svg>

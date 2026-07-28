@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Download01Icon, PrinterIcon } from 'hugeicons-react';
 import { AppShell } from '../../../lib/appshell';
-import { DatePicker, Dropdown } from '../../../lib/components';
+import { DatePicker, Dropdown, ReportBanner, money } from '../../../lib/components';
 import { getDayBook, type DayBook } from '../../../lib/api';
 
-const inr = (n: number) => '₹' + n.toLocaleString('en-IN');
+const inr = money;
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const typePill: Record<string, string> = { sales: 'ok', receipt: 'ok', purchase: 'warn', payment: 'crit', journal: 'neut', contra: 'neut' };
 
@@ -39,6 +39,8 @@ export default function DayBookPage() {
           <Dropdown width={170} value={type} onChange={setType} options={[{ value: 'all', label: 'All types' }, { value: 'sales', label: 'Sales' }, { value: 'purchase', label: 'Purchase' }, { value: 'receipt', label: 'Receipt' }, { value: 'payment', label: 'Payment' }, { value: 'journal', label: 'Journal' }]} />
         </div>
       </div>
+
+      {db && <ReportBanner debit={db.totalDebit} credit={db.totalCredit} empty={db.entries.length === 0} label="the day's debit equals its credit" />}
 
       <div className="card">
         <div className="card-head"><h3>Entries</h3><span className="csub" style={{ marginLeft: 'auto' }}>{entries.length} vouchers</span></div>
