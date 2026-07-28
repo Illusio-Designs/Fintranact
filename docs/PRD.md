@@ -226,12 +226,12 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 
 > **Business context.** RAVI Metal Treatment is a **job-work / heat-treatment processing house** — it receives customers' material, applies a **process** (carburising, hardening & tempering, annealing, nitriding, surface coating, etc.), and returns the processed material, billing **job-work/process charges**. The company **does not manufacture or sell its own finished goods**, so the model is inward → process → outward against the customer, plus the mirror flow when work is sub-let to another job-worker.
 
-- **Inward (customer → us):** receive customer material under a job-work/delivery challan — customer, material, quantity, UoM, incoming challan ref, and the **process** to be applied (from **Process Master**, §5.17).
-- **Outward (us → customer):** dispatch processed material back. **Outward works on the pending quantity of the corresponding inward** — the system tracks, per inward challan/line, `received − already returned = pending`, and an outward challan can only dispatch **up to the pending quantity** (partial dispatches allowed across multiple outward challans until pending = 0). Wastage/scrap/burning-loss is captured so `returned + wastage + pending` reconciles to the received quantity. The same pending-quantity logic governs material we **sub-let** to another job-worker (our outward → their inward, their return reduces our pending).
-- **Job Card / Job Memo:** each job is tracked on a **Job Card** carrying process, material, in/out quantities, rate, and a **memo type — Cash or Debit (credit/account)**:
-  - **Cash memo** → charges collected immediately (counter/cash-processing job), receipt raised on delivery.
-  - **Debit memo** → charges billed to the customer's ledger (on account), added to receivables and settled later.
-- **Rate & charge computation:** process charges are picked from **Rate Master** (§5.17) — rate per kg / per piece / per lot by process + customer (contract rate) — and auto-computed on the job card (qty × rate), with GST on job-work charges (SAC 9988) and **TDS 194C** handled where the customer deducts.
+- **Inward (customer → us) — carries the Cash/Debit memo:** when customer material is received under a job-work/delivery challan, the operator captures customer, material, quantity, UoM, incoming challan ref, the **process** to be applied (from **Process Master**, §5.17), the **rate** (from **Rate Master**), and the **memo type — Cash or Debit (credit/account)**. The charge is decided and booked at inward:
+  - **Cash memo** → charges collected on delivery; a **receipt** is raised, no receivable is created.
+  - **Debit memo** → charges billed to the customer's ledger (on account), added to receivables and settled later (with GST on SAC 9988 and **TDS 194C** where the customer deducts).
+  The memo type lives on the **inward entry**, not on a separate job card. Pending-to-return is set to the received quantity.
+- **Outward (us → customer):** dispatch processed material back — **purely a physical movement against the pending quantity** of the linked inward (the charge was already booked at inward). The system tracks, per inward challan/line, `received − already returned − loss = pending`, and an outward challan can only dispatch **up to the pending quantity** (partial dispatches allowed across multiple outward challans until pending = 0). Handling/burning-loss is captured so `returned + loss + pending` reconciles to the received quantity. The same pending-quantity logic governs material we **sub-let** to another job-worker (our outward → their inward, their return reduces our pending).
+- **Rate & charge computation:** process charges are picked from **Rate Master** (§5.17) — rate per kg / per piece / per lot by process + customer (contract rate) — and auto-computed at inward (qty × rate), with GST on job-work charges (SAC 9988). A **Job Card** remains available as a process-tracking/traveller document (process, in/out quantities, status) but does **not** own the cash/debit decision.
 - **Pending / ageing views:** live "pending inward" and "pending outward" registers, plus statutory ageing (1-year/3-year job-work return norms) and alerts on overdue material.
 - **ITC-04** supporting data for goods received-for-processing and returned; e-way bill on movement where applicable.
 - Roles: Store/Process Supervisor (inward/outward, job card), Accountant (charges/GST/TDS), Controller (approve write-offs/wastage & rate overrides).
@@ -347,12 +347,11 @@ All operational data is driven by versioned, effective-dated masters so day-to-d
 5. Working is reviewed and **locked** by Compliance Officer; GSTR-3B ITC figure is derived from the locked reco.
 
 ### 6.6 Job Work Inward → Process → Outward (against pending quantity)
-1. Store Supervisor books an **inward** job-work challan: Customer *Mahalaxmi Traders* sends **1,000 kg** of gears for **Carburising** (process picked from **Process Master**). Pending-to-return starts at 1,000 kg; ageing clock starts.
-2. A **Job Card** is created for the job — process, material, quantity, **rate auto-picked from Rate Master** (say ₹18/kg contract rate → charge ₹18,000 + GST), and **memo type**: *Debit* (bill to customer's ledger) or *Cash* (collect on delivery).
-3. Material is processed; **burning/handling loss 20 kg** is recorded.
-4. First **outward** dispatch returns **600 kg** — the system checks this against **pending (1,000 kg)** and allows it; pending becomes **380 kg** (`1000 − 600 − 20 loss`). A second outward later returns the remaining 380 kg; **outward can never exceed pending**.
-5. On final delivery the job card closes; charges post per memo type — *Debit* → customer receivable + output GST (+ **TDS 194C** where the customer deducts); *Cash* → receipt raised.
-6. **ITC-04** and pending/ageing registers update throughout; any short/excess reconciles as loss (approval-gated).
+1. Store Supervisor books an **inward** entry: Customer *Mahalaxmi Traders* sends **1,000 kg** of gears for **Carburising** (process from **Process Master**). On the **same inward** the operator sets the **memo type — Debit** (bill to ledger) or **Cash** (collect on delivery), and the **rate auto-picks from Rate Master** (say ₹18/kg → charge ₹18,000 + GST). Charge posts here: *Debit* → customer receivable + output GST (+ **TDS 194C** where deducted); *Cash* → receipt on delivery. Pending-to-return = 1,000 kg; ageing starts.
+2. Material is processed; **burning/handling loss 20 kg** is recorded.
+3. First **outward** dispatch returns **600 kg** — checked against **pending (1,000 kg)** and allowed; pending becomes **380 kg** (`1000 − 600 − 20 loss`). Outward is a physical movement only (no re-billing).
+4. A second outward later returns the remaining 380 kg; **cumulative outward + loss can never exceed pending**, and the job closes when pending = 0.
+5. **ITC-04** and pending/ageing registers update throughout; any short/excess reconciles as loss (approval-gated).
 
 ### 6.7 Monthly Payroll Run (with Approval & GL Posting)
 1. Payroll Manager locks attendance/leave for the cycle; LOP computed.
@@ -747,7 +746,7 @@ apps/admin/src/app/
 4. **GST reporting:** GSTR-1 & GSTR-3B working (return-ready export as JSON/CSV) and **GSTR-2B reconciliation**; HSN summary.
 5. **TDS:** section-aware deduction with threshold tracking, TDS payable/receivable ledgers, challan (ITNS 281) tracking, and **26Q/24Q return-ready output**.
 6. **TCS:** 206C(1H) collection with threshold tracking, TCS ledgers, challan tracking, **27EQ return-ready output**, 194Q/206C interplay guard.
-7. **Job work (core business):** inward → process → outward with **outward gated by pending inward quantity**, partial dispatch, wastage/loss reconciliation, **Job Card with Cash/Debit memo**, **Process Master** & **Rate Master** (contract rates), job-work charges (GST on SAC 9988 + TDS 194C), pending/ageing registers, ITC-04 supporting data.
+7. **Job work (core business):** inward → process → outward with the **Cash/Debit memo and charge on the inward entry**, **outward gated by pending inward quantity**, partial dispatch, wastage/loss reconciliation, **Process Master** & **Rate Master** (contract rates), job-work charges (GST on SAC 9988 + TDS 194C), pending/ageing registers, ITC-04 supporting data.
 8. **Masters:** Financial Year, Ledger Categories, Item/Material master, Process Master, Rate Master, numbering series, cost centres, UoM, address types.
 9. **Payroll (core):** employee master, salary structures, **biometric-machine attendance integration**, leave, monthly run with PF/ESI/PT/TDS deductions, reimbursements, payslips (self-service), GL posting, statutory outputs (PF ECR, ESI, PT, 24Q data).
 10. **Controls & signing:** configurable maker-checker approval on payments, credit notes, period reopen, payroll disbursement, permission changes; **user-wise digital signing with a secret PIN** on approve/post/sign actions.
@@ -797,8 +796,8 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 
 **Job Work (core)**
 - AC-10: For an inward of 1,000 kg, cumulative **outward can never exceed the pending quantity**; a partial 600 kg dispatch leaves pending = 400 kg (less recorded loss), and once pending = 0 the job card closes; ITC-04 reflects the movements.
-- AC-10a: A **Job Card** correctly applies the **Rate Master** rate (customer contract rate overriding standard) and settles per **memo type** — *Debit* posts to the customer ledger + GST (+194C where deducted); *Cash* raises a receipt on delivery.
-- AC-10b: Selecting a **Process** from the Process Master carries its SAC and default UoM into the job card and rate lookup.
+- AC-10a: The **Inward entry** carries the **memo type** — *Debit* posts the process charge to the customer ledger + GST (+194C where deducted); *Cash* raises a receipt on delivery — and applies the **Rate Master** rate (customer contract rate overriding standard). Outward does not re-bill.
+- AC-10b: Selecting a **Process** from the Process Master carries its SAC and default UoM into the inward entry and rate lookup.
 
 **Masters & Ledgers**
 - AC-10c: A ledger can hold **multiple addresses**; choosing a delivery address with a different state flips place-of-supply (CGST+SGST ↔ IGST) on the document.
@@ -860,7 +859,7 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - **A5.** **Bank payment initiation** is out of MVP; the system exports payment batches/files for upload to the bank.
 - **A6.** Inventory in MVP is **lightweight** (customer-material custody position + consumable valuation) to support job work; there is **no manufacturing/BOM/finished-goods** module because the reference business is a **job-work / process house only**.
 - **A6b.** Job-work **outward is constrained to the pending quantity** of the linked inward; partial dispatches are allowed until pending reaches zero, and burning/handling loss is reconciled explicitly.
-- **A6c.** A **Job Card** carries a **memo type — Cash** (collect on delivery) or **Debit** (bill to ledger); process comes from **Process Master** and charge from **Rate Master** (contract rate overrides standard).
+- **A6c.** The **Inward entry** carries the **memo type — Cash** (collect on delivery) or **Debit** (bill to ledger) and books the charge; process comes from **Process Master** and rate from **Rate Master** (contract rate overrides standard). **Outward** is a physical dispatch against pending only (no re-billing). A Job Card is a process traveller, not the memo owner.
 - **A6d.** **User signing** uses a per-user **secret PIN stored hashed**, separate from the login password; DSC binding is Phase 2.
 - **A6e.** **Biometric attendance** is integrated for payroll; exact device integration mode (SDK/import/push) is per deployment (see Open Q15).
 - **A7.** **`Ravi Matel`** is the **internal platform-admin** module (not a tenant feature), present in both backend (`modules/ravi-matel`) and frontend (`apps/admin/ravi-matel`), behind a separate Super-Admin realm.

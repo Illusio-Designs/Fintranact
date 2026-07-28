@@ -514,10 +514,10 @@
           <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
         </summary>
         <div class="sub">
-          <a class="page"><span class="pdot"></span>Inward Challans</a>
-          <a class="page"><span class="pdot"></span>Job Cards (Cash / Debit)</a>
+          <a class="page"><span class="pdot"></span>Inward — Cash / Debit memo</a>
           <a class="page"><span class="pdot"></span>Outward Challans (Rule 45)</a>
           <a class="page"><span class="pdot"></span>Pending — Inward / Outward<span class="tail red">10</span></a>
+          <a class="page"><span class="pdot"></span>Job Cards</a>
           <a class="page"><span class="pdot"></span>Material Ageing</a>
           <a class="page"><span class="pdot"></span>ITC-04</a>
           <a class="page"><span class="pdot"></span>Customers &amp; Job Workers</a>
@@ -777,7 +777,6 @@
       <optgroup label="Operations">
         <option value="bank">Bank — multi-line entry</option>
         <option value="job">Job Work — Inward / Outward</option>
-        <option value="jobcard">Job Card (Cash / Debit)</option>
         <option value="payroll">Payroll Run</option>
       </optgroup>
       <optgroup label="Masters">
@@ -1044,23 +1043,65 @@
 
     <!-- ===== JOB WORK ===== -->
     <div class="qp-pane" id="qp-job">
-      <div class="toggle2"><button class="on">Outward (issue)</button><button>Inward (receive)</button></div>
-      <div class="fld"><label>Job worker</label>
-        <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Anand Fabrication — 27AAT…6R2</option><option>Precision Heat Treaters</option><option>Shakti Surface Coating</option></select>
+      <div class="toggle2" id="jobDir">
+        <button type="button" class="on" data-jw="inward" onclick="setJobDir('inward')">Inward (receive)</button>
+        <button type="button" data-jw="outward" onclick="setJobDir('outward')">Outward (dispatch)</button>
       </div>
-      <div class="grid2">
-        <div class="fld"><label>Challan no. (Rule 45)</label><input class="ctl" value="JW-OUT/26-27/0045"></div>
-        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+
+      <!-- INWARD: receive customer material, choose Cash / Debit memo, book charge -->
+      <div id="jobInward">
+        <div class="grid2">
+          <div class="fld"><label>Inward challan no.</label><input class="ctl" value="JW-IN/26-27/0052"></div>
+          <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+        </div>
+        <div class="fld"><label>Customer (material owner)</label>
+          <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Mahalaxmi Traders — 27AACFM…9K1</option><option>Shree Balaji Enterprises — 27AAB…2Z1</option><option>Tata Motors Ltd — 27AAA…9M4</option></select>
+        </div>
+        <div class="fld"><label>Memo type</label>
+          <div class="toggle2" id="jwMemo">
+            <button type="button" class="on" data-memo="debit" onclick="setMemo('debit')">Debit (bill to ledger)</button>
+            <button type="button" data-memo="cash" onclick="setMemo('cash')">Cash (collect on delivery)</button>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="fld"><label>Process</label>
+            <select class="ctl" id="jwProc" onchange="calcJob()"><option value="" disabled selected>— Select —</option><option data-rate="18">Carburising</option><option data-rate="22">Hardening &amp; Tempering</option><option data-rate="14">Annealing</option><option data-rate="28">Nitriding</option><option data-rate="20">Induction Hardening</option></select>
+          </div>
+          <div class="fld"><label>Material / description</label>
+            <select class="ctl"><option value="" disabled selected>— Select —</option><option>Gears</option><option>Shafts</option><option>MS Rounds</option><option>Pins / fasteners</option></select>
+          </div>
+        </div>
+        <div class="grid3">
+          <div class="fld"><label>Qty received (kg)</label><input class="ctl" id="jwQtyIn" inputmode="decimal" oninput="calcJob()" placeholder="0"></div>
+          <div class="fld"><label>Rate ₹/kg (Rate Master)</label><input class="ctl" id="jwRate" inputmode="decimal" oninput="calcJob()" placeholder="auto"></div>
+          <div class="fld"><label>GST rate</label><select class="ctl" id="jwGst" onchange="calcJob()"><option value="18" selected>18% (SAC 9988)</option><option value="12">12%</option><option value="5">5%</option></select></div>
+        </div>
+        <div class="calc-box" id="jwBox"></div>
+        <div class="qp-note" id="jwMemoNote"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> <span id="jwMemoTxt">Debit memo → process charge posts to the customer ledger (receivable) with GST + TDS 194C where deducted. Pending-to-return = qty received.</span></div>
       </div>
-      <div class="fld"><label>Process</label>
-        <select class="ctl"><option value="" disabled selected>— Select —</option><option>Carburising</option><option>Hardening &amp; Tempering</option><option>Annealing</option><option>Nitriding</option></select>
+
+      <!-- OUTWARD: dispatch against pending qty of an inward -->
+      <div id="jobOutward" style="display:none">
+        <div class="grid2">
+          <div class="fld"><label>Outward challan no. (Rule 45)</label><input class="ctl" value="JW-OUT/26-27/0061"></div>
+          <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+        </div>
+        <div class="fld"><label>Against inward challan</label>
+          <select class="ctl big" id="jwInwardRef" onchange="calcJob()">
+            <option value="" disabled selected>— Select —</option>
+            <option value="1000|400">JW-IN/0044 · Mahalaxmi · Gears · recd 1,000 · pending 400</option>
+            <option value="500|500">JW-IN/0051 · Shree Balaji · Shafts · recd 500 · pending 500</option>
+            <option value="250|60">JW-IN/0039 · Tata Motors · Pins · recd 250 · pending 60</option>
+          </select>
+          <div class="hint">Outward can dispatch at most the <b>pending quantity</b> of this inward. <span class="badge-auto">pending <b id="jwPending">0</b> kg</span></div>
+        </div>
+        <div class="grid2">
+          <div class="fld"><label>Dispatch qty (kg)</label><input class="ctl" id="jwQtyOut" inputmode="decimal" oninput="calcJob()" placeholder="0"></div>
+          <div class="fld"><label>Handling / burning loss (kg)</label><input class="ctl" id="jwLoss" inputmode="decimal" oninput="calcJob()" placeholder="0"></div>
+        </div>
+        <div class="calc-box" id="jwOutBox"></div>
+        <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> No GST on Rule 45 movement — charge was booked at inward per the Cash/Debit memo. Partial dispatches allowed until pending = 0; feeds <b>ITC-04</b>.</div>
       </div>
-      <div class="grid3">
-        <div class="fld"><label>Material</label><select class="ctl"><option value="" disabled selected>— Select —</option><option>MS Rounds (RM)</option><option>Gears (SFG)</option></select></div>
-        <div class="fld"><label>Qty sent</label><input class="ctl" placeholder="e.g. 1,000 kg"></div>
-        <div class="fld"><label>Return by</label><input class="ctl" value="10 Aug 26"></div>
-      </div>
-      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> No GST on movement under Rule 45. Stock moves to job-worker custody; feeds <b>ITC-04</b> &amp; 1-year return tracker.</div>
     </div>
 
     <!-- ===== PAYROLL ===== -->
@@ -1085,44 +1126,6 @@
         <div class="hint">Live punches synced from device · <b>142/142 mapped</b> · last sync 6:10 pm. <span class="badge-auto">biometric</span></div>
       </div>
       <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Runs off biometric attendance → LOP/overtime. Approve to post the salary journal to GL and stage <b>PF ECR · ESI · PT · 24Q</b>. Disbursement is signed &amp; maker-checker gated.</div>
-    </div>
-
-    <!-- ===== JOB CARD (Cash / Debit memo) ===== -->
-    <div class="qp-pane" id="qp-jobcard">
-      <div class="grid2">
-        <div class="fld"><label>Job card no.</label><input class="ctl" value="JC/26-27/0512"></div>
-        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
-      </div>
-      <div class="fld"><label>Memo type</label>
-        <div class="toggle2" id="jcMemo">
-          <button type="button" class="on" data-memo="debit" onclick="setMemo('debit')">Debit (bill to ledger)</button>
-          <button type="button" data-memo="cash" onclick="setMemo('cash')">Cash (collect on delivery)</button>
-        </div>
-      </div>
-      <div class="fld"><label>Customer</label>
-        <select class="ctl big"><option value="" disabled selected>— Select —</option><option>Mahalaxmi Traders — 27AACFM…9K1</option><option>Shree Balaji Enterprises — 27AAB…2Z1</option><option>Tata Motors Ltd — 27AAA…9M4</option></select>
-      </div>
-      <div class="fld"><label>Against inward challan</label>
-        <select class="ctl" id="jcInward" onchange="calcJobCard()">
-          <option value="" disabled selected>— Select —</option>
-          <option value="1000|400">JW-IN/0044 · Gears · recd 1,000 · pending 400 kg</option>
-          <option value="500|500">JW-IN/0051 · Shafts · recd 500 · pending 500 kg</option>
-          <option value="250|60">JW-IN/0039 · Pins · recd 250 · pending 60 kg</option>
-        </select>
-        <div class="hint">Outward is limited to the <b>pending quantity</b> of the selected inward. <span class="badge-auto">pending <b id="jcPending">0</b> kg</span></div>
-      </div>
-      <div class="grid2">
-        <div class="fld"><label>Process</label>
-          <select class="ctl" id="jcProc" onchange="calcJobCard()"><option value="" disabled selected>— Select —</option><option data-rate="18">Carburising</option><option data-rate="22">Hardening &amp; Tempering</option><option data-rate="14">Annealing</option><option data-rate="28">Nitriding</option><option data-rate="20">Induction Hardening</option></select>
-        </div>
-        <div class="fld"><label>Return / dispatch qty (kg)</label><input class="ctl" id="jcQty" inputmode="decimal" oninput="calcJobCard()" placeholder="0"></div>
-      </div>
-      <div class="grid2">
-        <div class="fld"><label>Rate ₹/kg (Rate Master)</label><input class="ctl" id="jcRate" inputmode="decimal" oninput="calcJobCard()" placeholder="auto"></div>
-        <div class="fld"><label>GST rate</label><select class="ctl" id="jcGst" onchange="calcJobCard()"><option value="18" selected>18% (SAC 9988)</option><option value="12">12%</option><option value="5">5%</option></select></div>
-      </div>
-      <div class="calc-box" id="jcBox"></div>
-      <div class="qp-note" id="jcNote"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> <span id="jcNoteTxt">Debit memo → charge posts to the customer ledger (receivable) with GST + TDS 194C where deducted.</span></div>
     </div>
 
     <!-- ===== LEDGER MASTER (categories · multi-address · blacklist) ===== -->
@@ -1242,8 +1245,7 @@
     creditnote: { s:'CN/26-27',  d:'Reduce a sales invoice (return / discount).',  post:'Post credit note' },
     debitnote:  { s:'DN/26-27',  d:'Reduce a purchase bill (return).',             post:'Post debit note' },
     bank:       { s:'BNK/26-27', d:'One bank, many contra lines.',                 post:'Post lines' },
-    job:        { s:'JW/26-27',  d:'Rule 45 job-work challan movement.',           post:'Save challan' },
-    jobcard:    { s:'JC/26-27',  d:'Process job card — Cash or Debit memo.',        post:'Sign & save job card' },
+    job:        { s:'JW/26-27',  d:'Inward (Cash/Debit memo) / Outward movement.',  post:'Sign & save inward' },
     payroll:    { s:'PAY/26-27', d:'Monthly salary run posted to GL.',             post:'Send for approval' },
     ledger:     { s:'LEDGER',    d:'Party ledger — category, addresses, blacklist.', post:'Save ledger' },
     process:    { s:'PROCESS',   d:'Heat-treatment / job-work process.',           post:'Save process' },
@@ -1389,28 +1391,50 @@
       : (diff > 0 ? 'Credit short by ' + inr2(diff) : 'Debit short by ' + inr2(-diff)));
     updatePostState();
   }
-  /* Job Card — memo type, pending-qty guard, rate-master auto-fill */
-  var jcMemo = 'debit', jcLastAuto = '';
-  function setMemo(m){
-    jcMemo = m;
-    qi('jcMemo').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.memo === m); });
-    qi('jcNoteTxt').textContent = m === 'cash'
-      ? 'Cash memo → charge collected on delivery; a receipt is raised. No receivable is created.'
-      : 'Debit memo → charge posts to the customer ledger (receivable) with GST + TDS 194C where deducted.';
+  /* Job Work — Inward (Cash/Debit memo + charge) / Outward (against pending qty) */
+  var jobDir = 'inward', jwMemo = 'debit', jwLastAuto = '';
+  function qtyRow(k, v, strong){
+    return '<div class="kv"><span class="k"' + (strong ? ' style="font-weight:700;color:var(--text)"' : '') + '>' + k + '</span>'
+         + '<span class="v"' + (strong ? ' style="font-size:15px"' : '') + '>' + Number(Math.max(0, v)).toLocaleString('en-IN') + ' kg</span></div>';
   }
-  function calcJobCard(){
-    var inw = qi('jcInward').value, pending = inw ? parseFloat(inw.split('|')[1]) : 0;
-    qi('jcPending').textContent = pending.toLocaleString('en-IN');
-    var opt = qi('jcProc').options[qi('jcProc').selectedIndex];
-    var autoRate = (opt && opt.dataset && opt.dataset.rate) ? opt.dataset.rate : '';
-    var rateEl = qi('jcRate');
-    if (autoRate && (rateEl.value === '' || rateEl.value === jcLastAuto)){ rateEl.value = autoRate; jcLastAuto = autoRate; }
-    var qty = pnum(qi('jcQty').value), rate = pnum(rateEl.value), gst = pnum(qi('jcGst').value);
-    var charge = qty * rate, tax = charge * gst / 100, over = pending > 0 && qty > pending;
-    var html = kvRow('Process charge (' + (qty || 0) + ' × ₹' + (rate || 0) + ')', charge)
-             + kvRow('GST @ ' + gst + '%', tax) + kvRow('Job card total', charge + tax, true);
-    if (over) html += '<div class="jbal-status" style="color:var(--red-ink);margin-top:8px">⚠ Dispatch ' + qty + ' exceeds pending ' + pending + ' kg — reduce quantity.</div>';
-    qi('jcBox').innerHTML = html;
+  function setJobDir(d){
+    jobDir = d;
+    qi('jobDir').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.jw === d); });
+    qi('jobInward').style.display = d === 'inward' ? 'block' : 'none';
+    qi('jobOutward').style.display = d === 'outward' ? 'block' : 'none';
+    qi('vtDesc').textContent = d === 'inward' ? 'Receive customer material — Cash / Debit memo & charge.' : 'Dispatch against pending inward quantity.';
+    var lbl = qi('qpPostLabel'); if (lbl) lbl.textContent = d === 'inward' ? 'Sign & save inward' : 'Sign & save outward';
+    calcJob();
+  }
+  function setMemo(m){
+    jwMemo = m;
+    qi('jwMemo').querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.memo === m); });
+    qi('jwMemoTxt').textContent = m === 'cash'
+      ? 'Cash memo → charge collected on delivery; a receipt is raised (no receivable). Pending-to-return = qty received.'
+      : 'Debit memo → process charge posts to the customer ledger (receivable) with GST + TDS 194C where deducted. Pending-to-return = qty received.';
+    calcJob();
+  }
+  function calcJob(){
+    if (jobDir === 'inward'){
+      var opt = qi('jwProc').options[qi('jwProc').selectedIndex];
+      var autoRate = (opt && opt.dataset && opt.dataset.rate) ? opt.dataset.rate : '';
+      var rateEl = qi('jwRate');
+      if (autoRate && (rateEl.value === '' || rateEl.value === jwLastAuto)){ rateEl.value = autoRate; jwLastAuto = autoRate; }
+      var qty = pnum(qi('jwQtyIn').value), rate = pnum(rateEl.value), gst = pnum(qi('jwGst').value);
+      var charge = qty * rate, tax = charge * gst / 100;
+      qi('jwBox').innerHTML = kvRow('Process charge (' + (qty || 0) + ' × ₹' + (rate || 0) + ')', charge)
+        + kvRow('GST @ ' + gst + '%', tax)
+        + kvRow(jwMemo === 'cash' ? 'Cash memo total' : 'Debit memo total', charge + tax, true);
+    } else {
+      var inw = qi('jwInwardRef').value, pending = inw ? parseFloat(inw.split('|')[1]) : 0;
+      qi('jwPending').textContent = pending.toLocaleString('en-IN');
+      var q = pnum(qi('jwQtyOut').value), loss = pnum(qi('jwLoss').value);
+      var over = pending > 0 && (q + loss) > pending;
+      var html = qtyRow('Pending before dispatch', pending) + qtyRow('Dispatch now', q) + qtyRow('Handling / burning loss', loss)
+        + qtyRow('Pending after', pending - q - loss, true);
+      if (over) html += '<div class="jbal-status" style="color:var(--red-ink);margin-top:8px">⚠ Dispatch + loss (' + (q + loss) + ') exceeds pending ' + pending + ' kg — reduce quantity.</div>';
+      qi('jwOutBox').innerHTML = html;
+    }
     updatePostState();
   }
 
@@ -1443,7 +1467,7 @@
     else if (type === 'creditnote') calcNote('cn');
     else if (type === 'debitnote') calcNote('dn');
     else if (type === 'journal') calcJournal();
-    else if (type === 'jobcard') calcJobCard();
+    else if (type === 'job') calcJob();
     else if (type === 'ledger') initAddresses();
   }
   function updatePostState(){
@@ -1454,7 +1478,10 @@
     else if (curTab === 'purchase'){ ok = pnum(qi('pQty').value) > 0 && pnum(qi('pRate').value) > 0 && pnum(qi('pGst').value) > 0 && !!qi('pPos').value; }
     else if (curTab === 'creditnote'){ ok = pnum(qi('cnTax').value) > 0 && pnum(qi('cnGst').value) > 0; }
     else if (curTab === 'debitnote'){ ok = pnum(qi('dnTax').value) > 0 && pnum(qi('dnGst').value) > 0; }
-    else if (curTab === 'jobcard'){ var inw = qi('jcInward').value, pend = inw ? parseFloat(inw.split('|')[1]) : 0, q = pnum(qi('jcQty').value); ok = !!inw && q > 0 && pnum(qi('jcRate').value) > 0 && q <= pend; }
+    else if (curTab === 'job'){
+      if (jobDir === 'inward'){ ok = pnum(qi('jwQtyIn').value) > 0 && pnum(qi('jwRate').value) > 0; }
+      else { var inw = qi('jwInwardRef').value, pend = inw ? parseFloat(inw.split('|')[1]) : 0, q = pnum(qi('jwQtyOut').value), loss = pnum(qi('jwLoss').value); ok = !!inw && q > 0 && (q + loss) <= pend; }
+    }
     btn.disabled = !ok;
   }
 
