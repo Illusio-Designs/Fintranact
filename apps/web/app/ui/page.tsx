@@ -10,6 +10,7 @@ import {
   MinusSignIcon, PlusSignIcon,
 } from 'hugeicons-react';
 import { AppShell } from '../../lib/appshell';
+import { Dropdown, Calendar, DatePicker } from '../../lib/components';
 
 /** @fintranact/ui — shared component library / design system reference. */
 
@@ -63,6 +64,9 @@ export default function UILibrary() {
   const [chips, setChips] = useState(['Heat treatment', 'Hardening']);
   const [chipDraft, setChipDraft] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [ddVal, setDdVal] = useState('sales');
+  const [calDate, setCalDate] = useState<Date | undefined>(new Date(2026, 6, 28));
+  const [pickDate, setPickDate] = useState<Date | undefined>(new Date(2026, 6, 28));
 
   // file upload state
   const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
@@ -158,11 +162,27 @@ export default function UILibrary() {
           </div>
         </Card>
 
-        <Card title="Date, time, select & search">
-          <div className="field"><label>Voucher date</label><div className="input-prefix"><span className="pfx" style={{ padding: '0 9px' }}><Calendar03Icon size={16} color="currentColor" /></span><input type="date" defaultValue="2026-07-28" /></div></div>
-          <div className="field"><label>Cut-off time</label><div className="input-prefix"><span className="pfx" style={{ padding: '0 9px' }}><Clock01Icon size={16} color="currentColor" /></span><input type="time" defaultValue="18:30" /></div></div>
-          <div className="field"><label>Voucher type</label><select className="ctl"><option>Sales</option><option>Purchase</option><option>Payment</option><option>Receipt</option><option>Journal</option></select></div>
-          <div className="field"><label>Search</label><div className="search" style={{ width: '100%' }}><Search01Icon size={15} color="currentColor" /> Search vouchers… <kbd>⌘K</kbd></div></div>
+        <Card title="Dropdowns, date & search" sub="Custom dropdown (searchable) + calendar date picker.">
+          <div className="field"><label>Custom dropdown</label>
+            <Dropdown value={ddVal} onChange={setDdVal} width="100%" options={[{ value: 'sales', label: 'Sales Invoice', hint: 'SI/26-27' }, { value: 'purchase', label: 'Purchase Bill', hint: 'PB/26-27' }, { value: 'payment', label: 'Payment', hint: 'PMT/26-27' }, { value: 'receipt', label: 'Receipt', hint: 'RCP/26-27' }, { value: 'journal', label: 'Journal', hint: 'JV/26-27' }]} />
+          </div>
+          <div className="field"><label>Searchable dropdown</label>
+            <Dropdown searchable placeholder="Select a party…" width="100%" onChange={() => {}} options={['Mahalaxmi Traders', 'Gujarat Poly Pvt Ltd', 'Shakti Forgings', 'Rajkot Steel Co', 'Aarav Metals', 'Shree Balaji Enterprises', 'Tata Motors Ltd', 'Anand Fabrication', 'Precision Heat Treaters'].map((p) => ({ value: p, label: p }))} />
+          </div>
+          <div className="field"><label>Date picker (calendar)</label><DatePicker value={pickDate} onChange={setPickDate} width="100%" /></div>
+          <div className="field"><label>Native date / time</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div className="input-prefix" style={{ flex: 1 }}><span className="pfx" style={{ padding: '0 9px' }}><Calendar03Icon size={16} color="currentColor" /></span><input type="date" defaultValue="2026-07-28" /></div>
+              <div className="input-prefix" style={{ flex: 1 }}><span className="pfx" style={{ padding: '0 9px' }}><Clock01Icon size={16} color="currentColor" /></span><input type="time" defaultValue="18:30" /></div>
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Calendar" sub="Inline month-grid date picker.">
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Calendar selected={calDate} onSelect={setCalDate} />
+          </div>
+          <div style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--text-2)' }}>Selected: <b>{calDate ? calDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</b></div>
         </Card>
 
         <Card title="Stepper, range, tags & rating">
