@@ -148,7 +148,7 @@ const ENTITIES: Record<string, EntityDef> = {
     label: 'Employees',
     columns: ['Emp Code', 'Name', 'Email', 'PAN', 'Designation', 'DOJ', 'Basic'],
     templateRows: [
-      ['RMT-0087', 'Amit Kumar', 'amit@ravimetal.local', 'ABCPK1234M', 'Furnace Operator', '12-07-2021', 24000],
+      ['RMT-0087', 'Amit Kumar', 'amit@ajideam.local', 'ABCPK1234M', 'Furnace Operator', '12-07-2021', 24000],
     ],
     map: (r) => ({
       empCode: col(r, 'Emp Code'),

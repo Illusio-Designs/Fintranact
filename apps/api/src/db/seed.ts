@@ -1,5 +1,5 @@
 /**
- * Seed a first admin user for RAVI Metal Treatment (dev/demo only).
+ * Seed a first admin user for Aji Deam (dev/demo only).
  * Password comes from SEED_ADMIN_PASSWORD or defaults to "ChangeMe!123".
  * Usage: pnpm --filter @fintranact/api exec tsx src/db/seed.ts
  */
@@ -10,7 +10,7 @@ import { logger } from '../common/logger.js';
 
 const COMPANY_ID = '11111111-1111-1111-1111-111111111111';
 const ADMIN_ROLE_ID = 'a0000000-0000-0000-0000-000000000001';
-const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@ravimetal.local';
+const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@ajideam.local';
 const PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe!123';
 
 async function run(): Promise<void> {

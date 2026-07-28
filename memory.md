@@ -1,7 +1,7 @@
 # Fintranact — Build Memory & Progress Log
 
 > Living log of development against `docs/PRD.md`. **Updated on every task completed.**
-> Product: Fintranact — Indian accounting / GST-TDS-TCS / job-work / payroll platform for **RAVI Metal Treatment** (job-work / heat-treatment processing house).
+> Product: Fintranact — Indian accounting / GST-TDS-TCS / job-work / payroll platform for **Aji Deam** (job-work / heat-treatment processing house).
 > Branch: `claude/indian-accounting-platform-prd-fv3jee`
 
 ---
@@ -107,7 +107,7 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - IAM: `iam.repo`/`iam.service`(argon2 login → JWT)/`iam.routes`(`/auth/login`,`/auth/me`); `app.ts`, `main.ts`.
 
 ### 2026-07-28 — Task 5: DB migrations
-- `001_init.sql` (identity/access/audit tables, DECIMAL money, hash-chained audit), `002_seed_rbac.sql` (company RAVI Metal, Pune branch, 9 roles, permission catalog + role→perm grants). `migrate.ts` runner + `seed.ts` admin user (argon2).
+- `001_init.sql` (identity/access/audit tables, DECIMAL money, hash-chained audit), `002_seed_rbac.sql` (company RAVI Metal, Rajkot branch, 9 roles, permission catalog + role→perm grants). `migrate.ts` runner + `seed.ts` admin user (argon2).
 
 ### 2026-07-28 — Task 6-8: Web, Desktop, UI skeletons
 - `apps/web` (Next.js): layout, landing, **working login page** posting to the API.
@@ -154,3 +154,9 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 ### 2026-07-28 — Task 15: Real RAVI Metal logo in web + merge to main
 - Added the exact logo from the HTML mockup to `apps/web/public/ravi-logo.gif`; header shows it in a white panel (dark bar), login shows it in a white card; right-side tag now "Powered by Fintranact". Rebuilt web — passes.
 - Merged feature branch into `main` and pushed.
+
+### 2026-07-28 — Task 16: Rename client RAVI Metal Treatment → Aji Deam (Rajkot)
+- Renamed the reference client to **Aji Deam**, location **Rajkot, Gujarat**, home GSTIN **24AABCS1429P1Z5** (state 24) across PRD, mockup, web app, seed SQL, Form 16 sample, README, memory. **Left the internal `Ravi Matel` admin module name untouched** (original mandate).
+- Replaced the RAVI logo with an **"AJI DEAM · Heat Treatment · Rajkot" wordmark** in the web app and mockup (removed `ravi-logo.gif`); the embedded data-URI logo is gone (mockup shrank ~1.2MB→136KB). A real Aji Deam logo can be dropped in later.
+- Flipped mockup place-of-supply so **Gujarat = intra-state** (home), Maharashtra = inter-state.
+- Regenerated `docs/samples/Form16_sample.pdf` for Aji Deam. Web build passes; artifact republished.

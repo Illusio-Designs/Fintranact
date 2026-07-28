@@ -18,7 +18,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 1024,
     minHeight: 680,
-    title: 'Fintranact — RAVI Metal Treatment',
+    title: 'Fintranact — Aji Deam',
     backgroundColor: '#0E0E11',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
