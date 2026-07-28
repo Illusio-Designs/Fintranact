@@ -1,14 +1,14 @@
--- 002_seed_rbac — seed RAVI Metal Treatment company, default roles & permissions.
+-- 002_seed_rbac — seed Aji Deam company, default roles & permissions.
 -- Idempotent-ish: uses fixed IDs + INSERT IGNORE so re-runs don't duplicate.
 
 SET @co := '11111111-1111-1111-1111-111111111111';
 SET @br := '22222222-2222-2222-2222-222222222222';
 
 INSERT IGNORE INTO companies (id, name, legal_name, pan)
-VALUES (@co, 'RAVI Metal Treatment', 'RAVI Metal Treatment', 'AABCS1429P');
+VALUES (@co, 'Aji Deam', 'Aji Deam', 'AABCS1429P');
 
 INSERT IGNORE INTO branches (id, company_id, name, gstin, state_code)
-VALUES (@br, @co, 'Pune (MIDC Bhosari)', '27AABCS1429P1Z8', '27');
+VALUES (@br, @co, 'Rajkot (Aji Dam GIDC)', '24AABCS1429P1Z5', '24');
 
 -- Default roles (PRD §7.2.1)
 INSERT IGNORE INTO roles (id, company_id, `key`, name, is_system) VALUES

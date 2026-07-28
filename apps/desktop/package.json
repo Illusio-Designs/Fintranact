@@ -20,7 +20,7 @@
     "typescript": "^5.4.0"
   },
   "build": {
-    "appId": "in.ravimetal.fintranact",
+    "appId": "in.ajideam.fintranact",
     "productName": "Fintranact",
     "win": {
       "target": ["nsis"]
