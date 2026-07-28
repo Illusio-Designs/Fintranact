@@ -256,7 +256,11 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 - **Deductions:** PF (employee/employer), ESI, Professional Tax (state-wise), TDS on salary (192, old/new regime), loans/advances.
 - **Reimbursements:** claim submission, approval, and payout (taxable/non-taxable treatment).
 - **Payslips:** generated PDF, employee self-service download.
-- **Statutory outputs:** PF ECR text file, ESI contribution file/challan data, PT returns, Form 16 / 24Q linkage, Form 12BB investment declarations.
+- **Statutory outputs:** PF ECR text file, ESI contribution file/challan data, PT returns, Form 12BB investment declarations, and **auto-generated Form 16** (see below).
+- **Form 16 — auto-generation (TDS on salary, u/s 203):** at year-end the system produces each employee's **Form 16**:
+  - **Part A** (deductor/employee identity — TAN, employer & employee **PAN**, address, AY & period, and the **quarter-wise TDS deducted & deposited** with challan/BSR references) is reconciled from the **24Q** returns / TRACES linkage.
+  - **Part B (Annexure)** is **computed automatically from the payroll**: gross salary [17(1)/(2)/(3)], allowances exempt u/s 10 (HRA, etc.), deductions u/s 16 (standard deduction, professional tax), income under *Salaries*, Chapter VI-A deductions (80C/80D/…), total income, tax on total income, rebate 87A, surcharge & **health-&-education cess**, relief u/s 89, and **net tax deducted** — supporting **old and new regime**.
+  - **Bulk one-click generation** for all employees, **digitally signed** (DSC / signing PIN), each PDF **password-protected** (PAN + DOB) and **auto-filed to the document root** and emailed to the employee. Regeneration keeps a version; every issue is audit-logged.
 - GL posting: salary journal auto-posted to accounts (salary expense, statutory payables, net-pay bank).
 - Roles: Payroll Manager (run), Controller/Compliance (approve & disburse), Employee (self-service).
 
@@ -877,6 +881,7 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - AC-11: A payroll run computes gross/net with PF/ESI/PT/TDS correctly, prorates LOP, posts a balanced salary journal to GL, and publishes payslips; PF ECR and ESI/PT/24Q outputs are generated.
 - AC-11a: **Biometric** punch logs ingested from the device map to employees, de-duplicate, and produce first-in/last-out, overtime, and LOP; unmapped punches are queued, not silently dropped.
 - AC-11b (**signing**): An approve/post/sign action requires the acting user's **secret signing PIN**; a wrong PIN blocks the action and is logged, and a successful sign stamps signer identity + timestamp on the record.
+- AC-11c (**Form 16**): Form 16 auto-generates with Part A (TAN/PAN, quarter-wise TDS + challan refs from 24Q) and a Part B computed from payroll (gross → exemptions → §16 → Chapter VI-A → tax → cess → net TDS) under the chosen regime; bulk generation produces one signed, password-protected PDF per employee, auto-filed to the document root, and the Part-B tax reconciles to the year's salary-TDS deducted.
 
 **Security & Controls**
 - AC-12: A user without a permission is denied the action **server-side** (not just hidden in UI); denial is logged.
