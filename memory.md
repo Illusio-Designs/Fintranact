@@ -6,6 +6,14 @@
 
 ---
 
+## ⚠️ MANDATORY RULE — UI library is compulsory for every page
+**Every page/screen MUST be built from the shared `@fintranact/ui` design system. No bespoke/inline styling or ad-hoc colours.**
+- Use the design tokens + component classes in `apps/web/app/globals.css` (`.card`, `.field`, `.ctl`, `.btn`, `.pill`, `.alert`, `.dropzone`, `.toolbar`, `.dd`, `.cal`, table styles, …) — never hardcoded hex or one-off inline CSS for structure/colour.
+- Compose from the shared React components: `AppShell` (`lib/appshell.tsx`) for every in-app page, and `Dropdown` / `Calendar` / `DatePicker` (`lib/components.tsx`); reuse `ModuleScreen` (`lib/modulescreen.tsx`) for list screens and the `QuickPanel` for pass-entry.
+- Auth screens (`/login`) may render outside `AppShell` (no sidebar) but STILL use the design-system classes (cards/fields/buttons/alerts).
+- When a new pattern is needed, add it to the library (globals.css + `lib/components.tsx`) and the `/ui` showcase — do NOT style it locally. The `/ui` page is the living catalogue; keep it in sync.
+- Reviewer checklist for any new page: ✅ wrapped in `AppShell` (or documented exception) · ✅ zero inline hex/colours · ✅ inputs/dropdowns/tables/alerts come from the library · ✅ shown on `/ui` if it introduces a new component.
+
 ## How this file is used
 - Every completed task appends an entry under **Task Log** (newest at bottom) with date, what changed, and files touched.
 - The **Phase checklist** reflects current state (`[ ]` todo, `[~]` in progress, `[x]` done).
@@ -208,3 +216,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Quick Entry wired**: Sales/Purchase posts now call the composer via the client — after the signing-PIN the button shows the returned voucher no. (e.g. "Posted ✓ SI/26-27/0484"); mock returns a canned number so the Vercel demo still works.
 - **Module screens wired**: when not in mock mode, voucher-type module pages load live rows from `GET /api/v1/vouchers`; mock rows remain the default for the standalone demo.
 - `next build` passes (8 routes); smoke-tested the Sales→PIN→post flow end-to-end. Merged to main.
+
+### 2026-07-28 — Task 24: UI library made compulsory; all pages migrated onto it
+- Added the **MANDATORY RULE** (top of this file): every page must be built from the `@fintranact/ui` design system — tokens + component classes in `globals.css` and the shared React components (`AppShell`, `Dropdown`, `Calendar`/`DatePicker`, `ModuleScreen`, `QuickPanel`). No inline hex / bespoke styling. `/login` may skip `AppShell` but still uses library classes. New patterns go into the library + `/ui` showcase, never styled locally.
+- **Migrated the last two off-library pages:**
+  - `/import` rebuilt from the library — page-head, `.ui-grid` two-card layout, `Dropdown` for entity + FY, `.dropzone` upload with selected-file chip, `.btn` actions, `.alert` status, and a `.pill` validation-preview table.
+  - `/login` rebuilt as a design-system `.card` (logo panel, `.field`/`.ctl` inputs, `.btn-primary`, `.alert` error) instead of inline styles.
+- **Removed dead `apps/web/lib/ui.tsx`** (legacy `C` palette + `Shell`) — no longer referenced. Audit: all routes now use the library (`/dashboard`, `/import`, `/widgets`, `/ui`, `/m/[…]` via `ModuleScreen`, `/login`; `/` redirects).
+- `next build` passes (8 routes). Verified import + login screenshots. Merged to main.
