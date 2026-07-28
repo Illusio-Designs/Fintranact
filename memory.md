@@ -71,7 +71,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **GSTR-2B reconciliation** (`/gst/gstr-2b`): books ITC vs portal 2B, invoice-wise matched/mismatch/only-books/only-2b with status tiles + difference banner; backend `/gst/gstr-2b/books` books-side ITC summary.
 - [x] **TDS challans (ITNS-281) + 26Q return** (`modules/tds`): backend `/tds/summary` (net TDS payable from `tds_payable` balance); pages `/tds/challans` (section-wise deducted/deposited/pending + status) and `/tds/returns` (26Q deductee-wise statement — PAN, section, rate, TDS, challan).
 - [x] **Job work — pending inward/outward + ITC-04** (`modules/jobwork`, migration `008_jobwork.sql`): inward/outward challan tables; `/jobwork/pending` computes pending = received − dispatched − loss (status open/partial/closed); `/jobwork/itc04` Rule-45 movement summary. Pages `/jobwork/pending` and `/jobwork/itc04`.
-- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); lien/forfeiture posting; payroll (biometric/Form 16); documents
+- [x] **Payroll run + statutory** (`modules/payroll`): computes gross (basic+40% HRA+10% allowance), PF (12% of ≤₹15k), ESI (0.75% if gross ≤₹21k), Gujarat PT, TDS 192 (annual slabs /12) per employee → net + PF/ESI/PT/TDS deposit summary. Page `/payroll/run`.
+- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); lien/forfeiture posting; Form 16 gen page; documents module
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -296,3 +297,8 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - `/jobwork/itc04` — Rule-45 quarterly statement: tiles (inward/outward challans, qty received/returned/pending) + a Table-4 challan list. Returned 1,715 = dispatched+loss, consistent with pending page.
   - Sidebar **Job Work → Pending Inward Outward / ITC-04** route to them.
 - `next build` passes (19 routes). Merged to main.
+
+### 2026-07-28 — Task 35: Payroll run with statutory deductions
+- **Backend** (`modules/payroll`): `GET /api/v1/payroll/run?month=` reads employees and computes each payslip — gross = basic + 40% HRA + 10% allowance; **PF** 12% of min(basic, ₹15,000); **ESI** 0.75% of gross when gross ≤ ₹21,000; **PT** Gujarat monthly slab; **TDS 192** from old-regime annual slabs (std deduction ₹50k + 80C on PF) spread /12 — then net + employee/employer statutory totals. `report:view`. Mounted; API typechecks; math spot-checked at basic 12k/25k/60k.
+- **Web** (mock-aware `getPayrollRun`, same formulas; 7 sample employees), page `/payroll/run` from the UI library — pay-month dropdown + biometric source, tiles (employees / gross / deductions / net), a **salary register** table (basic, gross, PF, ESI, PT, TDS, net) with a totals row, and a **"Statutory to deposit"** card (PF ECR employee+employer, ESI, PT, TDS→24Q, total). Verified fully consistent: gross ₹2,97,000 − deductions ₹26,714 = net ₹2,70,286; statutory payout ₹39,708. "Approve & post" flashes posted. Sidebar **Payroll & HR → Payroll Run** routes to it.
+- `next build` passes (20 routes). Merged to main.
