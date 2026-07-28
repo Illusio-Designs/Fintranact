@@ -4,6 +4,8 @@ import { asyncHandler, ok } from '../../common/http.js';
 import { requireAuth } from '../../common/middleware/auth.js';
 import { requirePermission } from '../../common/middleware/rbac.js';
 import { createSalesInvoice } from './sales.service.js';
+import { getCompanyProfile } from '../settings/settings.service.js';
+import { generateEInvoice } from '../integrations/einvoice.service.js';
 
 export const salesRouter: Router = Router();
 
@@ -24,7 +26,15 @@ salesRouter.post(
       userId: req.session!.userId,
       requestId: req.requestId,
     });
+    // If enabled in Settings, auto-generate the IRN for this service invoice.
+    let einvoice = null;
+    const company = await getCompanyProfile(req.session!.companyId);
+    if (company?.auto_einvoice_service) {
+      try {
+        einvoice = await generateEInvoice(result.id, { companyId: req.session!.companyId, userId: req.session!.userId, requestId: req.requestId });
+      } catch { /* non-blocking: invoice is posted; IRN can be generated later */ }
+    }
     res.status(201);
-    ok(res, result);
+    ok(res, { ...result, einvoice });
   }),
 );

@@ -6,6 +6,7 @@ import { audit } from '../../common/audit.js';
 import { config } from '../../config.js';
 import { getVoucher } from '../accounting/vouchers.service.js';
 import { getCompanyProfile } from '../settings/settings.service.js';
+import { whitebooksIrn } from './whitebooks.js';
 
 export interface EInvoiceResult {
   invoiceNo: string; party: string; date: string; value: number;
@@ -27,14 +28,13 @@ function sandboxIrn(gstin: string, docNo: string, value: number, dateIso: string
   return { irn, ack, ackDate: new Date().toISOString(), signedQr };
 }
 
-/** Live IRP/GSP call — used when EINVOICE_MODE=live and an endpoint is configured. */
+/** Live IRP call — Whitebooks GSP by default (config.integrations.gsp.provider). */
 async function liveIrn(payload: unknown): Promise<{ irn: string; ack: string; ackDate: string; signedQr: string }> {
+  if (config.integrations.gsp.provider === 'whitebooks') return whitebooksIrn(payload);
   const { apiUrl, apiKey } = config.integrations.einvoice;
   if (!apiUrl) throw Errors.validation('EINVOICE_API_URL not configured for live mode');
   const res = await fetch(`${apiUrl}/einvoice/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(payload),
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` }, body: JSON.stringify(payload),
   });
   const body = (await res.json()) as Record<string, string>;
   if (!res.ok) throw Errors.validation(`IRP error: ${body?.message ?? res.status}`);

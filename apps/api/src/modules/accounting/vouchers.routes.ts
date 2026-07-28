@@ -6,7 +6,7 @@ import { requireAuth } from '../../common/middleware/auth.js';
 import { requirePermission } from '../../common/middleware/rbac.js';
 import * as vouchers from './vouchers.service.js';
 import { renderVoucherPdf } from '../vouchers/pdf.service.js';
-import { getCompanyProfile } from '../settings/settings.service.js';
+import { getCompanyProfile, getPrintBank } from '../settings/settings.service.js';
 
 export const vouchersRouter: Router = Router();
 
@@ -19,7 +19,8 @@ vouchersRouter.get(
     const v = await vouchers.getVoucher(req.session!.companyId, req.params.id!);
     if (!v) throw Errors.notFound('Voucher not found');
     const company = await getCompanyProfile(req.session!.companyId);
-    const pdf = await renderVoucherPdf(v, company);
+    const bank = await getPrintBank(req.session!.companyId);
+    const pdf = await renderVoucherPdf(v, company, bank);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${String(v.voucher_no).replace(/[^\w.-]+/g, '_')}.pdf"`);
     res.send(pdf);

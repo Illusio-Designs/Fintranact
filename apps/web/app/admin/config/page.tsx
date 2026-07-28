@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { FloppyDiskIcon, InformationCircleIcon } from 'hugeicons-react';
+import { FloppyDiskIcon, InformationCircleIcon, Add01Icon, CheckmarkCircle02Icon, Building06Icon } from 'hugeicons-react';
 import { AppShell } from '../../../lib/appshell';
 import { Dropdown } from '../../../lib/components';
 import { showSuccess, showError } from '../../../lib/success';
 import {
   getNumberingSeries, updateNumberingSeries, getCompanyProfile,
-  type NumberingSeries, type CompanyProfile,
+  getBankAccounts, addBankAccount, setPrintBank, updateCompanySettings,
+  type NumberingSeries, type CompanyProfile, type BankAccount,
 } from '../../../lib/api';
 
 const pad = (n: number, w: number) => String(n).padStart(w, '0');
@@ -17,11 +18,35 @@ export default function SystemConfigPage() {
   const [series, setSeries] = useState<NumberingSeries[]>([]);
   const [draft, setDraft] = useState<Record<string, { prefix: string; nextNo: number; width: number }>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [bankForm, setBankForm] = useState({ bankName: '', accountNo: '', ifsc: '', branch: '', upi: '' });
+  const [autoIrn, setAutoIrn] = useState(false);
 
+  const loadBanks = () => getBankAccounts().then(setBanks).catch(() => {});
   useEffect(() => {
-    getCompanyProfile().then(setCompany).catch(() => {});
+    getCompanyProfile().then((c) => { setCompany(c); setAutoIrn(!!c.autoEinvoiceService); }).catch(() => {});
     getNumberingSeries().then(setSeries).catch(() => {});
+    loadBanks();
   }, []);
+
+  async function saveBank() {
+    if (!bankForm.bankName || !bankForm.accountNo) return;
+    try {
+      await addBankAccount(bankForm);
+      setBankForm({ bankName: '', accountNo: '', ifsc: '', branch: '', upi: '' });
+      await loadBanks();
+      showSuccess({ title: 'Bank account added', rows: [['Bank', bankForm.bankName], ['A/C', bankForm.accountNo]] });
+    } catch (e) { showError('Could not add bank', [['Reason', (e as Error).message]]); }
+  }
+  async function pickPrint(id: string) {
+    try { setBanks(await setPrintBank(id)); showSuccess({ title: 'Print bank updated', rows: [['Info', 'This bank now prints on vouchers']] }); }
+    catch (e) { showError('Could not update', [['Reason', (e as Error).message]]); }
+  }
+  async function toggleAutoIrn(v: boolean) {
+    setAutoIrn(v);
+    try { await updateCompanySettings({ autoEinvoiceService: v }); showSuccess({ title: v ? 'Auto e-Invoice on' : 'Auto e-Invoice off', rows: [['Service invoices', v ? 'IRN generated on post' : 'Generate manually']] }); }
+    catch (e) { setAutoIrn(!v); showError('Could not update', [['Reason', (e as Error).message]]); }
+  }
 
   const edit = (t: string, patch: Partial<{ prefix: string; nextNo: number; width: number }>) => {
     const base = series.find((s) => s.voucherType === t)!;
@@ -114,7 +139,55 @@ export default function SystemConfigPage() {
           </table>
         </div>
         <div className="card-body" style={{ paddingTop: 14, color: 'var(--text-2)', fontSize: 12 }}>
-          E-Invoice IRN and E-Way Bill numbers are issued by the government portal (IRP / NIC); the series above are only our internal document references stored against each invoice.
+          E-Invoice IRN and E-Way Bill numbers are issued by the government portal (IRP / NIC) via our GSP (Whitebooks); the series above are only our internal document references.
+        </div>
+      </div>
+
+      {/* Bank accounts — which one prints on vouchers */}
+      <div className="card" style={{ marginTop: 18 }}>
+        <div className="card-head"><h3>Bank accounts (printed on vouchers)</h3><span className="csub" style={{ marginLeft: 'auto' }}>{banks.length}</span></div>
+        <div style={{ overflowX: 'auto' }}>
+          <table>
+            <thead><tr><th>Bank</th><th>Account no.</th><th>IFSC</th><th>Branch</th><th>Prints on voucher</th></tr></thead>
+            <tbody>
+              {banks.map((b) => (
+                <tr key={b.id}>
+                  <td className="party"><Building06Icon size={14} color="var(--text-3)" style={{ verticalAlign: '-2px', marginRight: 6 }} />{b.bankName}</td>
+                  <td className="vno">{b.accountNo}</td>
+                  <td style={{ fontSize: 12.5 }}>{b.ifsc ?? '—'}</td>
+                  <td style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{b.branch ?? '—'}</td>
+                  <td>{b.printDefault
+                    ? <span className="pill ok"><CheckmarkCircle02Icon size={12} color="currentColor" /> Default</span>
+                    : <button className="mini" onClick={() => pickPrint(b.id)}>Set as print</button>}</td>
+                </tr>
+              ))}
+              {banks.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-3)', padding: 22 }}>No bank accounts yet — add one below to print it on vouchers.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+        <div className="card-body" style={{ paddingTop: 14 }}>
+          <div className="grid3" style={{ gap: 10, alignItems: 'end' }}>
+            <div className="field"><label>Bank name</label><input className="ctl" value={bankForm.bankName} onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })} placeholder="HDFC Bank" /></div>
+            <div className="field"><label>Account no.</label><input className="ctl" value={bankForm.accountNo} onChange={(e) => setBankForm({ ...bankForm, accountNo: e.target.value })} /></div>
+            <div className="field"><label>IFSC</label><input className="ctl" value={bankForm.ifsc} onChange={(e) => setBankForm({ ...bankForm, ifsc: e.target.value.toUpperCase() })} /></div>
+            <div className="field"><label>Branch</label><input className="ctl" value={bankForm.branch} onChange={(e) => setBankForm({ ...bankForm, branch: e.target.value })} /></div>
+            <div className="field"><label>UPI (optional)</label><input className="ctl" value={bankForm.upi} onChange={(e) => setBankForm({ ...bankForm, upi: e.target.value })} /></div>
+            <div><button className="btn btn-primary" disabled={!bankForm.bankName || !bankForm.accountNo} onClick={saveBank}><Add01Icon size={14} color="currentColor" /> Add bank</button></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Automation */}
+      <div className="card" style={{ marginTop: 18 }}>
+        <div className="card-head"><h3>Automation</h3></div>
+        <div className="card-body">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+            <input type="checkbox" checked={autoIrn} onChange={(e) => toggleAutoIrn(e.target.checked)} style={{ width: 18, height: 18 }} />
+            <span>
+              <b>Auto-generate e-Invoice (IRN) on service invoices</b>
+              <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>When a job-work / service invoice is posted, the IRN &amp; signed QR are fetched automatically from the IRP.</div>
+            </span>
+          </label>
         </div>
       </div>
     </AppShell>

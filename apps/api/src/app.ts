@@ -28,6 +28,7 @@ import { appDataRouter } from './modules/appdata/appdata.routes.js';
 import { mastersRouter } from './modules/masters/masters.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { integrationsRouter } from './modules/integrations/integrations.routes.js';
+import { leaveRouter } from './modules/leave/leave.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -68,6 +69,7 @@ export function createApp(): Express {
   app.use('/api/v1', mastersRouter);
   app.use('/api/v1', dashboardRouter);
   app.use('/api/v1', integrationsRouter);
+  app.use('/api/v1', leaveRouter);
   // Future modules mount here: compliance, jobwork, payroll, documents…
 
   app.use(errorHandler);

@@ -3,6 +3,7 @@ import { pool } from '../../common/db.js';
 import { Errors } from '../../common/errors.js';
 import { audit } from '../../common/audit.js';
 import { config } from '../../config.js';
+import { whitebooksEwb } from './whitebooks.js';
 
 export interface EwayInput {
   voucherId?: string; invoiceNo: string; party: string; from: string; to: string;
@@ -27,6 +28,7 @@ function sandboxEwb(inv: string, value: number, distance: number): { ewbNo: stri
 }
 
 async function liveEwb(payload: unknown): Promise<{ ewbNo: string; validTill: string }> {
+  if (config.integrations.gsp.provider === 'whitebooks') return whitebooksEwb(payload);
   const { apiUrl, apiKey } = config.integrations.eway;
   if (!apiUrl) throw Errors.validation('EWAY_API_URL not configured for live mode');
   const res = await fetch(`${apiUrl}/ewayapi/generate`, {

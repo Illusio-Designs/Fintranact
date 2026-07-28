@@ -279,12 +279,34 @@ export async function updateNumberingSeries(voucherType: string, patch: { prefix
 export interface CompanyProfile {
   name: string; legalName?: string; pan?: string; gstin?: string; tan?: string; cin?: string;
   gstRegType?: string; ptRegn?: string; pfRegn?: string; esiRegn?: string;
-  address?: string; city?: string; stateCode?: string; pincode?: string;
+  address?: string; city?: string; stateCode?: string; pincode?: string; autoEinvoiceService?: boolean;
 }
 export async function getCompanyProfile(): Promise<CompanyProfile> {
   const d = await getJson<Record<string, string>>('/settings/company', {} as Record<string, string>);
-  return { name: d.name ?? '', legalName: d.legal_name, pan: d.pan, gstin: d.gstin, tan: d.tan, cin: d.cin, gstRegType: d.gst_reg_type, ptRegn: d.pt_regn, pfRegn: d.pf_regn, esiRegn: d.esi_regn, address: d.address, city: d.city, stateCode: d.state_code, pincode: d.pincode };
+  return { name: d.name ?? '', legalName: d.legal_name, pan: d.pan, gstin: d.gstin, tan: d.tan, cin: d.cin, gstRegType: d.gst_reg_type, ptRegn: d.pt_regn, pfRegn: d.pf_regn, esiRegn: d.esi_regn, address: d.address, city: d.city, stateCode: d.state_code, pincode: d.pincode, autoEinvoiceService: !!Number(d.auto_einvoice_service) };
 }
 
 /** URL to a voucher's server-rendered PDF. */
 export function voucherPdfUrl(id: string): string { return `${API}/api/v1/vouchers/${id}/pdf`; }
+
+// ---- Leave applications ----
+export interface LeaveRequest { id: string; employeeName: string; type: 'casual' | 'sick' | 'earned' | 'unpaid'; fromDate: string; toDate: string; days: number; reason: string | null; status: 'pending' | 'approved' | 'rejected'; approver: string | null; createdAt: string }
+export async function getLeave(): Promise<LeaveRequest[]> { return getJson('/leave', []); }
+export async function applyLeave(input: { employeeName: string; type: string; fromDate: string; toDate: string; reason?: string }): Promise<LeaveRequest> {
+  return sendJson('POST', '/leave', input);
+}
+export async function decideLeave(id: string, decision: 'approved' | 'rejected', approver?: string): Promise<{ id: string; status: string }> {
+  return sendJson('PATCH', `/leave/${id}/decision`, { decision, approver });
+}
+
+// ---- Company bank accounts (voucher printing) ----
+export interface BankAccount { id: string; bankName: string; accountNo: string; ifsc: string | null; branch: string | null; upi: string | null; printDefault: boolean }
+export async function getBankAccounts(): Promise<BankAccount[]> { return getJson('/settings/banks', []); }
+export async function addBankAccount(input: { bankName: string; accountNo: string; ifsc?: string; branch?: string; upi?: string }): Promise<BankAccount> {
+  return sendJson('POST', '/settings/banks', input);
+}
+export async function setPrintBank(id: string): Promise<BankAccount[]> { return sendJson('PATCH', `/settings/banks/${id}/print`, {}); }
+export async function updateCompanySettings(patch: { autoEinvoiceService?: boolean }): Promise<CompanyProfile> {
+  const d = await sendJson<Record<string, string>>('PATCH', '/settings/company', patch);
+  return { name: d.name ?? '', legalName: d.legal_name, pan: d.pan, gstin: d.gstin, tan: d.tan, gstRegType: d.gst_reg_type, address: d.address, city: d.city, stateCode: d.state_code, pincode: d.pincode };
+}
