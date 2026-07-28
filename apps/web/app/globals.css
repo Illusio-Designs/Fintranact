@@ -414,3 +414,16 @@
     .switcher .gstin { display: none; }
     .head-actions { width: 100%; } .head-actions .btn { flex: 1; justify-content: center; }
   }
+
+/* ===== Huge round nav icons ===== */
+.grp > summary { gap: 12px; padding: 8px 10px; }
+.grp > summary .g-round {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; flex: none;
+  background: #1B1B20; color: #C9C7CB;
+  transition: background .15s ease, color .15s ease;
+}
+.grp > summary .g-round svg { width: 22px; height: 22px; }
+.grp[open] > summary .g-round,
+.grp > summary:hover .g-round { background: rgba(200,16,46,.20); color: #fff; }
+.grp > summary { font-size: 13.5px; font-weight: 700; }

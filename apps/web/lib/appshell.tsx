@@ -2,12 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import {
+  DashboardCircleIcon,
+  Book02Icon,
+  Invoice01Icon,
+  CheckmarkBadge01Icon,
+  Coins01Icon,
+  ArchiveIcon,
+  Factory01Icon,
+  UserGroupIcon,
+  Configuration01Icon,
+  Analytics01Icon,
+  Settings01Icon,
+} from 'hugeicons-react';
 import { ROLES } from './mock';
 
 /** Sidebar nav — `#N` on a label adds a red count badge. */
 const NAV: { group: string; open?: boolean; badge?: string; pages: string[] }[] = [
-  { group: 'Overview', open: true, pages: ['Dashboard', 'Compliance Calendar#2', 'Documents', 'Notifications'] },
+  { group: 'Overview', open: true, pages: ['Dashboard', 'Widgets', 'Compliance Calendar#2', 'Documents', 'Notifications'] },
   { group: 'Accounting', open: true, pages: ['Chart of Accounts', 'Ledgers & Groups', 'Vouchers', 'Day Book', 'Bank & Cash'] },
   { group: 'Sales & Purchase', pages: ['Sales Invoices', 'Purchase Bills', 'Credit / Debit Notes', 'Customers & Vendors', 'Items & Price Lists'] },
   { group: 'GST & Returns', badge: '3', pages: ['GST Invoices', 'E-Way Bills', 'GSTR-1', 'GSTR-3B', 'GSTR-2B Reconciliation'] },
@@ -26,13 +39,34 @@ export function slug(label: string): string {
 function hrefFor(label: string): string {
   const clean = label.replace(/#.*/, '').trim();
   if (clean === 'Dashboard') return '/dashboard';
+  if (clean === 'Widgets') return '/widgets';
   if (clean === 'Documents') return '/import';
   return `/m/${slug(clean)}`;
 }
 
-const GIcon = () => (
-  <svg className="g-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg>
-);
+/** Distinct Hugeicons icon per nav group, rendered inside a large round badge. */
+type IconCmp = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+const GROUP_ICON: Record<string, IconCmp> = {
+  Overview: DashboardCircleIcon,
+  Accounting: Book02Icon,
+  'Sales & Purchase': Invoice01Icon,
+  'GST & Returns': CheckmarkBadge01Icon,
+  TDS: Coins01Icon,
+  TCS: ArchiveIcon,
+  'Job Work & Process': Factory01Icon,
+  'Payroll & HR': UserGroupIcon,
+  Masters: Configuration01Icon,
+  Reports: Analytics01Icon,
+  'Admin · Ravi Metal Ops': Settings01Icon,
+};
+const GIcon = ({ group }: { group: string }) => {
+  const Ic = GROUP_ICON[group] ?? DashboardCircleIcon;
+  return (
+    <span className="g-round">
+      <Ic size={22} color="currentColor" strokeWidth={1.8} />
+    </span>
+  );
+};
 const Chev = () => (
   <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><path d="M9 6l6 6-6 6" /></svg>
 );
@@ -72,7 +106,7 @@ export function AppShell({
             {NAV.map((g, gi) => (
               <details className="grp" key={gi} open={g.open}>
                 <summary>
-                  <GIcon />
+                  <GIcon group={g.group} />
                   {g.group}
                   {g.badge && <span className="count alert">{g.badge}</span>}
                   <Chev />
