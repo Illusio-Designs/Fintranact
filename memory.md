@@ -1,7 +1,7 @@
 # Fintranact — Build Memory & Progress Log
 
 > Living log of development against `docs/PRD.md`. **Updated on every task completed.**
-> Product: Fintranact — Indian accounting / GST-TDS-TCS / job-work / payroll platform for **Aji Deam** (job-work / heat-treatment processing house).
+> Product: Fintranact — Indian accounting / GST-TDS-TCS / job-work / payroll platform for **RAVI Metal Treatment** (job-work / heat-treatment processing house).
 > Branch: `claude/indian-accounting-platform-prd-fv3jee`
 
 ---
@@ -155,13 +155,18 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - Added the exact logo from the HTML mockup to `apps/web/public/ravi-logo.gif`; header shows it in a white panel (dark bar), login shows it in a white card; right-side tag now "Powered by Fintranact". Rebuilt web — passes.
 - Merged feature branch into `main` and pushed.
 
-### 2026-07-28 — Task 16: Rename client RAVI Metal Treatment → Aji Deam (Rajkot)
-- Renamed the reference client to **Aji Deam**, location **Rajkot, Gujarat**, home GSTIN **24AABCS1429P1Z5** (state 24) across PRD, mockup, web app, seed SQL, Form 16 sample, README, memory. **Left the internal `Ravi Matel` admin module name untouched** (original mandate).
-- Replaced the RAVI logo with an **"AJI DEAM · Heat Treatment · Rajkot" wordmark** in the web app and mockup (removed `ravi-logo.gif`); the embedded data-URI logo is gone (mockup shrank ~1.2MB→136KB). A real Aji Deam logo can be dropped in later.
+### 2026-07-28 — Task 16: Rename client RAVI Metal Treatment → RAVI Metal Treatment (Rajkot)
+- Renamed the reference client to **RAVI Metal Treatment**, location **Rajkot, Gujarat**, home GSTIN **24AABCS1429P1Z5** (state 24) across PRD, mockup, web app, seed SQL, Form 16 sample, README, memory. **Left the internal `Ravi Matel` admin module name untouched** (original mandate).
+- Replaced the RAVI logo with an **"AJI DEAM · Heat Treatment · Rajkot" wordmark** in the web app and mockup (removed `ravi-logo.gif`); the embedded data-URI logo is gone (mockup shrank ~1.2MB→136KB). A real RAVI Metal Treatment logo can be dropped in later.
 - Flipped mockup place-of-supply so **Gujarat = intra-state** (home), Maharashtra = inter-state.
-- Regenerated `docs/samples/Form16_sample.pdf` for Aji Deam. Web build passes; artifact republished.
+- Regenerated `docs/samples/Form16_sample.pdf` for RAVI Metal Treatment. Web build passes; artifact republished.
 
 ### 2026-07-28 — Task 17: Port the HTML mockup look into the web dashboard
 - Extracted the mockup's stylesheet → `apps/web/app/globals.css` (loaded in layout); rebuilt `/dashboard` as a faithful React port: dark **sidebar** (AJI DEAM wordmark + collapsible module nav with pages), **topbar** (company switcher · GSTIN · Rajkot, FY + role selects, search, theme toggle, notifications bell, Quick Entry), **KPI tiles** (incl. dark GST accent), **cash-flow chart**, **compliance calendar**, **P&L**, recent vouchers, approvals, and supervisor/payroll cards.
 - Role selector swaps KPIs + which cards show; theme toggle (light/dark) and mobile nav drawer wired. Extended `lib/mock.ts` (accountant/compliance/auditor roles + approvals + pending inward/outward).
 - **`next build` passes**; verified with a headless screenshot — matches the mockup. Merged to main.
+
+### 2026-07-28 — Task 18: Working sidebar + real logo; company/branch corrected
+- **Corrected identity:** company = **RAVI Metal Treatment** (logo restored), branch/unit = **Aji Deam Unit 3, Rajkot (Gujarat, GSTIN 24…)**. Reverted the earlier over-rename (Aji Deam was meant as the branch, not the company).
+- **Working sidebar:** extracted the shell into `lib/appshell.tsx` (rail + topbar + content); every nav item now links (Dashboard→/dashboard, Documents→/import, all others→ catch-all `/m/[...slug]`), active item highlights via `usePathname`. Module pages render a titled placeholder ("API ready" note for ledgers/vouchers/sales). Dashboard + Import refactored onto AppShell.
+- **Logo** restored (`ravi-logo.gif`) in the sidebar white panel + login; re-embedded in the mockup; regenerated Form 16 for RAVI Metal Treatment / Aji Deam Unit 3. Verified dashboard + `/m/vouchers` via screenshots; build passes; artifact republished.

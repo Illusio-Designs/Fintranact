@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata = {
-  title: 'Fintranact — Aji Deam',
+  title: 'Fintranact — RAVI Metal Treatment',
   description: 'Indian accounting, GST/TDS/TCS, job-work & payroll platform',
 };
 

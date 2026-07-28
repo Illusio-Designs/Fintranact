@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS voucher_lines (
   INDEX idx_vl_ledger (company_id, ledger_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed the current FY + default numbering series for Aji Deam
+-- Seed the current FY + default numbering series for RAVI Metal Treatment
 SET @co := '11111111-1111-1111-1111-111111111111';
 INSERT IGNORE INTO financial_years (id, company_id, year, starts_on, ends_on, status)
 VALUES (UUID(), @co, '2026-27', '2026-04-01', '2027-03-31', 'active');

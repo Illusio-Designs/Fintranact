@@ -1,5 +1,5 @@
 /**
- * Seed a first admin user for Aji Deam (dev/demo only).
+ * Seed a first admin user for RAVI Metal Treatment (dev/demo only).
  * Password comes from SEED_ADMIN_PASSWORD or defaults to "ChangeMe!123".
  * Usage: pnpm --filter @fintranact/api exec tsx src/db/seed.ts
  */
