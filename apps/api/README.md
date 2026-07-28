@@ -16,6 +16,20 @@ pnpm --filter @fintranact/api dev        # http://localhost:4000
 - `GET  /health` — liveness + DB ping
 - `POST /api/v1/auth/login` — `{ email, password }` → `{ accessToken, session }`
 - `GET  /api/v1/auth/me` — current session (Bearer token)
+- `GET  /api/v1/import/ledgers/template` — download the .xlsx import template
+- `POST /api/v1/import/ledgers/validate` — multipart `file` → per-row validation (dry run, no writes)
+- `POST /api/v1/import/ledgers/commit` — multipart `file` + `financialYear` → import valid rows (ledgers + opening balances)
+
+### Import older data from Excel (quick try)
+```bash
+TOKEN=... # from /auth/login
+curl -H "Authorization: Bearer $TOKEN" -OJ http://localhost:4000/api/v1/import/ledgers/template
+# fill the template, then:
+curl -H "Authorization: Bearer $TOKEN" -F file=@ledgers.xlsx \
+     http://localhost:4000/api/v1/import/ledgers/validate         # check first
+curl -H "Authorization: Bearer $TOKEN" -F file=@ledgers.xlsx -F financialYear=2025-26 \
+     http://localhost:4000/api/v1/import/ledgers/commit           # then import
+```
 
 ## Structure
 ```

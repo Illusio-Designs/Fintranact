@@ -38,6 +38,12 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [ ] Wire login end-to-end against a running MySQL (migrate + seed + login) — **Phase 0 exit**
 - [ ] Follow-ups: tenancy middleware (X-Company-Id validation), refresh-token rotation, MFA, signing-PIN endpoints
 
+## Phase 1 — started early: Excel data import (older-data migration)
+- [x] Ledger + opening-balance tables (`003_ledgers_import.sql`) as an import target
+- [x] Excel import module: parse `.xlsx` (exceljs), **validate (dry run)** vs zod, **commit** valid rows in a transaction, import-batch + per-row audit, downloadable template
+- [x] Endpoints: `GET /import/ledgers/template`, `POST /import/ledgers/validate`, `POST /import/ledgers/commit` (multipart, `data:import` permission)
+- [ ] Extend to Items/Employees/Rate-Master + historical vouchers; background job for large files; web import UI
+
 ## Later phases (see PRD §16)
 - Phase 1 Accounting core · Masters · Documents
 - Phase 2 GST · Invoicing · e-Invoice/e-Way
@@ -91,3 +97,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - `packages/ui`: design tokens (black/red/white) + `Button` — first shared component.
 
 **NOTE / next verification:** dependencies not yet installed in this env. Before running, do `pnpm install` at root, create the MySQL DB, `pnpm --filter @fintranact/api migrate`, then `tsx src/db/seed.ts`, then start `api` + `web`. Run `pnpm typecheck` to confirm types across workspaces.
+
+### 2026-07-28 — Task 9: Excel data import (older data)
+- PRD: added §5.19 Data Import & Migration (Excel / legacy) — templates, validate-then-commit, opening balances, audited batches.
+- `packages/validation`: `ledgerImportRowSchema` (tolerant of messy cells; Dr xor Cr).
+- DB `003_ledgers_import.sql`: `ledgers`, `ledger_opening_balances`, `import_batches`, `import_rows` + `data:import` permission (accountant/controller).
+- `apps/api/modules/import`: `import.service` (parse xlsx via exceljs, validate, commit-in-tx, template gen) + `import.routes` (template/validate/commit, multipart via multer, `data:import` guard); mounted in `app.ts`. Deps added: exceljs, multer, @types/multer.
+- Endpoints + curl usage documented in `apps/api/README.md`.
+- Note: introduces a minimal `ledgers` table early (Phase-1 target) so older data has somewhere to land.

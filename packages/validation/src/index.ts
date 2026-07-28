@@ -42,18 +42,20 @@ export const addressSchema = z.object({
   isDefault: z.boolean().default(false),
 });
 
+export const ledgerCategory = z.enum([
+  'customer',
+  'supplier',
+  'jobworker',
+  'transporter',
+  'expense',
+  'bank',
+  'cash',
+  'statutory',
+]);
+
 export const ledgerCreateSchema = z.object({
   name: z.string().min(1),
-  category: z.enum([
-    'customer',
-    'supplier',
-    'jobworker',
-    'transporter',
-    'expense',
-    'bank',
-    'cash',
-    'statutory',
-  ]),
+  category: ledgerCategory,
   pan: panSchema.optional(),
   gstin: gstinSchema.optional(),
   addresses: z.array(addressSchema).default([]),
@@ -61,3 +63,28 @@ export const ledgerCreateSchema = z.object({
   blacklistReason: z.string().optional(),
 });
 export type LedgerCreateInput = z.infer<typeof ledgerCreateSchema>;
+
+// ---- Excel import of legacy/older data (see PRD §5.19) ----
+/** Empty cell → undefined; trims strings. Used to tolerate messy spreadsheets. */
+const emptyToUndef = (v: unknown) =>
+  v === '' || v === null || v === undefined ? undefined : typeof v === 'string' ? v.trim() : v;
+
+/** One flat ledger row as it appears in the import spreadsheet (opening balance inline). */
+export const ledgerImportRowSchema = z
+  .object({
+    name: z.preprocess(emptyToUndef, z.string().min(1, 'Name is required')),
+    category: z.preprocess(
+      (v) => (typeof v === 'string' ? v.trim().toLowerCase() : v),
+      ledgerCategory,
+    ),
+    pan: z.preprocess(emptyToUndef, panSchema.optional()),
+    gstin: z.preprocess(emptyToUndef, gstinSchema.optional()),
+    state: z.preprocess(emptyToUndef, z.string().optional()),
+    openingDr: z.preprocess((v) => (v == null || v === '' ? 0 : v), z.coerce.number().nonnegative()),
+    openingCr: z.preprocess((v) => (v == null || v === '' ? 0 : v), z.coerce.number().nonnegative()),
+  })
+  .refine((r) => !(r.openingDr > 0 && r.openingCr > 0), {
+    message: 'A ledger cannot have both a debit and a credit opening balance',
+    path: ['openingDr'],
+  });
+export type LedgerImportRow = z.infer<typeof ledgerImportRowSchema>;

@@ -330,6 +330,17 @@ A built-in document store so every record can carry its supporting paperwork, wi
 - **Search & OCR:** metadata/full-text search across filenames, types, tags, and linked party; **OCR text extraction** for scanned bills/challans to make them searchable (Phase 2), feeding future auto-capture/reconciliation.
 - Roles: Operator/Accountant (upload/attach), all (view within permission scope), Controller/Admin (delete/retention), Auditor (read + audit).
 
+### 5.19 Data Import & Migration (Excel / legacy data)
+Onboarding a business means bringing in its **older data** — masters and opening positions from its previous system (Tally/Busy/Excel). Fintranact imports this from **Excel (.xlsx)** with a safe validate-then-commit flow.
+
+- **Downloadable templates** per entity (**Ledgers/parties, Items/materials, Opening balances, Employees, Rate Master, historical vouchers**) with the exact expected columns and example rows, so users don't guess the format.
+- **Upload → Validate (dry run):** the sheet is parsed and every row is checked against the same **zod schemas** used by the live forms (GSTIN/PAN format, category, non-negative amounts, a ledger can't have both Dr and Cr opening). The user sees a **per-row result** (valid / errors with the exact field & message) **before anything is written** — messy spreadsheets are tolerated (empty cells, case-insensitive headers, trimmed text).
+- **Commit:** only valid rows are imported, inside a **transaction**; each import is recorded as an **import batch** with per-row outcome (committed / skipped-with-reason), so a migration is fully **traceable and audited**. Duplicates (e.g., a ledger name already present) are reported, not silently overwritten.
+- **Opening balances / older data:** opening Dr/Cr can be imported inline with ledgers against a chosen **cutover financial year**, or as a dedicated opening-balance sheet — this is how last year's closing becomes this year's opening. Historical vouchers can be imported (later phase) for full trailing history.
+- **Bulk & re-runnable:** large files run as background jobs with a downloadable result log; a corrected sheet can be re-uploaded (the batch history is preserved).
+- **Security:** import requires the `data:import` permission, is tenant-scoped, and every batch is audit-logged. (Built with the **`xlsx`** and custom **`fintranact-tally-migrate`** Claude skills — see §16.2.)
+- Roles: Accountant/Controller/Admin (import), Auditor (read import history).
+
 ---
 
 ## 6. Detailed Workflows
