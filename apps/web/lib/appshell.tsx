@@ -52,6 +52,8 @@ function hrefFor(label: string): string {
   if (clean === 'GSTR-2B Reconciliation') return '/gst/gstr-2b';
   if (clean === 'Challans ITNS 281') return '/tds/challans';
   if (clean === 'Returns 24Q 26Q 27Q') return '/tds/returns';
+  if (clean === 'Pending Inward Outward') return '/jobwork/pending';
+  if (clean === 'ITC-04') return '/jobwork/itc04';
   return `/m/${slug(clean)}`;
 }
 
