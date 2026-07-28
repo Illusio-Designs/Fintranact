@@ -234,7 +234,11 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 - **Rate & charge computation:** process charges are picked from **Rate Master** (§5.17) — rate per kg / per piece / per lot by process + customer (contract rate) — and auto-computed at inward (qty × rate), with GST on job-work charges (SAC 9988). A **Job Card** remains available as a process-tracking/traveller document (process, in/out quantities, status) but does **not** own the cash/debit decision.
 - **Pending / ageing views:** live "pending inward" and "pending outward" registers, plus statutory ageing (1-year/3-year job-work return norms) and alerts on overdue material.
 - **ITC-04** supporting data for goods received-for-processing and returned; e-way bill on movement where applicable.
-- Roles: Store/Process Supervisor (inward/outward, job card), Accountant (charges/GST/TDS), Controller (approve write-offs/wastage & rate overrides).
+- **Lien & forfeiture of customer material against unpaid dues:** when a customer's outstanding is **overdue beyond a configured period** and their material is still lying in our custody, the system links the two and enables a **processor's-lien recovery** flow (bailee's particular lien, Indian Contract Act §170):
+  - It flags eligible cases (overdue amount + material value in custody) and requires a **formal notice** reference plus **approval + signing PIN** before anything moves — this is someone else's property, so the action is tightly controlled and fully audited.
+  - On forfeiture, the material moves from **customer-custody (off-books) → our "Recovered Goods / Scrap" inventory (on-books)** at an assessed realizable value, and the customer's receivable is reduced accordingly.
+  - The recovered goods can then be **sold** (tax invoice to a scrap/third-party buyer, output GST) to **collect revenue**, and the net proceeds are **applied against the customer's outstanding**: a **surplus** becomes refundable to the customer (liability), a **shortfall** stays receivable and may be written off as bad debt (approval-gated).
+- Roles: Store/Process Supervisor (inward/outward, job card), Accountant (charges/GST/TDS, forfeiture entries), Controller/Owner (approve forfeiture, write-offs, rate overrides).
 
 ### 5.11 Inventory & Material Master (job-work model)
 - **Item / Material Master** (§5.17): items are primarily **customer material received for processing** (identified by customer + grade/description + UoM + HSN) and **own consumables** (furnace LPG/gas, quenching oil, salts, packing) — **not** own finished goods, since the company does not manufacture.
@@ -266,6 +270,11 @@ Each module lists capabilities and the roles that typically interact with it. Ro
 
 ### 5.14 Reports and Dashboards
 - **Financial:** Trial Balance, Profit & Loss, Balance Sheet, Cash Flow, Day Book, Ledger statements, Ageing (receivable/payable).
+- **Profitability — Gross & Net Profit (job-work model):** the P&L is built **live from posted GL entries**, FY-scoped and drill-down, grouped by the *nature* of each ledger's CoA group/category (Direct Income, Direct/Process Cost, Indirect Income, Indirect Expense, Finance Cost, Tax). The engine computes:
+  - **Gross Profit = Operating Income (process/job-work charges + scrap/labour) − Direct/Process Cost** (furnace **fuel/gas**, **power**, quenching oil/salts/consumables, **direct wages**, sub-contract job-work, ± consumable **stock movement**).
+  - **Net Profit (PBT) = Gross Profit + Indirect Income − Indirect Expenses − Finance Cost**; **Net Profit (PAT) = PBT − Tax provision**.
+  - **GP% and NP% margins** are shown against revenue; drill any subtotal to the source vouchers.
+  - **Job-work-correct treatment:** **customer material held in custody is excluded** from cost/stock (it was never purchased); **GST/TDS/TCS are Balance-Sheet items, not P&L** (a ₹18,000 charge + ₹3,240 GST books ₹18,000 as income); the **Cash vs Debit memo** choice affects *collection*, not profit (both post the same process-charge income). Recovered-goods (lien) sales and their assessed cost flow through P&L as a small gain/loss.
 - **GST:** GSTR-1/3B working, 2B reco, HSN summary, tax liability & ITC.
 - **TDS/TCS:** deduction registers, challan status, return-ready summaries, 26AS reco.
 - **Payroll:** salary register, statutory summaries, cost-to-company reports, headcount.
@@ -374,6 +383,14 @@ All operational data is driven by versioned, effective-dated masters so day-to-d
 - **Bulk payslip** publish and **bulk reminder** emails (AR ageing).
 - **Bulk import** of ledgers, items, opening balances, employees via validated templates.
 - All bulk actions run as **background jobs** with progress, per-row success/failure, and a downloadable result log; failures are retriable; every bulk action is fully audited.
+
+### 6.10 Recovering an Overdue via Lien on Customer Material (forfeiture → sell → adjust)
+1. Customer *Shree Balaji* owes **₹1,04,200** (overdue 95 days). Their **500 kg of shafts** are still in our custody (job done, not collected). The system flags the case: overdue amount + material in custody.
+2. Accountant records the statutory **notice** (reference/date); Controller/Owner **approves** the lien and **signs (PIN)** — the action is audited (it is the customer's property).
+3. **Forfeiture** posts: material moves from custody to **Recovered Goods / Scrap (inventory)** at an assessed realizable value (say ₹90,000), and the customer's receivable is reduced by that amount.
+4. **Sale** of the recovered goods: a **tax invoice** is raised to a scrap buyer for **₹98,000 + GST**; revenue is booked, output GST charged, and the goods leave stock (small gain to P&L).
+5. **Settlement:** net proceeds are applied to the outstanding. Realized ₹98,000 vs due ₹1,04,200 → **shortfall ₹6,200** remains receivable (written off as bad debt with approval if irrecoverable). Had proceeds exceeded the due, the **surplus would be refundable to the customer** (liability).
+6. Every step (flag → notice → approval+sign → forfeiture → sale → settlement) is on the **audit trail**; the customer ledger shows the full recovery history.
 
 ---
 
@@ -798,6 +815,8 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - AC-10: For an inward of 1,000 kg, cumulative **outward can never exceed the pending quantity**; a partial 600 kg dispatch leaves pending = 400 kg (less recorded loss), and once pending = 0 the job card closes; ITC-04 reflects the movements.
 - AC-10a: The **Inward entry** carries the **memo type** — *Debit* posts the process charge to the customer ledger + GST (+194C where deducted); *Cash* raises a receipt on delivery — and applies the **Rate Master** rate (customer contract rate overriding standard). Outward does not re-bill.
 - AC-10b: Selecting a **Process** from the Process Master carries its SAC and default UoM into the inward entry and rate lookup.
+- AC-10f (**lien/forfeiture**): When a customer is overdue and holds material in our custody, an approved + PIN-signed **forfeiture** moves the material to Recovered-Goods stock and reduces the receivable; a subsequent **sale** books revenue + GST and applies net proceeds to the outstanding, leaving a surplus refundable or a shortfall receivable — all fully audited.
+- AC-10g (**profit**): Gross Profit = operating income − direct/process cost, and Net Profit = Gross Profit + indirect income − indirect expenses − finance cost − tax, computed live from posted entries; customer-custody material and GST/TDS/TCS are excluded from the P&L; GP%/NP% reconcile to the figures and drill to source vouchers.
 
 **Masters & Ledgers**
 - AC-10c: A ledger can hold **multiple addresses**; choosing a delivery address with a different state flips place-of-supply (CGST+SGST ↔ IGST) on the document.
@@ -847,6 +866,7 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 17. **Job-work rate model:** Confirm charge basis (per kg / per piece / per lot), and whether customer-specific contract rates and minimum charges are needed at launch.
 18. **Blacklist policy:** Should blacklisting a party be a **hard block** on transactions or a **soft warning + approval**, and who can override?
 19. **Pending-quantity tolerance:** Allowed over/under-return tolerance and how burning/handling loss is treated (auto-write-off vs approval) for job work.
+20. **Lien/forfeiture process:** What overdue period and notice procedure trigger forfeiture eligibility, how the recovered material is **valued** (assessed NRV vs outstanding), the GST treatment on the recovery sale, and who may approve — confirm against legal/CA advice before enabling.
 
 ---
 
@@ -896,6 +916,8 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 | **PF / UAN / ECR** | Provident Fund / Universal Account Number / Electronic Challan-cum-Return. |
 | **ESI / ESIC** | Employees' State Insurance / its corporation. |
 | **PT** | Professional Tax (state-specific slabs). |
+| **Processor's / Bailee's Lien** | Right (Indian Contract Act §170) to retain a customer's goods for unpaid processing charges; after notice, goods may be forfeited and sold to recover dues. |
+| **Gross / Net Profit** | Gross = operating income − direct/process cost; Net = gross + other income − indirect expenses − finance cost − tax. |
 | **DPDP Act 2023** | Digital Personal Data Protection Act — India's data-privacy law. |
 | **FY** | Financial Year, April 1 – March 31. |
 

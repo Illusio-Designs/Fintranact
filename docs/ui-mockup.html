@@ -519,6 +519,7 @@
           <a class="page"><span class="pdot"></span>Pending — Inward / Outward<span class="tail red">10</span></a>
           <a class="page"><span class="pdot"></span>Job Cards</a>
           <a class="page"><span class="pdot"></span>Material Ageing</a>
+          <a class="page"><span class="pdot"></span>Lien / Forfeiture (overdue)<span class="tail red">1</span></a>
           <a class="page"><span class="pdot"></span>ITC-04</a>
           <a class="page"><span class="pdot"></span>Customers &amp; Job Workers</a>
         </div>
@@ -687,6 +688,42 @@
         </div>
       </section>
 
+      <section class="row a">
+        <div class="card">
+          <div class="card-head">
+            <div><h3>Profit &amp; Loss</h3><div class="csub">FY 2026–27 · live from posted entries</div></div>
+            <div class="tools"><span class="pill ok">GP 45.2%</span><span class="pill ok">NP 13.4%</span></div>
+          </div>
+          <div class="card-body" style="padding-top:8px">
+            <div class="kv"><span class="k">Process charges (income)</span><span class="v">₹38,60,000</span></div>
+            <div class="kv"><span class="k">– Direct / process cost <small style="color:var(--text-3)">(fuel · power · consumables · wages)</small></span><span class="v" style="color:var(--red)">₹21,15,000</span></div>
+            <div class="kv" style="background:var(--good-tint);margin:6px -8px;padding:9px 8px;border-radius:8px;border:0"><span class="k" style="font-weight:800;color:var(--good)">= Gross Profit</span><span class="v" style="font-size:16px;font-weight:800;color:var(--good)">₹17,45,000</span></div>
+            <div class="kv"><span class="k">+ Other / indirect income</span><span class="v">₹40,000</span></div>
+            <div class="kv"><span class="k">– Indirect expenses <small style="color:var(--text-3)">(admin · rent · depreciation)</small></span><span class="v" style="color:var(--red)">₹9,80,000</span></div>
+            <div class="kv"><span class="k">– Finance cost (interest)</span><span class="v" style="color:var(--red)">₹1,05,000</span></div>
+            <div class="kv"><span class="k" style="font-weight:700;color:var(--text)">= Net Profit before tax</span><span class="v" style="font-weight:700">₹7,00,000</span></div>
+            <div class="kv"><span class="k">– Tax provision</span><span class="v" style="color:var(--red)">₹1,82,000</span></div>
+            <div class="kv" style="background:color-mix(in srgb,var(--red) 8%,var(--paper-2));margin:6px -8px 0;padding:9px 8px;border-radius:8px;border:0"><span class="k" style="font-weight:800">= Net Profit (PAT)</span><span class="v" style="font-size:16px;font-weight:800;color:var(--red)">₹5,18,000</span></div>
+            <div class="hint" style="margin-top:10px">Customer-custody material &amp; GST/TDS/TCS are excluded from P&amp;L. Drill any line to its vouchers.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Overdue Recovery · Lien</h3><span class="pill crit" style="margin-left:auto">1 eligible</span></div>
+          <div class="card-body" style="padding-top:12px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="who2" style="width:34px;height:34px;background:linear-gradient(135deg,#8A888C,#3A3A42)">SB</div>
+              <div style="flex:1"><b style="font-size:13.5px">Shree Balaji Enterprises</b><div style="color:var(--text-3);font-size:12px">Overdue 95 days · no response to reminders</div></div>
+            </div>
+            <div class="kv"><span class="k">Outstanding (overdue)</span><span class="v" style="color:var(--red-ink)">₹1,04,200</span></div>
+            <div class="kv"><span class="k">Material in our custody</span><span class="v">500 kg shafts</span></div>
+            <div class="kv"><span class="k">Assessed realizable value</span><span class="v">≈ ₹98,000</span></div>
+            <div class="qp-note" style="margin-top:10px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Processor's lien: after notice, forfeit the material, sell it, and adjust proceeds against dues.</div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" onclick="openQuick('forfeiture')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Start lien recovery</button>
+          </div>
+        </div>
+      </section>
+
       <section class="row b">
         <div class="card">
           <div class="card-head"><h3>Recent Vouchers</h3><div class="tools"><div class="seg"><button class="on">All</button><button>Sales</button><button>Purchase</button><button>Payment</button></div></div></div>
@@ -777,6 +814,7 @@
       <optgroup label="Operations">
         <option value="bank">Bank — multi-line entry</option>
         <option value="job">Job Work — Inward / Outward</option>
+        <option value="forfeiture">Lien / Material Forfeiture</option>
         <option value="payroll">Payroll Run</option>
       </optgroup>
       <optgroup label="Masters">
@@ -1104,6 +1142,30 @@
       </div>
     </div>
 
+    <!-- ===== LIEN / MATERIAL FORFEITURE ===== -->
+    <div class="qp-pane" id="qp-forfeiture">
+      <div class="qp-note" style="background:var(--warn-tint);color:var(--warn)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg> Processor's lien (Contract Act §170). This handles a customer's property — notice, approval &amp; signing are required. Fully audited.</div>
+      <div class="fld"><label>Overdue customer</label>
+        <select class="ctl big" id="frCust" onchange="calcForfeit()">
+          <option value="104200" selected>Shree Balaji Enterprises — overdue ₹1,04,200 (95 d)</option>
+          <option value="61000">Ganesh Auto Parts — overdue ₹61,000 (72 d)</option>
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Notice reference</label><input class="ctl" placeholder="Lien notice no. / date"></div>
+        <div class="fld"><label>Date</label><input class="ctl" value="27 Jul 2026"></div>
+      </div>
+      <div class="fld"><label>Material in custody (from their inward)</label>
+        <select class="ctl"><option value="" disabled selected>— Select —</option><option>JW-IN/0051 · 500 kg shafts</option><option>JW-IN/0033 · 260 kg brackets</option></select>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label>Assessed realizable value ₹</label><input class="ctl" id="frValue" inputmode="decimal" oninput="calcForfeit()" placeholder="0.00"></div>
+        <div class="fld"><label>Expected sale value ₹</label><input class="ctl" id="frSale" inputmode="decimal" oninput="calcForfeit()" placeholder="0.00"></div>
+      </div>
+      <div class="calc-box" id="frBox"></div>
+      <div class="qp-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg> Forfeiture moves the material to <b>Recovered-Goods stock</b> and reduces the receivable. On sale (tax invoice + GST) proceeds settle the dues — surplus refundable, shortfall receivable / bad-debt.</div>
+    </div>
+
     <!-- ===== PAYROLL ===== -->
     <div class="qp-pane" id="qp-payroll">
       <div style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--red) 5%,var(--paper-2)),var(--paper-2))">
@@ -1246,6 +1308,7 @@
     debitnote:  { s:'DN/26-27',  d:'Reduce a purchase bill (return).',             post:'Post debit note' },
     bank:       { s:'BNK/26-27', d:'One bank, many contra lines.',                 post:'Post lines' },
     job:        { s:'JW/26-27',  d:'Inward (Cash/Debit memo) / Outward movement.',  post:'Sign & save inward' },
+    forfeiture: { s:'FRF/26-27', d:'Forfeit overdue party material → recover dues.', post:'Sign & forfeit' },
     payroll:    { s:'PAY/26-27', d:'Monthly salary run posted to GL.',             post:'Send for approval' },
     ledger:     { s:'LEDGER',    d:'Party ledger — category, addresses, blacklist.', post:'Save ledger' },
     process:    { s:'PROCESS',   d:'Heat-treatment / job-work process.',           post:'Save process' },
@@ -1461,6 +1524,22 @@
     qi('blReasonFld').style.display = v === 'on' ? 'block' : 'none';
   }
 
+  /* Lien / forfeiture — recover an overdue via customer material */
+  function calcForfeit(){
+    var due = pnum(qi('frCust').value), value = pnum(qi('frValue').value), sale = pnum(qi('frSale').value);
+    var net = sale, diff = net - due;
+    var html = kvRow('Outstanding (overdue)', due)
+             + kvRow('Recovered-goods value (to stock)', value)
+             + kvRow('Expected sale proceeds', sale, true);
+    if (sale > 0){
+      html += diff >= 0
+        ? '<div class="jbal-status" style="color:var(--good);margin-top:8px">✓ Recovers dues · surplus ' + inr2(diff) + ' refundable to customer</div>'
+        : '<div class="jbal-status" style="color:var(--red-ink);margin-top:8px">⚠ Shortfall ' + inr2(-diff) + ' stays receivable / bad-debt (approval)</div>';
+    }
+    qi('frBox').innerHTML = html;
+    updatePostState();
+  }
+
   function recalcFor(type){
     if (type === 'sales') calcSales();
     else if (type === 'purchase') calcPurchase();
@@ -1468,8 +1547,10 @@
     else if (type === 'debitnote') calcNote('dn');
     else if (type === 'journal') calcJournal();
     else if (type === 'job') calcJob();
+    else if (type === 'forfeiture') calcForfeit();
     else if (type === 'ledger') initAddresses();
   }
+
   function updatePostState(){
     var btn = qi('qpPost'); if (!btn) return; var ok = true;
     if (curTab === 'journal'){ var dr = pnum(qi('jDr').value), cr = pnum(qi('jCr').value); ok = dr > 0 && dr === cr; }
@@ -1482,6 +1563,7 @@
       if (jobDir === 'inward'){ ok = pnum(qi('jwQtyIn').value) > 0 && pnum(qi('jwRate').value) > 0; }
       else { var inw = qi('jwInwardRef').value, pend = inw ? parseFloat(inw.split('|')[1]) : 0, q = pnum(qi('jwQtyOut').value), loss = pnum(qi('jwLoss').value); ok = !!inw && q > 0 && (q + loss) <= pend; }
     }
+    else if (curTab === 'forfeiture'){ ok = pnum(qi('frValue').value) > 0 && pnum(qi('frSale').value) > 0; }
     btn.disabled = !ok;
   }
 
