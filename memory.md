@@ -367,3 +367,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - **ModuleScreen**: Show (page size) + Sort-by selects → `<Dropdown>`.
   - Header FY/role/branch already converted (Task 43).
 - Only the `/ui` **showcase** keeps a native `<select>` on purpose (it documents the native control alongside the custom Dropdown). `next build` passes. Merged to main.
+
+### 2026-07-28 — Task 45: Centered status-card host (all kinds), flag phone selector, flyout fix, per-page Quick Entry
+- **Status card host** (`lib/success.tsx`, replaces the toast for voucher feedback): a **centered, auto-closing card with NO button** (per the reference image, minus the button). `showSuccess/showError/showWarning/showInfo/showStatus` emit to a mounted `<SuccessHost>` (portal to body). Green scalloped-style badge + title + key/value rows + "This closes automatically" hint; ok closes at 2.6s, others at 3.4s; click-scrim also dismisses. Four kinds — **ok** (green `CheckmarkBadge01`), **err** (red `Alert02`), **warn** (amber `Alert01`), **info** (slate `InformationCircle`) — each with its own `.ok-badge.{kind}` tint. Verified all four render centered. Mounted in `AppShell`.
+  - QuickPanel `doPost` now calls `showSuccess({...})` on post (voucher no./type/date/amount rows, or type/series/date for masters) and `showError(...)` on failure; removed the old inline `posted` state.
+- **Flag country selector** (`PhoneInput` in `components.tsx`): searchable `<Dropdown>` of countries (flag + dial code, country-name hint) + a `tel` input; 10 seed countries led by 🇮🇳 +91. Used on the `/ui` phone field. `.phone-field` CSS added.
+- **Collapsed-rail flyout fix**: native `title` tooltip was overlapping the hover flyout — swapped `title` → `aria-label`; flyout now `max-height: calc(100vh - 24px)` with `overflow-y:auto`, and the bottom two groups anchor upward (`nth-last-child(-n+2)`) so nothing clips off-screen.
+- **Per-page Quick Entry** ("their own task"): `quickTypeFor(pathname)` in `AppShell` maps the route → the relevant voucher/task and passes it as `initialType` to `<QuickPanel>`, which opens to that type. Verified: Sales Invoices→Sales Invoice, Purchase Bills→Purchase Bill, Payroll Run→Payroll Run, Process Master→Process master, Lien Forfeiture→Lien / Material Forfeiture.
+- `next build` passes. Merged to main.

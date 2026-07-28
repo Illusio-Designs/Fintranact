@@ -141,6 +141,34 @@ export function RowMenu({ items, label = 'Row actions' }: { items: RowMenuItem[]
   );
 }
 
+/** Flag-based country dial-code selector + number field. */
+const COUNTRIES: { code: string; flag: string; name: string }[] = [
+  { code: '+91', flag: '🇮🇳', name: 'India' },
+  { code: '+1', flag: '🇺🇸', name: 'United States' },
+  { code: '+44', flag: '🇬🇧', name: 'United Kingdom' },
+  { code: '+971', flag: '🇦🇪', name: 'United Arab Emirates' },
+  { code: '+65', flag: '🇸🇬', name: 'Singapore' },
+  { code: '+61', flag: '🇦🇺', name: 'Australia' },
+  { code: '+49', flag: '🇩🇪', name: 'Germany' },
+  { code: '+86', flag: '🇨🇳', name: 'China' },
+  { code: '+81', flag: '🇯🇵', name: 'Japan' },
+  { code: '+880', flag: '🇧🇩', name: 'Bangladesh' },
+];
+
+export function PhoneInput({ code, onCode, value, onChange, placeholder = '98250 12345' }: {
+  code: string; onCode: (c: string) => void; value: string; onChange: (v: string) => void; placeholder?: string;
+}) {
+  const flag = COUNTRIES.find((c) => c.code === code)?.flag ?? '🏳️';
+  return (
+    <div className="phone-field">
+      <Dropdown width={112} value={code} onChange={onCode} searchable
+        icon={<span className="flag" style={{ fontSize: 15 }}>{flag}</span>}
+        options={COUNTRIES.map((c) => ({ value: c.code, label: `${c.flag} ${c.code}`, hint: c.name }))} />
+      <input className="ctl" type="tel" inputMode="tel" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const WD = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
