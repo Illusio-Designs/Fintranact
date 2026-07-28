@@ -318,6 +318,38 @@ export async function getTdsReturn(): Promise<TdsReturn> {
   return { form: '26Q', quarter: 'Q1 FY 2026-27', rows, totalPaid, totalTds };
 }
 
+// ---- Job work ----
+export interface InwardPending { id: string; challanNo: string; customer: string; process: string; material: string; qtyRecd: number; dispatched: number; loss: number; pending: number; uom: string; date: string; status: 'open' | 'partial' | 'closed' }
+
+export async function getJobworkPending(): Promise<InwardPending[]> {
+  if (MOCK) {
+    const raw = [
+      { challanNo: 'JW-IN/0044', customer: 'Mahalaxmi Traders', process: 'Carburising', material: 'Gears', qtyRecd: 1000, dispatched: 600, loss: 0, date: '10 Jul 2026' },
+      { challanNo: 'JW-IN/0051', customer: 'Shree Balaji Enterprises', process: 'Hardening & Tempering', material: 'Shafts', qtyRecd: 500, dispatched: 0, loss: 0, date: '14 Jul 2026' },
+      { challanNo: 'JW-IN/0039', customer: 'Tata Motors Ltd', process: 'Nitriding', material: 'Pins', qtyRecd: 250, dispatched: 180, loss: 10, date: '08 Jul 2026' },
+      { challanNo: 'JW-IN/0055', customer: 'Ganesh Auto Parts', process: 'Annealing', material: 'MS Rounds', qtyRecd: 800, dispatched: 800, loss: 0, date: '02 Jul 2026' },
+      { challanNo: 'JW-IN/0058', customer: 'Mahalaxmi Traders', process: 'Induction Hardening', material: 'Cam lobes', qtyRecd: 320, dispatched: 120, loss: 5, date: '18 Jul 2026' },
+    ];
+    return raw.map((r, i) => {
+      const pending = Math.round((r.qtyRecd - r.dispatched - r.loss) * 1000) / 1000;
+      const status: InwardPending['status'] = pending <= 0 ? 'closed' : r.dispatched + r.loss > 0 ? 'partial' : 'open';
+      return { id: String(i + 1), uom: 'kg', pending, status, ...r };
+    });
+  }
+  const res = await fetch(`${API}/api/v1/jobwork/pending`, { headers: authHeaders() });
+  return (await res.json()).data ?? [];
+}
+
+export interface Itc04Summary { inwardChallans: number; outwardChallans: number; qtyReceived: number; qtyReturned: number; qtyPending: number }
+
+export async function getItc04(): Promise<Itc04Summary> {
+  if (MOCK) {
+    return { inwardChallans: 5, outwardChallans: 8, qtyReceived: 2870, qtyReturned: 1715, qtyPending: 1155 };
+  }
+  const res = await fetch(`${API}/api/v1/jobwork/itc04`, { headers: authHeaders() });
+  return (await res.json()).data ?? { inwardChallans: 0, outwardChallans: 0, qtyReceived: 0, qtyReturned: 0, qtyPending: 0 };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();

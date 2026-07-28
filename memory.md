@@ -70,7 +70,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **GST returns — GSTR-3B & GSTR-1** (`modules/gst`): GSTR-3B computes output tax vs ITC → net payable from the GST ledger balances; GSTR-1 outward-supplies summary. Pages `/gst/gstr-3b` (3.1/4/5.1 tables + tiles) and `/gst/gstr-1` (B2B/B2C rate-wise). Sidebar routed.
 - [x] **GSTR-2B reconciliation** (`/gst/gstr-2b`): books ITC vs portal 2B, invoice-wise matched/mismatch/only-books/only-2b with status tiles + difference banner; backend `/gst/gstr-2b/books` books-side ITC summary.
 - [x] **TDS challans (ITNS-281) + 26Q return** (`modules/tds`): backend `/tds/summary` (net TDS payable from `tds_payable` balance); pages `/tds/challans` (section-wise deducted/deposited/pending + status) and `/tds/returns` (26Q deductee-wise statement — PAN, section, rate, TDS, challan).
-- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); job-work (ITC-04/lien); payroll (biometric/Form 16); documents
+- [x] **Job work — pending inward/outward + ITC-04** (`modules/jobwork`, migration `008_jobwork.sql`): inward/outward challan tables; `/jobwork/pending` computes pending = received − dispatched − loss (status open/partial/closed); `/jobwork/itc04` Rule-45 movement summary. Pages `/jobwork/pending` and `/jobwork/itc04`.
+- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); lien/forfeiture posting; payroll (biometric/Form 16); documents
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -286,3 +287,12 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
   - `/tds/returns` — 26Q deductee-wise statement (deductee, PAN, section pill, amount paid, rate, TDS, challan pill), quarter + section filter dropdowns, tiles, total row. Verified: TDS total ₹3,66,200 on ₹1,86,30,000 paid.
   - Sidebar **TDS → Challans ITNS 281 / Returns 24Q 26Q 27Q** route to them.
 - `next build` passes (17 routes). Merged to main. First TDS slice (challans + non-salary 26Q).
+
+### 2026-07-28 — Task 34: Job work — pending inward/outward tracking + ITC-04
+- **DB** `008_jobwork.sql`: `job_work_inward` (challan, customer, process, qty_recd, rate, gst, memo_type) + `job_work_outward` (inward_id, qty_out, loss) with Rule-45 challan numbers.
+- **Backend** (`modules/jobwork`): `GET /api/v1/jobwork/pending` lists inward challans with **pending = received − dispatched − loss** and a status (open/partial/closed); `GET /api/v1/jobwork/itc04` returns the Rule-45 movement summary (received vs returned vs pending). `report:view`. Mounted; API typechecks.
+- **Web** (mock-aware `getJobworkPending`/`getItc04`), two pages from the UI library:
+  - `/jobwork/pending` — the key operational screen: status filter, pending-ageing warning banner, tiles (inward / open / pending kg), and a challan table (received/dispatched/loss/pending kg, status pill) with a totals row. Verified: 2,870 − 1,700 − 15 = **1,155 kg pending**.
+  - `/jobwork/itc04` — Rule-45 quarterly statement: tiles (inward/outward challans, qty received/returned/pending) + a Table-4 challan list. Returned 1,715 = dispatched+loss, consistent with pending page.
+  - Sidebar **Job Work → Pending Inward Outward / ITC-04** route to them.
+- `next build` passes (19 routes). Merged to main.
