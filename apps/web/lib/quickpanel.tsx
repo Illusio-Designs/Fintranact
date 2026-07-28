@@ -75,15 +75,18 @@ type BankLine = { date: string; dir: 'dr' | 'cr'; acc: string; narr: string; amt
 
 const VTYPES: VType[] = ['payment', 'receipt', 'contra', 'journal', 'sales', 'purchase', 'creditnote', 'debitnote', 'bank', 'job', 'forfeiture', 'payroll', 'ledger', 'process', 'rate'];
 
-export function QuickPanel({ open, onClose, initialType }: { open: boolean; onClose: () => void; initialType?: string }) {
+export function QuickPanel({ open, onClose, initialType, initialJobDir }: { open: boolean; onClose: () => void; initialType?: string; initialJobDir?: 'inward' | 'outward' }) {
   const [vType, setVType] = useState<VType>('payment');
   const [v, setV] = useState<Record<string, string>>({ jwGst: '18' });
   const set = (id: string, val: string) => setV((p) => ({ ...p, [id]: val }));
 
-  // When opened, jump to the page's own task (e.g. Sales page → Sales Invoice).
+  // When opened, jump to the page's own task (e.g. Sales page → Sales Invoice,
+  // Outward Challans → Job Work in the outward direction).
   useEffect(() => {
-    if (open && initialType && VTYPES.includes(initialType as VType)) setVType(initialType as VType);
-  }, [open, initialType]);
+    if (!open) return;
+    if (initialType && VTYPES.includes(initialType as VType)) setVType(initialType as VType);
+    if (initialJobDir) setJobDir(initialJobDir);
+  }, [open, initialType, initialJobDir]);
 
   // bank multi-line
   const [bankLines, setBankLines] = useState<BankLine[]>([]);
