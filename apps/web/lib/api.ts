@@ -132,6 +132,45 @@ export async function getTrialBalance(): Promise<TrialBalance> {
   return (await res.json()).data ?? { rows: [], totalDebit: 0, totalCredit: 0, balanced: true };
 }
 
+export interface DayBookEntry { voucherId: string; voucherNo: string; type: string; date: string; narration: string | null; debit: number; credit: number; particulars: string }
+export interface DayBook { date: string; entries: DayBookEntry[]; totalDebit: number; totalCredit: number }
+
+export async function getDayBook(date: string): Promise<DayBook> {
+  if (MOCK) {
+    const entries: DayBookEntry[] = [
+      { voucherId: '1', voucherNo: 'SI/26-27/0482', type: 'sales', date, narration: 'Heat treatment — Mahalaxmi', debit: 248600, credit: 248600, particulars: 'Mahalaxmi Traders, Job Work Charges, Output CGST, Output SGST' },
+      { voucherId: '2', voucherNo: 'RCP/26-27/0341', type: 'receipt', date, narration: 'Against SI/0461', debit: 104200, credit: 104200, particulars: 'HDFC Bank, Shree Balaji Enterprises' },
+      { voucherId: '3', voucherNo: 'PB/26-27/0311', type: 'purchase', date, narration: 'HDPE granules', debit: 112000, credit: 112000, particulars: 'Gujarat Poly Pvt Ltd, Purchases, Input CGST, Input SGST' },
+      { voucherId: '4', voucherNo: 'PMT/26-27/0209', type: 'payment', date, narration: 'Furnace LPG', debit: 86400, credit: 86400, particulars: 'HDFC Bank, Furnace Fuel & Gas' },
+      { voucherId: '5', voucherNo: 'JW/26-27/0052', type: 'journal', date, narration: 'Depreciation — July', debit: 41200, credit: 41200, particulars: 'Depreciation, Accumulated Depreciation' },
+    ];
+    const totalDebit = entries.reduce((s, e) => s + e.debit, 0);
+    const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
+    return { date, entries, totalDebit, totalCredit };
+  }
+  const res = await fetch(`${API}/api/v1/reports/day-book?date=${encodeURIComponent(date)}`, { headers: authHeaders() });
+  return (await res.json()).data ?? { date, entries: [], totalDebit: 0, totalCredit: 0 };
+}
+
+export interface PnlRow { name: string; amount: number }
+export interface Pnl { income: PnlRow[]; directExpense: PnlRow[]; indirectExpense: PnlRow[]; totalIncome: number; totalDirect: number; totalIndirect: number; grossProfit: number; netProfit: number }
+
+export async function getPnl(): Promise<Pnl> {
+  if (MOCK) {
+    const income: PnlRow[] = [{ name: 'Job Work / Process Charges', amount: 21500000 }, { name: 'Scrap & Recovered Goods', amount: 480000 }];
+    const directExpense: PnlRow[] = [{ name: 'Furnace Fuel & Gas', amount: 3860000 }, { name: 'Consumables & Chemicals', amount: 1240000 }, { name: 'Power & Electricity', amount: 2180000 }];
+    const indirectExpense: PnlRow[] = [{ name: 'Salaries & Wages', amount: 5210000 }, { name: 'Rent — Factory Shed', amount: 720000 }, { name: 'Depreciation', amount: 1360000 }, { name: 'Freight Outward', amount: 410000 }];
+    const totalIncome = income.reduce((s, r) => s + r.amount, 0);
+    const totalDirect = directExpense.reduce((s, r) => s + r.amount, 0);
+    const totalIndirect = indirectExpense.reduce((s, r) => s + r.amount, 0);
+    const grossProfit = totalIncome - totalDirect;
+    const netProfit = grossProfit - totalIndirect;
+    return { income, directExpense, indirectExpense, totalIncome, totalDirect, totalIndirect, grossProfit, netProfit };
+  }
+  const res = await fetch(`${API}/api/v1/reports/pnl`, { headers: authHeaders() });
+  return (await res.json()).data ?? { income: [], directExpense: [], indirectExpense: [], totalIncome: 0, totalDirect: 0, totalIndirect: 0, grossProfit: 0, netProfit: 0 };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();
