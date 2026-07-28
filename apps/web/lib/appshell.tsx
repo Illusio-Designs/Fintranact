@@ -6,6 +6,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { QuickPanel } from './quickpanel';
 import { NotificationDrawer } from './notifications';
 import { ToastHost } from './toast';
+import { Dropdown } from './components';
 import { notifications as NOTIF_SEED, type Notif } from './mock';
 import {
   DashboardCircleIcon,
@@ -125,6 +126,8 @@ export function AppShell({
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<Notif[]>(NOTIF_SEED);
   const unread = notifs.filter((n) => !n.read).length;
+  const [fy, setFy] = useState('2026-27');
+  const [branch, setBranch] = useState('aji-3');
 
   // Which group holds the active route — used as the default-open group.
   const activeGroup = NAV.find((g) => g.pages.some((p) => hrefFor(p) === pathname))?.group ?? NAV[0]!.group;
@@ -213,12 +216,14 @@ export function AppShell({
           <div className="topbar">
             <button className="hamb" onClick={openNav} aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div className="crumbs">Home / <b>{crumb}</b></div>
-            <button className="switcher"><span className="dot" /> RAVI Metal Treatment <span className="gstin">· Aji Deam Unit 3 · Rajkot</span> ▾</button>
-            <select className="topsel fy" defaultValue="FY 2026–27"><option>FY 2026–27</option><option>FY 2025–26</option></select>
+            <div className="topsel-dd branch"><Dropdown width={300} value={branch} onChange={setBranch}
+              icon={<span className="dot" />}
+              options={[{ value: 'aji-3', label: 'RAVI Metal Treatment · Aji Deam Unit 3', hint: 'Rajkot, Gujarat · 24AABCS1429P1Z5' }, { value: 'aji-1', label: 'RAVI Metal Treatment · Unit 1', hint: 'Rajkot, Gujarat' }]} /></div>
+            <div className="topsel-dd fy"><Dropdown width={120} value={fy} onChange={setFy}
+              options={[{ value: '2026-27', label: 'FY 2026–27' }, { value: '2025-26', label: 'FY 2025–26' }]} /></div>
             {setRole && (
-              <select className="topsel role" value={role} onChange={(e) => setRole(e.target.value)}>
-                {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-              </select>
+              <div className="topsel-dd role"><Dropdown width={165} value={role} onChange={setRole}
+                options={Object.entries(ROLES).map(([k, v]) => ({ value: k, label: v.name }))} /></div>
             )}
             <div className="spacer" />
             <div className="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg> Search… <kbd>⌘K</kbd></div>

@@ -717,3 +717,12 @@ table tfoot tr:first-child td { border-top-width: 2px; }
 .toast-stack .toast.toast-err { border-left-color: var(--red); }
 .toast-stack .toast.toast-info { border-left-color: var(--text-3); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* ===================== Topbar dropdowns (from the UI library) ===================== */
+.topsel-dd .dd-trigger { padding: 7px 11px; font-size: 12.5px; border-radius: 999px; background: var(--paper-2); }
+.topsel-dd .dd-trigger .dd-ph { color: var(--text); }
+.topsel-dd .dd-menu { z-index: 60; }
+.topsel-dd.branch .dd-trigger .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex: none; }
+@media (max-width: 1120px){ .topsel-dd.fy { display: none; } }
+@media (max-width: 980px){ .topsel-dd.branch { max-width: 190px; } .topsel-dd.branch .dd-trigger { overflow: hidden; } }
+@media (max-width: 860px){ .topsel-dd.role, .topsel-dd.branch { display: none; } }
