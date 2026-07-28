@@ -27,7 +27,7 @@
 13. [Scalability and Performance Considerations](#13-scalability-and-performance-considerations)
 14. [Risk Analysis](#14-risk-analysis)
 15. [MVP Scope](#15-mvp-scope)
-16. [Phase 2 Roadmap](#16-phase-2-roadmap)
+16. [Phased Development Plan (Frontend + Backend + Windows App) + Required Skills](#16-phased-development-plan-frontend--backend--windows-app)
 17. [Acceptance Criteria](#17-acceptance-criteria)
 18. [Open Questions](#18-open-questions)
 19. [Appendix A — Stated Assumptions](#appendix-a--stated-assumptions)
@@ -63,8 +63,9 @@ To be the default financial and compliance backbone for Indian SMBs and mid-mark
 
 - **Backend:** Node.js (TypeScript), modular service architecture.
 - **Database:** MySQL 8.x (InnoDB, strict mode) as primary store.
-- **Frontend:** Next.js (App Router, TypeScript, React Server Components where appropriate).
-- **Shared UI library:** A versioned internal component library (`@fintranact/ui`) consumed by both the customer-facing app and internal admin/back-office screens.
+- **Frontend (web):** Next.js (App Router, TypeScript, React Server Components where appropriate).
+- **Windows desktop application:** an **Electron** desktop app for Windows that **reuses the same shared UI and calls the same backend APIs** — giving the Tally-like desktop experience Indian accountants prefer, plus local hardware access and offline-capable fast entry. It ships a code-signed **MSI/NSIS installer** with **auto-update**, a **local device bridge** (biometric machines, thermal/laser printers, scanners, weighbridge) over USB/serial/TCP, an **offline cache + sync queue**, and secure local secret storage (Windows DPAPI/keytar). RBAC is still enforced **server-side** — the desktop app is a client, not a trust boundary. (Tauri is a viable lighter alternative; Electron is the default for maximal Node/native reuse.)
+- **Shared UI library:** A versioned internal component library (`@fintranact/ui`) consumed by the web app, the Windows desktop app, and internal admin/back-office screens — one design system, three surfaces.
 - **Supporting infra:** Redis (sessions, cache, queues), object storage (documents/invoices/payslips), a message/queue worker tier for async jobs (returns, bulk actions, e-invoice IRN calls).
 
 ---
@@ -112,7 +113,7 @@ Indian businesses today juggle a fragmented stack to stay compliant and operatio
 - **NG2 — Not a bank.** No payment initiation/settlement rails in MVP (bank integration is read/reconcile-first; payment file export like bulk NEFT is Phase 2).
 - **NG3 — Not a direct GSTN/TRACES filer in MVP.** Fintranact produces return-ready data and JSON/CSV exports; direct filing is via GSP/ASP integration (Phase 2), with export in MVP.
 - **NG4 — No global tax engine.** India-first only; multi-country tax is out of scope.
-- **NG5 — No offline desktop client.** Web-first, responsive PWA-capable; native mobile app is Phase 2+.
+- **NG5 — Windows desktop is in scope; other native clients are not (yet).** The product ships a **Windows desktop app** (Electron) alongside the responsive web app from the foundation phase onward. macOS/Linux desktop builds and a **native mobile app** are Phase 2+.
 - **NG6 — Not a statutory/legal advisor.** The system encodes rules and rates but is not a substitute for a CA; users configure/verify rates.
 
 ---
@@ -506,9 +507,13 @@ Dashboards are **configurable** (widget catalog, drag-arrange, saved per role/us
                          ┌─────────────────────────────┐
                          │         Clients             │
                          │  Next.js Web App (Tenant)    │
+                         │  Windows Desktop App (Electron)│
+                         │   └─ local device bridge:    │
+                         │      biometric · printer ·   │
+                         │      scanner · offline cache │
                          │  Internal Admin (Ravi Matel) │
                          └───────────────┬─────────────┘
-                                         │ HTTPS (TLS)
+                                         │ HTTPS (TLS) — same APIs
                                  ┌───────▼────────┐
                                  │   Edge / WAF   │  rate-limit, TLS, headers
                                  └───────┬────────┘
@@ -558,6 +563,7 @@ Dashboards are **configurable** (widget catalog, drag-arrange, saved per role/us
 - **Read replicas** for reporting/dashboards; heavy analytical queries offloaded from the primary.
 - **Idempotency keys** on all mutating and integration endpoints (critical for e-invoice/challan/payment to prevent duplicates).
 - **Config-as-data:** tax rates, TDS/TCS sections, PT slabs, statutory rates are stored in versioned, effective-dated reference tables (not hard-coded), so rate changes are configuration, not deployments.
+- **Windows desktop client (Electron).** The desktop app renders the **same shared UI** and calls the **same backend APIs** as the web app (no forked business logic). It adds: a **local device bridge** (a Node side-process talking to biometric machines, printers, scanners, weighbridge over USB/serial/TCP); an **offline cache + sync queue** (local encrypted SQLite/IndexedDB) so vouchers/inward can be captured without connectivity and reconciled on reconnect (idempotency keys prevent duplicates); **auto-update** and a **code-signed installer**; secrets in OS keychain (DPAPI). It is a **client only** — all authorization and posting rules are enforced server-side, so an offline draft becomes a real posting only after server validation.
 
 ### 8.3 Environments & DevOps
 - Environments: dev → staging → prod, India region.
@@ -704,6 +710,10 @@ The mandated **`Ravi Matel`** module namespace appears in **both backend and fro
 fintranact/
 ├── apps/
 │   ├── web/                     # Next.js tenant app
+│   ├── desktop/                 # Windows desktop app (Electron) — reuses @fintranact/ui
+│   │   ├── main/                # Electron main process, auto-update, installer
+│   │   ├── device-bridge/       # biometric / printer / scanner / weighbridge (USB/serial/TCP)
+│   │   └── offline/             # local encrypted cache + sync queue
 │   ├── admin/                   # Next.js internal admin (hosts Ravi Matel screens)
 │   └── api/                     # Node.js backend (modular monolith)
 ├── packages/
@@ -823,26 +833,83 @@ apps/admin/src/app/
 10. **Controls & signing:** configurable maker-checker approval on payments, credit notes, period reopen, payroll disbursement, permission changes; **user-wise digital signing with a secret PIN** on approve/post/sign actions.
 11. **Automation:** keyboard-first fast entry, voucher templates, and one-click bulk actions via worker jobs with result logs.
 12. **Reporting & dashboards:** Trial Balance, P&L, Balance Sheet, Day Book, ledger statements, ageing, and **role-based (per-role) dashboards**.
-13. **Shared UI library** (`@fintranact/ui`) powering web + internal `Ravi Matel` admin, and **platform admin** (tenant provisioning, ops, system/statutory-rate config).
+13. **Shared UI library** (`@fintranact/ui`) powering **web + Windows desktop (Electron)** + internal `Ravi Matel` admin, plus **platform admin** (tenant provisioning, ops, system/statutory-rate config). Each delivery phase ships web *and* Windows together (see §16).
 
 **Explicitly deferred from MVP (see §16):** direct GSTN/TRACES e-filing, bank payment initiation, native mobile app, SSO, advanced analytics, multi-currency/forex, fixed-asset depreciation, and any manufacturing/BOM/finished-goods module (out of scope for a job-work business).
 
 ---
 
-## 16. Phase 2 Roadmap
+## 16. Phased Development Plan (Frontend + Backend + Windows App)
 
-| Theme | Phase 2 items |
+Development is **phase-wise**, and **every phase delivers all three surfaces together** — backend APIs, the Next.js web frontend, and the Windows desktop app — built on the **shared UI library** so a feature is written once and appears on web and desktop. Each phase ends with a demoable, testable increment behind the same RBAC and audit spine. Durations are indicative for a small cross-functional team.
+
+**Legend per phase:** **BE** = backend/API/DB · **FE** = web (Next.js) · **WIN** = Windows desktop (Electron) · **Exit** = done-when.
+
+### Phase 0 — Foundation *(≈4–6 wks)*
+Establish the spine all features plug into, on all three surfaces at once.
+- **BE:** monorepo + modular-monolith scaffolding; MySQL baseline; **IAM** (auth, RBAC, sessions, MFA, **signing PIN**); tenancy scoping; **audit log** (hash-chained); config-as-data; object storage; CI/CD; secrets/KMS.
+- **FE:** Next.js app shell; **`@fintranact/ui` v0** (tokens + core components); auth/MFA screens; company/branch switcher; theme (black/red/white); empty **role-based dashboard** frame.
+- **WIN:** Electron shell packaging the shared UI; **code-signed installer + auto-update**; secure local storage; **device-bridge & offline-cache scaffolding**; login parity with web.
+- **Exit:** a user logs in on **web *and* Windows**, RBAC enforced server-side, every action audit-logged.
+
+### Phase 1 — Accounting Core · Masters · Documents *(≈6–8 wks)*
+- **BE:** Chart of Accounts; **ledgers** (categories, multi-address, blacklist); all **voucher types** + double-entry + numbering; **Financial Year** management & period locks; **masters** (Process, Rate, Item/Material, categories); **document upload + document root**.
+- **FE:** voucher-type-driven **Quick Entry**; ledger & masters screens; Day Book; **Documents browser**.
+- **WIN:** keyboard-first fast entry; **local printing** of vouchers/memos; **offline draft capture + sync**; attach documents from local disk/scanner.
+- **Exit:** run full books on web + desktop; blank pass-entry posts; period lock; documents filed.
+
+### Phase 2 — GST · Sales/Purchase · Invoicing · e-Invoice/e-Way *(≈6–8 wks)*
+- **BE:** invoices & notes; place-of-supply GST engine; **GSTR-1/3B** working; **GSTR-2B reco**; **GSP** integration (IRN/QR, e-way).
+- **FE:** invoice/notes screens; GST returns & 2B-reco UI; HSN summary.
+- **WIN:** **local invoice/e-way printing**; GSP calls from desktop; offline invoice queue with later IRN.
+- **Exit:** GST-compliant invoicing + return-ready GSTR-1/3B + 2B reconciliation.
+
+### Phase 3 — TDS/TCS · Job Work · Lien · Inventory *(≈6–8 wks)*
+- **BE:** section-aware **TDS/TCS** + challans + return-ready 26Q/27Q/27EQ; **job work** inward (Cash/Debit memo + charge) → **outward against pending qty**; job cards; **ITC-04**; **lien/forfeiture** recovery; consumable inventory.
+- **FE:** TDS/TCS screens; job-work inward/outward; pending & ageing registers; lien recovery.
+- **WIN:** **shop-floor inward/outward** with local **weighbridge/printer**; offline job capture on the plant floor.
+- **Exit:** full job-work operations + TDS/TCS compliance working end-to-end.
+
+### Phase 4 — Payroll · Biometric · Form 16 · Statutory *(≈6–8 wks)*
+- **BE:** employee/salary structures; **biometric ingestion**; payroll run; PF/ESI/PT/TDS; payslips; **Form 16** (Part A + auto Part B); ECR/challan outputs.
+- **FE:** payroll, attendance, leave, payslip, Form 16 screens.
+- **WIN:** **biometric device sync agent** (local network/USB); payslip & **Form 16 printing**; offline attendance capture.
+- **Exit:** run payroll end-to-end from biometric attendance to payslips + signed Form 16.
+
+### Phase 5 — Reports · Role Dashboards · Approvals · Bulk · Hardening *(≈5–7 wks)*
+- **BE:** Trial Balance/P&L/Balance Sheet; **role dashboards**; **approval engine** (maker-checker + thresholds + signing); **bulk jobs**; performance tuning.
+- **FE:** role-based dashboards; reports; approvals inbox; bulk actions with result logs.
+- **WIN:** offline/local reports & scheduled exports; desktop approvals with PIN sign.
+- **Exit:** role-wise dashboards, approvals, bulk automation; **security & performance hardening**; UAT → **GA**.
+
+### Phase 6+ — Post-GA Roadmap *(future)*
+| Theme | Items |
 |---|---|
-| **Direct filing** | GSP/ASP direct GSTR-1/3B filing; TRACES integration for TDS/TCS return upload & Form 16/16A generation; auto-fetch 26AS/AIS. |
-| **Banking** | Bank API integration, auto bank reconciliation, and **bulk payment initiation** (NEFT/RTGS/UPI files, payment gateway). |
-| **Inventory+** | Full warehouse/stock management, batch/serial, multi-location transfers, BOM, basic production. |
-| **Analytics** | Data warehouse + BI dashboards, cash-flow forecasting, anomaly detection, scheduled/emailed reports. |
-| **Mobile & SSO** | Native mobile apps (approvals, payslips, expense capture); enterprise SSO (SAML/OIDC), SCIM provisioning. |
-| **Fixed assets** | Asset register with depreciation (Companies Act & IT Act), disposal/CWIP. |
-| **Advanced compliance** | GST annual returns (GSTR-9/9C), Professional-Tax multi-state automation, ROC/MCA linkage, TDS lower-deduction workflows. |
-| **Platform** | Public API + webhooks, marketplace integrations (Shopify/marketplaces), CA/consultant multi-client console, WhatsApp notifications. |
-| **AI assist** | Auto-categorization of vouchers, OCR bill capture, reconciliation suggestions, compliance-deadline copilot. |
-| **Multi-currency** | Forex transactions, revaluation, and export/import documentation. |
+| **Direct filing** | GSP/ASP direct GSTR-1/3B filing; TRACES upload for TDS/TCS & Form 16/16A; auto-fetch 26AS/AIS. |
+| **Banking** | Bank API + auto reconciliation; **bulk payment initiation** (NEFT/RTGS/UPI, gateway). |
+| **Analytics / AI** | BI dashboards; cash-flow forecasting; **OCR bill capture**; reconciliation & compliance copilot. |
+| **Mobile & SSO** | Native mobile (approvals, payslips); SSO (SAML/OIDC), SCIM; **macOS/Linux desktop builds**. |
+| **Advanced compliance** | GSTR-9/9C; multi-state PT automation; DSC-signed statutory docs; fixed-asset depreciation. |
+| **Platform** | Public API + webhooks; CA/consultant multi-client console; WhatsApp/SMS; multi-currency. |
+
+### 16.1 Required Skills & Team Composition
+Skills needed to deliver the phases above (a small team can hold multiple hats; roles map to the tri-surface build):
+
+| Area | Key skills / tools | Used most in |
+|---|---|---|
+| **Backend engineering** | Node.js + **TypeScript**, REST API design, MySQL schema/indexing/query tuning, Redis, **BullMQ** queues, outbox/idempotency, testing (Jest/Vitest) | All phases |
+| **Frontend (web)** | **Next.js**/React (App Router, RSC), TypeScript, React Query, **React Hook Form + Zod**, accessible virtualized **data grids**, design-system consumption | All phases |
+| **Windows desktop** | **Electron** (main/renderer/IPC), **code-signing + MSI/NSIS**, **auto-update**, native/serial/USB/TCP device integration, **offline sync** (SQLite), Windows packaging | Ph 0–5 (esp. 3–4) |
+| **Shared UI / design system** | Component library engineering, tokens/theming, **Storybook**, semantic versioning, accessibility (WCAG) | Ph 0 onward |
+| **Database / DBA** | MySQL 8 administration, migrations, partitioning/archival, backups/PITR, **data migration from Tally/Excel** | Ph 0–1, ongoing |
+| **DevOps / Cloud** | CI/CD, containers, **India-region** cloud, IaC, observability (logs/metrics/tracing), DR | All phases |
+| **Security / AppSec** | OWASP, **encryption/KMS**, session/authz hardening, **pen-testing**, **DPDP** compliance, threat modeling | Ph 0 & Ph 5 |
+| **QA / Test automation** | Unit/integration/e2e (Playwright), **load/performance** testing around filing deadlines, tax-scenario test suites | All phases |
+| **Integrations** | **GSP/ASP** (e-invoice/e-way), **biometric device SDKs** (ESSL/ZKTeco/Matrix), printers/weighbridge, bank feeds | Ph 2–4 |
+| **Indian accounting domain (SME)** | **Chartered Accountant / consultant** — GST, **TDS/TCS**, payroll (PF/ESI/PT/Form 16), **job-work & lien** law; validates rules & rates | All phases (advisory) |
+| **Product & UX** | Product management, UX/UI design, technical writing, onboarding/migration playbooks | All phases |
+
+**Suggested core team:** 1 Tech Lead/Architect, 2 Backend, 2 Frontend (web + shared UI), 1 **Desktop/Electron** engineer, 1 DevOps, 1 QA, 1 Security (shared/part-time), 1 **CA/domain SME** (advisory), 1 PM, 1 UX — scaling per phase.
 
 ---
 
@@ -900,7 +967,8 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 
 **Non-functional**
 - AC-19: Voucher save p95 < 300 ms; key list/report loads p95 < 500 ms at target volume.
-- AC-20: The shared UI library (`@fintranact/ui`) is consumed by both web and `Ravi Matel` admin apps from a single versioned package.
+- AC-20: The shared UI library (`@fintranact/ui`) is consumed by the web app, the **Windows desktop app**, and the `Ravi Matel` admin app from a single versioned package.
+- AC-21 (**Windows desktop**): The Windows app installs from a signed installer, auto-updates, logs in with parity to web (same RBAC/audit), prints a voucher/memo locally, ingests a biometric punch via the device bridge, and captures a voucher **offline** that posts (idempotently) on reconnect.
 
 ---
 
@@ -926,6 +994,7 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 18. **Blacklist policy:** Should blacklisting a party be a **hard block** on transactions or a **soft warning + approval**, and who can override?
 19. **Pending-quantity tolerance:** Allowed over/under-return tolerance and how burning/handling loss is treated (auto-write-off vs approval) for job work.
 20. **Lien/forfeiture process:** What overdue period and notice procedure trigger forfeiture eligibility, how the recovered material is **valued** (assessed NRV vs outstanding), the GST treatment on the recovery sale, and who may approve — confirm against legal/CA advice before enabling.
+21. **Windows desktop:** Confirm **Electron vs Tauri**, the offline scope (which flows must work fully offline vs online-only), and which **hardware** the device bridge must support first (biometric model, printer type, weighbridge protocol).
 
 ---
 
@@ -945,7 +1014,8 @@ Acceptance is met when the following are demonstrably true (each backed by autom
 - **A7.** **`Ravi Matel`** is the **internal platform-admin** module (not a tenant feature), present in both backend (`modules/ravi-matel`) and frontend (`apps/admin/ravi-matel`), behind a separate Super-Admin realm.
 - **A8.** "100% secure" is implemented as a **defense-in-depth, security-first mindset**; no absolute security guarantee is claimed — see R7.
 - **A9.** Hosting is **India-region**; the platform aligns with **DPDP Act 2023** principles.
-- **A10.** The stack is fixed to **Node.js (TypeScript) + MySQL + Next.js + shared UI library**, delivered as a **modular monolith** that is service-extraction-ready.
+- **A10.** The stack is fixed to **Node.js (TypeScript) + MySQL + Next.js + shared UI library**, delivered as a **modular monolith** that is service-extraction-ready. A **Windows desktop app (Electron)** ships from the foundation phase, reusing the same shared UI and backend APIs; it is a client only (authorization stays server-side).
+- **A12.** Delivery is **phase-wise**, and **each phase ships backend + web + Windows desktop together** (§16) — not backend-first then a separate UI pass.
 - **A11.** Employees, parties, and users are distinct identity concepts; an employee is not automatically a system user.
 
 ---
