@@ -15,7 +15,8 @@ import { logger } from '../common/logger.js';
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'db', 'migrations');
 
-async function run(): Promise<void> {
+/** Apply any pending .sql migrations (forward-only, versioned via schema_migrations). */
+export async function runMigrations(): Promise<void> {
   const conn = await mysql.createConnection({
     host: config.db.host,
     port: config.db.port,
@@ -57,4 +58,7 @@ async function run(): Promise<void> {
   await conn.end();
 }
 
-run().catch(() => process.exit(1));
+// CLI entry: `pnpm migrate`
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runMigrations().catch(() => process.exit(1));
+}

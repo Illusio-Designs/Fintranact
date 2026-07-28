@@ -8,7 +8,7 @@ import { NotificationDrawer } from './notifications';
 import { ToastHost } from './toast';
 import { SuccessHost } from './success';
 import { Dropdown } from './components';
-import { notifications as NOTIF_SEED, type Notif } from './mock';
+import { getRoleList, getNotifications, type Notif } from './api';
 import {
   DashboardCircleIcon,
   Book02Icon,
@@ -22,7 +22,6 @@ import {
   Analytics01Icon,
   Settings01Icon,
 } from 'hugeicons-react';
-import { ROLES } from './mock';
 
 /** Sidebar nav — `#N` on a label adds a red count badge. */
 const NAV: { group: string; open?: boolean; badge?: string; pages: string[] }[] = [
@@ -158,11 +157,16 @@ export function AppShell({
   crumb?: string;
 }) {
   const pathname = usePathname();
-  const roleName = role ? ROLES[role]?.name : 'Finance Controller';
+  const [roles, setRoles] = useState<{ key: string; name: string }[]>([]);
+  const roleName = (role && roles.find((r) => r.key === role)?.name) || 'Finance Controller';
   const [quick, setQuick] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notifs, setNotifs] = useState<Notif[]>(NOTIF_SEED);
+  const [notifs, setNotifs] = useState<Notif[]>([]);
   const unread = notifs.filter((n) => !n.read).length;
+  useEffect(() => {
+    getRoleList().then(setRoles).catch(() => {});
+    getNotifications().then(setNotifs).catch(() => {});
+  }, []);
   const [fy, setFy] = useState('2026-27');
   const [branch, setBranch] = useState('aji-3');
 
@@ -260,7 +264,7 @@ export function AppShell({
               options={[{ value: '2026-27', label: 'FY 2026–27' }, { value: '2025-26', label: 'FY 2025–26' }]} /></div>
             {setRole && (
               <div className="topsel-dd role"><Dropdown width={165} value={role} onChange={setRole}
-                options={Object.entries(ROLES).map(([k, v]) => ({ value: k, label: v.name }))} /></div>
+                options={roles.map((r) => ({ value: r.key, label: r.name }))} /></div>
             )}
             <div className="spacer" />
             <div className="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg> Search… <kbd>⌘K</kbd></div>

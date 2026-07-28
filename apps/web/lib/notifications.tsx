@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Notification03Icon, Cancel01Icon, CheckmarkCircle02Icon, Alert01Icon, InformationCircleIcon, Tick02Icon } from 'hugeicons-react';
-import { notifications as SEED, type Notif } from './mock';
+import { type Notif } from './api';
 
 const icon = (k: Notif['kind']) => k === 'crit' || k === 'warn' ? <Alert01Icon size={16} color="currentColor" /> : k === 'ok' ? <CheckmarkCircle02Icon size={16} color="currentColor" /> : <InformationCircleIcon size={16} color="currentColor" />;
 
@@ -15,7 +15,7 @@ export function NotificationDrawer({ open, onClose, items, setItems }: {
   const unread = items.filter((n) => !n.read).length;
   const counts = { all: items.length, task: items.filter((n) => n.cat === 'task').length, alert: items.filter((n) => n.cat === 'alert').length };
 
-  const markRead = (id: number) => setItems(items.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markRead = (id: number | string) => setItems(items.map((n) => (n.id === id ? { ...n, read: true } : n)));
   const markAll = () => setItems(items.map((n) => ({ ...n, read: true })));
 
   // group by day preserving order

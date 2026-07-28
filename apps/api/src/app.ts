@@ -24,6 +24,9 @@ import { tdsRouter } from './modules/tds/tds.routes.js';
 import { jobworkRouter } from './modules/jobwork/jobwork.routes.js';
 import { payrollRouter } from './modules/payroll/payroll.routes.js';
 import { settingsRouter } from './modules/settings/settings.routes.js';
+import { appDataRouter } from './modules/appdata/appdata.routes.js';
+import { mastersRouter } from './modules/masters/masters.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -60,6 +63,9 @@ export function createApp(): Express {
   app.use('/api/v1', jobworkRouter);
   app.use('/api/v1', payrollRouter);
   app.use('/api/v1', settingsRouter);
+  app.use('/api/v1', appDataRouter);
+  app.use('/api/v1', mastersRouter);
+  app.use('/api/v1', dashboardRouter);
   // Future modules mount here: compliance, jobwork, payroll, documents…
 
   app.use(errorHandler);

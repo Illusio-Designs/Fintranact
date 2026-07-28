@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react';
 import { CloudUploadIcon, File01Icon, Cancel01Icon, CheckmarkCircle02Icon, Alert01Icon } from 'hugeicons-react';
 import { AppShell } from '../../lib/appshell';
 import { Dropdown } from '../../lib/components';
-import { commitImport, listImportEntities, MOCK, validateImport } from '../../lib/api';
-import { mockValidation } from '../../lib/mock';
+import { commitImport, listImportEntities, validateImport, type ImportValidation } from '../../lib/api';
 
-type Summary = typeof mockValidation;
+type Summary = ImportValidation;
 
 export default function ImportPage() {
   const [entities, setEntities] = useState<{ key: string; label: string }[]>([]);
@@ -24,7 +23,7 @@ export default function ImportPage() {
   }, []);
 
   async function onValidate() {
-    if (!file && !MOCK) return setMsg({ tone: 'err', text: 'Choose an .xlsx file first.' });
+    if (!file) return setMsg({ tone: 'err', text: 'Choose an .xlsx file first.' });
     setBusy(true); setMsg(null);
     try {
       const s = await validateImport(entity, file as File);

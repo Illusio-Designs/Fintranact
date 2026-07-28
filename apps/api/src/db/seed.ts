@@ -13,7 +13,8 @@ const ADMIN_ROLE_ID = 'a0000000-0000-0000-0000-000000000001';
 const EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@raviMetal.com';
 const PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'Ravi@1234';
 
-async function run(): Promise<void> {
+/** Idempotent seed of the first admin user (safe to run on every boot). */
+export async function runSeed(): Promise<void> {
   const hash = await argon2.hash(PASSWORD, { type: argon2.argon2id });
 
   const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [EMAIL]);
@@ -38,10 +39,14 @@ async function run(): Promise<void> {
   );
 
   logger.info(`Seed complete. Login: ${EMAIL} / ${PASSWORD}`);
-  await pool.end();
 }
 
-run().catch((err) => {
-  logger.error({ err }, 'Seed failed');
-  process.exit(1);
-});
+// CLI entry: `pnpm exec tsx src/db/seed.ts`
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runSeed()
+    .then(() => pool.end())
+    .catch((err) => {
+      logger.error({ err }, 'Seed failed');
+      process.exit(1);
+    });
+}
