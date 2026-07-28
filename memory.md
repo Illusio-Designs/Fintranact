@@ -69,7 +69,8 @@ Goal: login on web + Windows, RBAC enforced server-side, every action audit-logg
 - [x] **All voucher types compose & post**: unified `POST /api/v1/vouchers/compose` (discriminated union) for payment / receipt / contra / journal / credit-note / debit-note; Quick Entry wires every type through the composer API (mock-aware). Sales & Purchase composers already existed. All 8 compositions verified balanced.
 - [x] **GST returns — GSTR-3B & GSTR-1** (`modules/gst`): GSTR-3B computes output tax vs ITC → net payable from the GST ledger balances; GSTR-1 outward-supplies summary. Pages `/gst/gstr-3b` (3.1/4/5.1 tables + tiles) and `/gst/gstr-1` (B2B/B2C rate-wise). Sidebar routed.
 - [x] **GSTR-2B reconciliation** (`/gst/gstr-2b`): books ITC vs portal 2B, invoice-wise matched/mismatch/only-books/only-2b with status tiles + difference banner; backend `/gst/gstr-2b/books` books-side ITC summary.
-- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TDS/TCS challans & returns; job-work (ITC-04/lien); payroll (biometric/Form 16); documents
+- [x] **TDS challans (ITNS-281) + 26Q return** (`modules/tds`): backend `/tds/summary` (net TDS payable from `tds_payable` balance); pages `/tds/challans` (section-wise deducted/deposited/pending + status) and `/tds/returns` (26Q deductee-wise statement — PAN, section, rate, TDS, challan).
+- [ ] Remaining: real ledger-create + master forms against live API; period locks; Process/Rate masters CRUD; e-Invoice/e-Way; TCS (27EQ); job-work (ITC-04/lien); payroll (biometric/Form 16); documents
 
 ## Web app — mock mode for Vercel demo
 - [x] Decoupled `apps/web` from workspace packages (self-contained) so it deploys standalone
@@ -277,3 +278,11 @@ pnpm --filter @fintranact/desktop dev  # Electron shell
 - **Backend** (`modules/gst`): `GET /api/v1/gst/gstr-2b/books` returns the books-side ITC total (input GST debit balances) + purchase/DN invoice count for reconciliation (the portal 2B is pulled from GSTN client-side / a later job). `report:view`. API typechecks.
 - **Web**: `getGstr2b()` (mock-aware recon dataset), page `/gst/gstr-2b` from the UI library — a difference **banner** (books vs 2B), four status **tiles** (Matched / Mismatch / Only in books / Only in 2B), a **status filter Dropdown**, and an invoice-matching table (supplier+GSTIN, invoice+date, ITC in books, ITC in 2B, difference, status pill) with a report **total row**. Sidebar **GST & Returns → GSTR-2B Reconciliation** routes to it. Verified: books ₹46,260 vs 2B ₹43,560, net diff ₹2,700.
 - `next build` passes (15 routes). Completes the GST-returns trio (GSTR-1 · 3B · 2B recon). Merged to main.
+
+### 2026-07-28 — Task 33: TDS challans (ITNS-281) + 26Q return
+- **Backend** (`modules/tds`): `GET /api/v1/tds/summary` returns net TDS payable (credit balance of the `tds_payable` ledger = deducted less deposited) + count of vouchers carrying a TDS leg. `report:view`. Mounted in `app.ts`. API typechecks.
+- **Web** (mock-aware `getTdsChallans`/`getTdsReturn`), two pages from the UI library:
+  - `/tds/challans` — ITNS-281 section-wise (194C/J/I/Q): deductees, TDS amount, challan/BSR, due-or-paid, status pills; tiles (deducted / deposited / pending) + a due-warning banner; report total row.
+  - `/tds/returns` — 26Q deductee-wise statement (deductee, PAN, section pill, amount paid, rate, TDS, challan pill), quarter + section filter dropdowns, tiles, total row. Verified: TDS total ₹3,66,200 on ₹1,86,30,000 paid.
+  - Sidebar **TDS → Challans ITNS 281 / Returns 24Q 26Q 27Q** route to them.
+- `next build` passes (17 routes). Merged to main. First TDS slice (challans + non-salary 26Q).

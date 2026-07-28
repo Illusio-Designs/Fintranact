@@ -50,6 +50,8 @@ function hrefFor(label: string): string {
   if (clean === 'GSTR-1') return '/gst/gstr-1';
   if (clean === 'GSTR-3B') return '/gst/gstr-3b';
   if (clean === 'GSTR-2B Reconciliation') return '/gst/gstr-2b';
+  if (clean === 'Challans ITNS 281') return '/tds/challans';
+  if (clean === 'Returns 24Q 26Q 27Q') return '/tds/returns';
   return `/m/${slug(clean)}`;
 }
 

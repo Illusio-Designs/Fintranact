@@ -285,6 +285,39 @@ export async function getGstr2b(): Promise<Gstr2b> {
   return { rows, matched, mismatch, onlyBooks, only2b, booksTotal, portalTotal };
 }
 
+// ---- TDS ----
+export interface TdsChallan { section: string; description: string; deductees: number; amount: number; challanNo: string | null; bsr: string | null; paidOn: string | null; dueOn: string; status: 'paid' | 'due' }
+export interface TdsChallans { rows: TdsChallan[]; totalDeducted: number; totalPaid: number; totalDue: number }
+
+export async function getTdsChallans(): Promise<TdsChallans> {
+  const rows: TdsChallan[] = [
+    { section: '194C', description: 'Payments to contractors', deductees: 12, amount: 184300, challanNo: 'CIN-2841100', bsr: '0510308', paidOn: '05 Jul 2026', dueOn: '07 Jul 2026', status: 'paid' },
+    { section: '194J', description: 'Professional / technical fees', deductees: 4, amount: 45000, challanNo: null, bsr: null, paidOn: null, dueOn: '07 Aug 2026', status: 'due' },
+    { section: '194I', description: 'Rent', deductees: 2, amount: 72000, challanNo: null, bsr: null, paidOn: null, dueOn: '07 Aug 2026', status: 'due' },
+    { section: '194Q', description: 'Purchase of goods', deductees: 6, amount: 100000, challanNo: null, bsr: null, paidOn: null, dueOn: '07 Aug 2026', status: 'due' },
+  ];
+  if (!MOCK) { try { await fetch(`${API}/api/v1/tds/summary`, { headers: authHeaders() }); } catch { /* ignore */ } }
+  const totalDeducted = rows.reduce((s, r) => s + r.amount, 0);
+  const totalPaid = rows.filter((r) => r.status === 'paid').reduce((s, r) => s + r.amount, 0);
+  return { rows, totalDeducted, totalPaid, totalDue: totalDeducted - totalPaid };
+}
+
+export interface TdsDeductee { name: string; pan: string; section: string; paid: number; rate: number; tds: number; date: string; challan: string | null }
+export interface TdsReturn { form: string; quarter: string; rows: TdsDeductee[]; totalPaid: number; totalTds: number }
+
+export async function getTdsReturn(): Promise<TdsReturn> {
+  const rows: TdsDeductee[] = [
+    { name: 'Anand Fabrication', pan: 'AABFA1234C', section: '194C', paid: 4820000, rate: 2, tds: 96400, date: '18 Jun 2026', challan: 'CIN-2841100' },
+    { name: 'Precision Heat Treaters', pan: 'AABCP5678T', section: '194C', paid: 2640000, rate: 2, tds: 52800, date: '20 Jun 2026', challan: 'CIN-2841100' },
+    { name: 'S. Mehta & Associates', pan: 'AMKPM9012J', section: '194J', paid: 450000, rate: 10, tds: 45000, date: '22 Jun 2026', challan: null },
+    { name: 'Rajkot Estates', pan: 'AAACR3456I', section: '194I', paid: 720000, rate: 10, tds: 72000, date: '25 Jun 2026', challan: null },
+    { name: 'Gujarat Poly Pvt Ltd', pan: 'AAGCG7890P', section: '194Q', paid: 10000000, rate: 1, tds: 100000, date: '28 Jun 2026', challan: null },
+  ];
+  const totalPaid = rows.reduce((s, r) => s + r.paid, 0);
+  const totalTds = rows.reduce((s, r) => s + r.tds, 0);
+  return { form: '26Q', quarter: 'Q1 FY 2026-27', rows, totalPaid, totalTds };
+}
+
 export async function commitImport(entity: string, file: File, financialYear: string): Promise<{ inserted: number; skipped: number }> {
   if (MOCK) return { inserted: mockValidation.valid, skipped: mockValidation.invalid };
   const fd = new FormData();

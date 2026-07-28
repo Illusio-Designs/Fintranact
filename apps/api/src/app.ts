@@ -19,6 +19,7 @@ import { purchaseRouter } from './modules/purchase/purchase.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
 import { composeRouter } from './modules/vouchers/compose.routes.js';
 import { gstRouter } from './modules/gst/gst.routes.js';
+import { tdsRouter } from './modules/tds/tds.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -50,6 +51,7 @@ export function createApp(): Express {
   app.use('/api/v1', reportsRouter);
   app.use('/api/v1', composeRouter);
   app.use('/api/v1', gstRouter);
+  app.use('/api/v1', tdsRouter);
   // Future modules mount here: compliance, jobwork, payroll, documents…
 
   app.use(errorHandler);
