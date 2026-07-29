@@ -171,7 +171,7 @@ export interface EwayGenInput { voucherId?: string; invoiceNo: string; party: st
 export async function generateEway(input: EwayGenInput): Promise<EWayRow> {
   return sendJson('POST', '/gst/e-way/generate', input);
 }
-export interface WhatsAppSendInput { to: string; toName?: string; kind?: string; body: string; docUrl?: string }
+export interface WhatsAppSendInput { to: string; toName?: string; kind?: string; body: string; docUrl?: string; attachVoucherId?: string }
 export async function sendWhatsApp(input: WhatsAppSendInput): Promise<{ id: string; to: string; status: string; provider: string; providerMsgId: string | null }> {
   return sendJson('POST', '/whatsapp/send', input);
 }

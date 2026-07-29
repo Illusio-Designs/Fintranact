@@ -106,14 +106,15 @@ export default function EInvoicePage() {
 function WhatsAppModal({ row, onClose }: { row: EInvoiceRow; onClose: () => void }) {
   const [to, setTo] = useState('');
   const [body, setBody] = useState(`Namaste ${row.party}, your tax invoice ${row.invoiceNo} for ${money(row.value)} is ready. Thank you for your business — RAVI Metal Treatment.`);
+  const [attach, setAttach] = useState(true);
   const [busy, setBusy] = useState(false);
   async function send() {
     if (!to.trim()) return;
     setBusy(true);
     try {
-      const res = await sendWhatsApp({ to, toName: row.party, kind: 'invoice', body });
+      const res = await sendWhatsApp({ to, toName: row.party, kind: 'invoice', body, attachVoucherId: attach ? row.voucherId : undefined });
       onClose();
-      showSuccess({ title: 'Sent on WhatsApp', rows: [['To', res.to], ['Invoice', row.invoiceNo], ['Status', res.status], ['Via', res.provider]] });
+      showSuccess({ title: 'Sent on WhatsApp', rows: [['To', res.to], ['Invoice', row.invoiceNo], ['Attachment', attach ? `${row.invoiceNo}.pdf` : 'none'], ['Via', res.provider]] });
     } catch (e) { showError('WhatsApp send failed', [['Reason', (e as Error).message]]); }
     finally { setBusy(false); }
   }
@@ -125,7 +126,11 @@ function WhatsAppModal({ row, onClose }: { row: EInvoiceRow; onClose: () => void
           <div><b style={{ fontSize: 15 }}>Send on WhatsApp</b><div style={{ fontSize: 12, color: 'var(--text-3)' }}>{row.invoiceNo} · {row.party}</div></div>
         </div>
         <div className="field" style={{ marginBottom: 10 }}><label>Customer WhatsApp number</label><input className="ctl" type="tel" placeholder="98250 12345" value={to} onChange={(e) => setTo(e.target.value)} /></div>
-        <div className="field" style={{ marginBottom: 14 }}><label>Message</label><textarea className="ctl" rows={4} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+        <div className="field" style={{ marginBottom: 10 }}><label>Message</label><textarea className="ctl" rows={4} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontSize: 13, cursor: 'pointer' }}>
+          <input type="checkbox" checked={attach} onChange={(e) => setAttach(e.target.checked)} style={{ width: 16, height: 16 }} disabled={!row.voucherId} />
+          Attach invoice PDF ({row.invoiceNo}.pdf)
+        </label>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" disabled={busy || !to.trim()} onClick={send}><WhatsappIcon size={15} color="currentColor" /> {busy ? 'Sending…' : 'Send'}</button>

@@ -36,6 +36,7 @@ integrationsRouter.post('/gst/e-way/generate', requireAuth, requirePermission('v
 const waSchema = z.object({
   to: z.string().min(6), toName: z.string().optional(),
   kind: z.string().optional(), body: z.string().min(1), docUrl: z.string().optional(),
+  attachVoucherId: z.string().optional(),
 });
 
 /** POST /whatsapp/send — send a text/document via WhatsApp. */
