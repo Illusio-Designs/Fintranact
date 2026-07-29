@@ -25,7 +25,7 @@ import {
 
 /** Sidebar nav — `#N` on a label adds a red count badge. */
 const NAV: { group: string; open?: boolean; badge?: string; pages: string[] }[] = [
-  { group: 'Overview', open: true, pages: ['Dashboard', 'Widgets', 'UI Library', 'Compliance Calendar#2', 'Documents', 'Notifications'] },
+  { group: 'Overview', open: true, pages: ['Dashboard', 'Widgets', 'UI Library', 'Compliance Calendar#2', 'Documents', 'WhatsApp', 'Notifications'] },
   { group: 'Accounting', open: true, pages: ['Chart of Accounts', 'Ledgers & Groups', 'Vouchers', 'Day Book', 'Bank & Cash'] },
   { group: 'Sales & Purchase', pages: ['Sales Invoices', 'Purchase Bills', 'Credit / Debit Notes', 'Customers & Vendors', 'Items & Price Lists'] },
   { group: 'GST & Returns', badge: '3', pages: ['GST Invoices', 'E-Way Bills', 'GSTR-1', 'GSTR-3B', 'GSTR-2B Reconciliation'] },
@@ -47,6 +47,7 @@ function hrefFor(label: string): string {
   if (clean === 'Widgets') return '/widgets';
   if (clean === 'UI Library') return '/ui';
   if (clean === 'Documents') return '/documents';
+  if (clean === 'WhatsApp') return '/whatsapp';
   if (clean === 'Compliance Calendar') return '/compliance';
   if (clean === 'Trial Balance') return '/reports/trial-balance';
   if (clean === 'Day Book') return '/reports/day-book';
