@@ -425,3 +425,7 @@ Provider-abstraction layer with **sandbox mode default** (deterministic, no netw
 
 ### 2026-07-28 — Task 51: WhatsApp message log page
 - New nav "WhatsApp" (Overview) → `/whatsapp`. Page lists every sent message (listWhatsApp): when, to (name+phone), type (Invoice/Reminder/Document/Message), body, attachment (📎 filename), status pill (sent/failed/queued), + KPI tiles + status filter + a "New message" compose modal (sendWhatsApp text). `WhatsAppMsg` type gained `docUrl`. Verified live: 3 prior messages show incl. the document row with SI_26-27_0002.pdf attachment. Merged to main.
+
+### 2026-07-28 — Task 52: Trim Overview nav + notifications See-all page
+- Overview nav reduced to **Dashboard only**. Moved Compliance Calendar → GST & Returns; Documents + WhatsApp → Admin group. Deleted the demo pages `app/widgets` + `app/ui` (and their hrefFor entries); getWidgets API left in place (unused).
+- New full **`/notifications`** page (tabs All/Tasks/Alerts, mark-all-read, day-grouped, empty state). Notification drawer now shows the recent 6 and its footer **"See all"** button closes the drawer and routes to `/notifications` (useRouter). Verified: See-all → /notifications; Compliance under GST; Documents+WhatsApp under Admin. Merged to main.

@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Notification03Icon, Cancel01Icon, CheckmarkCircle02Icon, Alert01Icon, InformationCircleIcon, Tick02Icon } from 'hugeicons-react';
+import { useRouter } from 'next/navigation';
+import { Notification03Icon, Cancel01Icon, CheckmarkCircle02Icon, Alert01Icon, InformationCircleIcon, Tick02Icon, ArrowRight01Icon } from 'hugeicons-react';
 import { type Notif } from './api';
 
 const icon = (k: Notif['kind']) => k === 'crit' || k === 'warn' ? <Alert01Icon size={16} color="currentColor" /> : k === 'ok' ? <CheckmarkCircle02Icon size={16} color="currentColor" /> : <InformationCircleIcon size={16} color="currentColor" />;
@@ -10,9 +11,12 @@ const icon = (k: Notif['kind']) => k === 'crit' || k === 'warn' ? <Alert01Icon s
 export function NotificationDrawer({ open, onClose, items, setItems }: {
   open: boolean; onClose: () => void; items: Notif[]; setItems: (n: Notif[]) => void;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState<'all' | 'task' | 'alert'>('all');
-  const list = useMemo(() => items.filter((n) => tab === 'all' || n.cat === tab), [items, tab]);
+  const filtered = useMemo(() => items.filter((n) => tab === 'all' || n.cat === tab), [items, tab]);
+  const list = filtered.slice(0, 6); // drawer shows recent; full list lives on the page
   const unread = items.filter((n) => !n.read).length;
+  const seeAll = () => { onClose(); router.push('/notifications'); };
   const counts = { all: items.length, task: items.filter((n) => n.cat === 'task').length, alert: items.filter((n) => n.cat === 'alert').length };
 
   const markRead = (id: number | string) => setItems(items.map((n) => (n.id === id ? { ...n, read: true } : n)));
@@ -69,7 +73,7 @@ export function NotificationDrawer({ open, onClose, items, setItems }: {
 
         <div className="nt-foot">
           <button onClick={markAll}><Tick02Icon size={14} color="currentColor" /> Mark all read</button>
-          <button onClick={onClose}>Close</button>
+          <button onClick={seeAll}>See all{filtered.length > list.length ? ` (${filtered.length})` : ''} <ArrowRight01Icon size={14} color="currentColor" /></button>
         </div>
       </aside>
     </>
