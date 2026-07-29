@@ -39,6 +39,10 @@ export const config = {
       clientId: process.env.GSP_CLIENT_ID ?? '',
       clientSecret: process.env.GSP_CLIENT_SECRET ?? '',
       gstin: process.env.GSP_GSTIN ?? '',
+      // SEK/RSA payload encryption (NIC scheme). Off by default (many GSPs handle it
+      // server-side); set GSP_ENCRYPTION=on + the sandbox/prod RSA public key to enable.
+      encryption: (process.env.GSP_ENCRYPTION ?? 'off') === 'on',
+      publicKey: (process.env.GSP_PUBLIC_KEY ?? '').replace(/\\n/g, '\n'),
     },
     einvoice: {
       mode: process.env.EINVOICE_MODE ?? 'sandbox', // 'sandbox' | 'live'
