@@ -175,7 +175,7 @@ export interface WhatsAppSendInput { to: string; toName?: string; kind?: string;
 export async function sendWhatsApp(input: WhatsAppSendInput): Promise<{ id: string; to: string; status: string; provider: string; providerMsgId: string | null }> {
   return sendJson('POST', '/whatsapp/send', input);
 }
-export interface WhatsAppMsg { id: string; toPhone: string; toName: string | null; kind: string; body: string; status: string; provider: string; createdAt: string }
+export interface WhatsAppMsg { id: string; toPhone: string; toName: string | null; kind: string; body: string; docUrl: string | null; status: string; provider: string; createdAt: string }
 export async function listWhatsApp(): Promise<WhatsAppMsg[]> { return getJson('/whatsapp/messages', []); }
 export async function getIntegrationsStatus(): Promise<{ einvoice: string; eway: string; whatsapp: string }> {
   return getJson('/integrations/status', { einvoice: 'sandbox', eway: 'sandbox', whatsapp: 'sandbox' });
