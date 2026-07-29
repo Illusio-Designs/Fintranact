@@ -25,17 +25,17 @@ import {
 
 /** Sidebar nav — `#N` on a label adds a red count badge. */
 const NAV: { group: string; open?: boolean; badge?: string; pages: string[] }[] = [
-  { group: 'Overview', open: true, pages: ['Dashboard', 'Widgets', 'UI Library', 'Compliance Calendar#2', 'Documents', 'WhatsApp', 'Notifications'] },
+  { group: 'Overview', open: true, pages: ['Dashboard'] },
   { group: 'Accounting', open: true, pages: ['Chart of Accounts', 'Ledgers & Groups', 'Vouchers', 'Day Book', 'Bank & Cash'] },
   { group: 'Sales & Purchase', pages: ['Sales Invoices', 'Purchase Bills', 'Credit / Debit Notes', 'Customers & Vendors', 'Items & Price Lists'] },
-  { group: 'GST & Returns', badge: '3', pages: ['GST Invoices', 'E-Way Bills', 'GSTR-1', 'GSTR-3B', 'GSTR-2B Reconciliation'] },
+  { group: 'GST & Returns', badge: '3', pages: ['GST Invoices', 'E-Way Bills', 'GSTR-1', 'GSTR-3B', 'GSTR-2B Reconciliation', 'Compliance Calendar#2'] },
   { group: 'TDS', pages: ['TDS Deductions', 'Payable / Receivable', 'Challans ITNS 281#1', 'Returns 24Q 26Q 27Q'] },
   { group: 'TCS', pages: ['TCS Collections', 'Challans', 'Return 27EQ'] },
   { group: 'Job Work & Process', pages: ['Inward Cash Debit memo', 'Outward Challans', 'Pending Inward Outward#10', 'Job Cards', 'Lien Forfeiture#1', 'ITC-04'] },
   { group: 'Payroll & HR', pages: ['Employees', 'Salary Structures', 'Attendance & Leave', 'Payroll Run#1', 'Payslips', 'Form 16', 'Statutory PF ESI PT'] },
   { group: 'Masters', pages: ['Process Master', 'Rate Master', 'Item Material Master', 'Ledger Categories', 'Financial Year'] },
   { group: 'Reports', pages: ['Trial Balance', 'Profit & Loss', 'Balance Sheet', 'Ageing'] },
-  { group: 'Admin · Ravi Metal Ops', pages: ['Companies & Branches', 'Users & Roles', 'Permissions', 'Audit Trail', 'System & Tax Config'] },
+  { group: 'Admin · Ravi Metal Ops', pages: ['Companies & Branches', 'Users & Roles', 'Permissions', 'Audit Trail', 'System & Tax Config', 'Documents', 'WhatsApp'] },
 ];
 
 export function slug(label: string): string {
@@ -44,8 +44,6 @@ export function slug(label: string): string {
 function hrefFor(label: string): string {
   const clean = label.replace(/#.*/, '').trim();
   if (clean === 'Dashboard') return '/dashboard';
-  if (clean === 'Widgets') return '/widgets';
-  if (clean === 'UI Library') return '/ui';
   if (clean === 'Documents') return '/documents';
   if (clean === 'WhatsApp') return '/whatsapp';
   if (clean === 'Compliance Calendar') return '/compliance';
